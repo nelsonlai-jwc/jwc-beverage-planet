@@ -135,7 +135,7 @@ function drawGlass(ctx){
   ctx.font='500 72px "Inter Tight", Inter, sans-serif';
   ctx.fillText('JWC Beverage Recipe Planet', M, 392);
   ctx.font='500 106px "Inter Tight", Inter, sans-serif';
-  ctx.fillText('Sep 09, 2009',        M, 518);
+  ctx.fillText('Since 2009',        M, 518);
   ctx.font='600 110px "Inter Tight", Inter, sans-serif'; ctx.fillStyle='#ffffff';
   ctx.font='600 82px "Inter Tight", Inter, sans-serif';
   ctx.fillText('Brewing With Abundance', M, 664);
@@ -152,14 +152,14 @@ function drawGlass(ctx){
 
   ctx.save(); ctx.translate(1200-M-24, 1236); ctx.rotate(Math.PI/2);
   ctx.font='500 23px Inter, sans-serif'; ctx.fillStyle='rgba(255,255,255,.62)';
-  ctx.fillText('—', 0, 0); ctx.fillText('SOTW', 48, 0);
+  ctx.fillText('—', 0, 0); ctx.fillText('JWC Planet', 48, 0);
   ctx.restore();
 
   ctx.font='700 34px "Inter Tight", Inter, sans-serif'; ctx.fillStyle='#ffffff';
-  ctx.fillText('orbit.', M, 1516);
-  const w = ctx.measureText('orbit.').width;
+  ctx.fillText('Award', M, 1516);
+  const w = ctx.measureText('Award').width;
   ctx.font='500 34px "Inter Tight", Inter, sans-serif';
-  ctx.fillStyle='rgba(255,255,255,.62)'; ctx.fillText(' winners', M+w, 1516);
+  ctx.fillStyle='rgba(255,255,255,.62)'; ctx.fillText(' Winners Cafe', M+w, 1516);
 }
 
 function makeCertTexture(){
