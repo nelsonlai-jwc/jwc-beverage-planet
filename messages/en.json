@@ -59,7 +59,7 @@
       },
       "outlet": {
         "label": "Outlet",
-        "rule": "The eight outlets listed in chapter 4."
+        "rule": "The eight initial outlets."
       },
       "currency": {
         "label": "Currency",
