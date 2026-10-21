@@ -11,6 +11,52 @@
     "hidePassword": "隐藏",
     "forgotPassword": "忘记密码？",
     "submit": "登录",
-    "suspended": "账号已停用？请联系管理员。"
+    "suspended": "账号已停用？请联系管理员。",
+    "submitting": "正在登录…",
+    "invalidCredentials": "邮箱或密码不正确。",
+    "accountInactive": "此账号未启用，请联系管理员。",
+    "networkError": "无法连接服务器，请检查网络后重试。"
+  },
+  "Invite": {
+    "loading": "正在核对邀请…",
+    "title": "激活账号",
+    "intro": "邮箱、角色和分店由管理员设定。",
+    "email": "邮箱",
+    "role": "角色",
+    "outlets": "分店",
+    "expires": "邀请有效期至",
+    "roles": {
+      "ADMIN": "管理员",
+      "MANAGER": "经理",
+      "BARISTA": "咖啡师"
+    },
+    "fullName": "全名",
+    "fullNameHint": "按 IC 或护照填写，使用大写字母。",
+    "documentType": "证件类型",
+    "documentTypes": {
+      "NRIC": "NRIC",
+      "PASSPORT": "护照"
+    },
+    "nricNumber": "NRIC 号码",
+    "passportNumber": "护照号码",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "show": "显示",
+    "hide": "隐藏",
+    "submit": "激活账号",
+    "submitting": "正在激活…",
+    "nameInvalid": "请输入全名（最多 100 个字符，只能包含字母、空格及 ' / @ -）。",
+    "documentInvalid": "请输入有效的证件号码。",
+    "passwordMismatch": "两次输入的密码不一致。",
+    "weakPassword": "密码强度不足，请使用更长的密码。",
+    "activationFailed": "此邀请无法使用，可能已过期或已被使用。",
+    "signInAfterActivation": "账号已激活，请登录继续。",
+    "networkError": "无法连接服务器，请检查网络后重试。",
+    "invalidTitle": "邀请不可用",
+    "expired": "此邀请已过期。",
+    "used": "此邀请已被使用。",
+    "revoked": "此邀请已被撤销。",
+    "notFound": "此邀请链接无效。",
+    "contactAdmin": "请联系管理员重新发送邀请。"
   }
 }
