@@ -12,5 +12,63 @@
     "forgotPassword": "Forgot password?",
     "submit": "Sign in",
     "suspended": "Account suspended? Contact your Admin."
+  },
+  "Nav": {
+    "users": "User",
+    "rawMaterials": "Raw Material",
+    "recipes": "Beverage Recipe",
+    "menus": "Menu",
+    "calibration": "Daily Coffee Calibration",
+    "reports": "Report",
+    "settings": "Setting"
+  },
+  "Shell": {
+    "mainNav": "Main navigation",
+    "menu": "Menu",
+    "closeMenu": "Close",
+    "role": "Role",
+    "outletScope": "Outlets",
+    "allOutlets": "All outlets"
+  },
+  "Placeholder": {
+    "comingSoon": "This page is not built yet."
+  },
+  "Settings": {
+    "title": "Setting",
+    "readOnlyNote": "Initial values from the design plan. Read-only until data management is connected.",
+    "groups": {
+      "strength": {
+        "label": "Strength",
+        "rule": "Fixed values 0 to 5; meanings do not change."
+      },
+      "beverageStyle": {
+        "label": "Beverage Style",
+        "rule": "Values in use can only be deactivated."
+      },
+      "unit": {
+        "label": "Unit",
+        "rule": "g and ml only; not free text."
+      },
+      "temp": {
+        "label": "Temp",
+        "rule": "Fixed system values."
+      },
+      "materialType": {
+        "label": "Material Type",
+        "rule": "Values in use can only be deactivated."
+      },
+      "outlet": {
+        "label": "Outlet",
+        "rule": "The eight outlets listed in chapter 4."
+      },
+      "currency": {
+        "label": "Currency",
+        "rule": "Only MYR at launch. More currencies may be added later; there is no currency conversion."
+      },
+      "language": {
+        "label": "Language",
+        "rule": "English and Simplified Chinese enabled. Malay later."
+      }
+    }
   }
 }
