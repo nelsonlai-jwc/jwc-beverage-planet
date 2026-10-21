@@ -12,5 +12,63 @@
     "forgotPassword": "忘记密码？",
     "submit": "登录",
     "suspended": "账号已停用？请联系管理员。"
+  },
+  "Nav": {
+    "users": "用户",
+    "rawMaterials": "原料",
+    "recipes": "饮料配方",
+    "menus": "菜单",
+    "calibration": "每日咖啡校准",
+    "reports": "报表",
+    "settings": "设置"
+  },
+  "Shell": {
+    "mainNav": "主导航",
+    "menu": "菜单",
+    "closeMenu": "关闭",
+    "role": "角色",
+    "outletScope": "分店",
+    "allOutlets": "全部分店"
+  },
+  "Placeholder": {
+    "comingSoon": "此页面尚未开发。"
+  },
+  "Settings": {
+    "title": "设置",
+    "readOnlyNote": "以下为设计计划书的初始值。接入数据管理前仅供查看。",
+    "groups": {
+      "strength": {
+        "label": "Strength",
+        "rule": "固定为 0 至 5，数值意义不变。"
+      },
+      "beverageStyle": {
+        "label": "Beverage Style",
+        "rule": "已被引用的选项只能停用。"
+      },
+      "unit": {
+        "label": "Unit",
+        "rule": "仅 g 和 ml，不是自由文本。"
+      },
+      "temp": {
+        "label": "Temp",
+        "rule": "固定系统选项。"
+      },
+      "materialType": {
+        "label": "Material Type",
+        "rule": "已被引用的选项只能停用。"
+      },
+      "outlet": {
+        "label": "Outlet",
+        "rule": "八间初始分店。"
+      },
+      "currency": {
+        "label": "Currency",
+        "rule": "首发仅 MYR，日后可扩展；不提供换汇功能。"
+      },
+      "language": {
+        "label": "Language",
+        "rule": "已启用英文和简体中文，马来文后续加入。"
+      }
+    }
   }
 }
