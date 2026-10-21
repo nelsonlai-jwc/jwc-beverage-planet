@@ -1,5 +1,16 @@
 {
   "HomePage": {
     "title": "JWC Beverage Planet"
+  },
+  "Login": {
+    "title": "Sign in",
+    "invitationOnly": "Access is by invitation.",
+    "email": "Email",
+    "password": "Password",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "forgotPassword": "Forgot password?",
+    "submit": "Sign in",
+    "suspended": "Account suspended? Contact your Admin."
   }
 }

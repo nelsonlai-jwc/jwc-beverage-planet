@@ -1,0 +1,13 @@
+{
+  "name": "@designcodeio/threeui",
+  "version": "0.0.0-vendored.8ec1b71c0dbc",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/shaders/3d-paper/ThreeDPaper.tsx",
+    "./style.css": "./src/shaders/threeui.css"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

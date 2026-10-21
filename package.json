@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:source": "node scripts/verify-source.mjs"
   },
   "dependencies": {
+    "@designcodeio/threeui": "file:vendor/threeui",
     "@react-three/fiber": "^9.8.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",

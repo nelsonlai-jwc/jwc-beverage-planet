@@ -1,5 +1,16 @@
 {
   "HomePage": {
     "title": "JWC Beverage Planet"
+  },
+  "Login": {
+    "title": "登录",
+    "invitationOnly": "仅限受邀用户使用。",
+    "email": "邮箱",
+    "password": "密码",
+    "showPassword": "显示",
+    "hidePassword": "隐藏",
+    "forgotPassword": "忘记密码？",
+    "submit": "登录",
+    "suspended": "账号已停用？请联系管理员。"
   }
 }
