@@ -47,14 +47,14 @@ body{
 
 </style>
 
-<div id="bg"><h1>NOCTURNE</h1></div>
+<div id="bg"><h1>JWC</h1></div>
 
 <div id="dof"></div>
 <canvas id="gl"></canvas>
 <div id="grain"></div>
 <div id="grain2"></div>
 <div id="vig"></div>
-<div id="hint"><b>Drag</b> to turn it<span class="ptr"> &nbsp;·&nbsp; <b>Hover</b> to light it</span></div>
+<div id="hint"></div>
 
 <script>/**
  * @license
@@ -141,14 +141,13 @@ function drawGlass(ctx){
   ctx.fillText('Brewing With Abundance', M, 664);
 
   ctx.font='600 34px Inter, sans-serif'; ctx.fillStyle='rgba(255,255,255,.90)';
-  ['By Nocturne Studio','Ilya Marchetti','Dara Okonkwo'].forEach((s,i)=>
-    ctx.fillText(s, M+4, 752+i*45));
+  wrapL(ctx,'So our JWC baristas always know how to make the best JWC signature drinks.',M+4,752,600,45);
 
   const px=592, py=1158;
   ctx.font='700 24px Inter, sans-serif'; ctx.fillStyle='rgba(255,255,255,.92)';
-  ctx.fillText('2026 Official Certificate.', px, py);
+  ctx.fillText('2026-10 Official Certificate.', px, py);
   ctx.font='500 22px Inter, sans-serif'; ctx.fillStyle='rgba(255,255,255,.68)';
-  const endY = wrapL(ctx,'The orbit jury is proud to declare this website Studio of the Week in recognition of the great talent and effort invested in its creation.',px,py+36,296,28);
+  const endY = wrapL(ctx,'All JWC outlet managers can use this website to register drinks. All Baristas can use it to learn our SOPs for making beverages.',px,py+36,296,28);
   [0,1,2].forEach(i=> signature(ctx, px+6+i*100, endY+24, 0.86, i*5+3, 'rgba(255,255,255,.62)'));
 
   ctx.save(); ctx.translate(1200-M-24, 1236); ctx.rotate(Math.PI/2);
