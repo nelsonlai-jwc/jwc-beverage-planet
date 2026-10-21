@@ -11,7 +11,11 @@
     "hidePassword": "Hide",
     "forgotPassword": "Forgot password?",
     "submit": "Sign in",
-    "suspended": "Account suspended? Contact your Admin."
+    "suspended": "Account suspended? Contact your Admin.",
+    "submitting": "Signing in…",
+    "invalidCredentials": "Email or password is incorrect.",
+    "accountInactive": "This account is not active. Contact your Admin.",
+    "networkError": "Can't reach the server. Check your connection and try again."
   },
   "Nav": {
     "users": "User",
@@ -70,5 +74,47 @@
         "rule": "English and Simplified Chinese enabled. Malay later."
       }
     }
+  },
+  "Invite": {
+    "loading": "Checking your invitation…",
+    "title": "Activate your account",
+    "intro": "Your email, role and outlet are set by your Admin.",
+    "email": "Email",
+    "role": "Role",
+    "outlets": "Outlet",
+    "expires": "Invitation valid until",
+    "roles": {
+      "ADMIN": "Admin",
+      "MANAGER": "Manager",
+      "BARISTA": "Barista"
+    },
+    "fullName": "Full name",
+    "fullNameHint": "As shown on your IC or passport, in capital letters.",
+    "documentType": "ID type",
+    "documentTypes": {
+      "NRIC": "NRIC",
+      "PASSPORT": "Passport"
+    },
+    "nricNumber": "NRIC number",
+    "passportNumber": "Passport number",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "show": "Show",
+    "hide": "Hide",
+    "submit": "Activate account",
+    "submitting": "Activating…",
+    "nameInvalid": "Enter your full name (up to 100 characters; letters, spaces, ' / @ - only).",
+    "documentInvalid": "Enter a valid ID number.",
+    "passwordMismatch": "Passwords do not match.",
+    "weakPassword": "This password is too weak. Choose a longer one.",
+    "activationFailed": "This invitation could not be used. It may have expired or already been used.",
+    "signInAfterActivation": "Your account is activated. Sign in to continue.",
+    "networkError": "Can't reach the server. Check your connection and try again.",
+    "invalidTitle": "Invitation not available",
+    "expired": "This invitation has expired.",
+    "used": "This invitation has already been used.",
+    "revoked": "This invitation has been cancelled.",
+    "notFound": "This invitation link is not valid.",
+    "contactAdmin": "Ask your Admin to send a new invitation."
   }
 }
