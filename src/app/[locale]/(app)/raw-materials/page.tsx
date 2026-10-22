@@ -56,14 +56,30 @@ export default async function RawMaterialsPage({
     ? (search.status as ApprovalStatus)
     : undefined;
 
-  const [{ count: pendingCount }, { count: pendingPackagingCount }] = await Promise.all([
+  // Same groups as the approvals page: new items, plus packs and prices on approved items.
+  const counts = await Promise.all([
     supabase.from("materials").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
+    supabase
+      .from("material_packs")
+      .select("id, materials!material_packs_material_id_fkey!inner(status)", { count: "exact", head: true })
+      .eq("status", "PENDING")
+      .eq("materials.status", "APPROVED"),
+    supabase
+      .from("material_price_versions")
+      .select("id, material_packs!inner(status)", { count: "exact", head: true })
+      .eq("status", "PENDING")
+      .eq("material_packs.status", "APPROVED"),
     supabase
       .from("packaging_items")
       .select("id", { count: "exact", head: true })
       .eq("status", "PENDING"),
+    supabase
+      .from("packaging_prices")
+      .select("id, packaging_items!inner(status)", { count: "exact", head: true })
+      .eq("status", "PENDING")
+      .eq("packaging_items.status", "APPROVED"),
   ]);
-  const waiting = (pendingCount ?? 0) + (pendingPackagingCount ?? 0);
+  const waiting = counts.reduce((sum, { count }) => sum + (count ?? 0), 0);
 
   return (
     <div className="flex flex-col gap-6">
