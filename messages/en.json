@@ -661,5 +661,111 @@
     "createAnother": "Create another",
     "copyNow": "Copy as draft",
     "noCopyTargets": "You don't manage another outlet to copy into."
+  },
+  "Reports": {
+    "title": "Reports",
+    "note": "Choose a report. Managers see their own outlets; Admins see all outlets.",
+    "noAccess": "Reports are available to Managers and Admins only.",
+    "backToReports": "← All reports",
+    "apply": "Apply filters",
+    "all": "All",
+    "empty": "Nothing matches these filters.",
+    "exportCsv": "Export CSV",
+    "print": "Print",
+    "showLines": "Show lines",
+    "hideLines": "Hide lines",
+    "cost": {
+      "title": "Cost Report",
+      "summary": "Cost, selling price, gross margin and cost rate of approved drinks.",
+      "note": "Approved recipes of your outlets, with cost per drink and margin against the live menu price.",
+      "basisCurrent": "Current estimate",
+      "basisSnapshot": "Snapshot at approval",
+      "allDrinks": "All drinks (excluding Prep)",
+      "currentExplain": "Current estimate: today's approved purchase prices; Prep Material follows its latest approved version.",
+      "snapshotExplain": "Snapshot at approval: prices saved when the version was approved. The two can differ when prices change.",
+      "snapshotAt": "Snapshot taken {date}",
+      "complete": "Complete",
+      "incomplete": "Incomplete"
+    },
+    "rnd": {
+      "title": "R&D Report",
+      "summary": "Recipe versions with change summary, tasting notes, flavour and cost change.",
+      "note": "Recipe versions of your outlets. Copies in other outlets are separate recipes.",
+      "notAssessed": "Not assessed",
+      "basis": "Snapshot at approval (prices at the time)",
+      "costExplain": "Cost and change use each version's snapshot at approval, so a price rise also shows as a cost change.",
+      "noSnapshot": "Not approved yet",
+      "vsVersion": "vs V{version}"
+    },
+    "menus": {
+      "title": "Menu Summary",
+      "summary": "Each menu's status, drinks, prices, current cost and data problems.",
+      "note": "Menus of your outlets with their live drinks. No sales data (no POS).",
+      "notArchived": "All except archived",
+      "costExplain": "Cost is today's estimate. Prices are the live menu prices; unpublished changes are not included.",
+      "drinkCount": "{count, plural, =0 {No drinks} one {# drink} other {# drinks}}"
+    },
+    "filters": {
+      "basis": "Cost basis",
+      "outlet": "Outlet",
+      "menu": "Menu",
+      "style": "Style",
+      "from": "From",
+      "to": "To",
+      "person": "Person",
+      "purpose": "Purpose",
+      "status": "Status"
+    },
+    "columns": {
+      "drink": "Drink",
+      "recipe": "Recipe",
+      "outlet": "Outlet",
+      "version": "Version",
+      "style": "Style",
+      "temp": "Temp",
+      "cost": "Cost (MYR)",
+      "price": "Price (MYR)",
+      "margin": "Gross margin",
+      "costRate": "Cost rate",
+      "status": "Status",
+      "purpose": "Purpose",
+      "author": "Created by",
+      "created": "Created",
+      "submitted": "Submitted",
+      "approved": "Approved",
+      "changeSummary": "Change summary",
+      "tastingNotes": "Tasting notes",
+      "flavour": "Flavour",
+      "approvalCost": "Cost at approval",
+      "costChange": "Cost change",
+      "menu": "Menu",
+      "menuStatus": "Menu status",
+      "issues": "Issues"
+    },
+    "issues": {
+      "RECIPE_NOT_APPROVED": "Recipe no longer approved",
+      "NOT_OFFICIAL_RELEASE": "R&D recipe on menu",
+      "COST_INCOMPLETE": "Cost incomplete"
+    },
+    "csv": {
+      "report": "Report",
+      "currency": "Currency",
+      "basis": "Cost basis",
+      "filters": "Filters",
+      "generatedAt": "Generated at"
+    },
+    "reasons": {
+      "QUANTITY_MISSING": "Quantity or unit missing",
+      "COST_PACK_MISSING": "No costing pack",
+      "PRICE_MISSING": "No approved price",
+      "UNIT_MISMATCH": "Unit does not match",
+      "PREP_NOT_APPROVED": "Prep Material not approved",
+      "YIELD_MISSING": "Prep yield missing",
+      "PREP_COST_INCOMPLETE": "Prep cost incomplete",
+      "CYCLE_DETECTED": "Uses itself through Prep",
+      "NO_INGREDIENTS": "No ingredients",
+      "NO_SNAPSHOT": "No approval snapshot",
+      "UNKNOWN": "Cost unavailable"
+    }
   }
 }

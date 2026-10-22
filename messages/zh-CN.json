@@ -661,5 +661,111 @@
     "createAnother": "另建配方",
     "copyNow": "复制为草稿",
     "noCopyTargets": "你没有可复制到的其他分店。"
+  },
+  "Reports": {
+    "title": "报表",
+    "note": "选择要看的报表。经理看所管分店，管理员看全部分店。",
+    "noAccess": "报表只开放给经理和管理员。",
+    "backToReports": "← 全部报表",
+    "apply": "套用筛选",
+    "all": "全部",
+    "empty": "没有符合筛选条件的资料。",
+    "exportCsv": "导出 CSV",
+    "print": "打印",
+    "showLines": "展开明细",
+    "hideLines": "收起明细",
+    "cost": {
+      "title": "成本报表",
+      "summary": "已批准饮料的成本、售价、毛利和成本率。",
+      "note": "所管分店的已批准配方，每款饮料的成本，以及按线上菜单售价计算的毛利。",
+      "basisCurrent": "当前估算",
+      "basisSnapshot": "批准时快照",
+      "allDrinks": "全部饮料（不含预制原料）",
+      "currentExplain": "当前估算：按今天的已批准采购价计算；预制原料跟随其最新批准版本。",
+      "snapshotExplain": "批准时快照：保存版本批准当时的价格。价格变动后两者会不同。",
+      "snapshotAt": "快照时间：{date}",
+      "complete": "完整",
+      "incomplete": "不完整"
+    },
+    "rnd": {
+      "title": "研发报表",
+      "summary": "配方版本的修改摘要、试饮备注、风味评分和成本变化。",
+      "note": "所管分店的配方版本。其他分店的复制件是独立配方，不会合并显示。",
+      "notAssessed": "未评估",
+      "basis": "批准时快照（当时价格）",
+      "costExplain": "成本和变化都按各版本批准时的快照计算，所以原料涨价也会显示为成本变化。",
+      "noSnapshot": "尚未批准",
+      "vsVersion": "对比 V{version}"
+    },
+    "menus": {
+      "title": "菜单汇总",
+      "summary": "每份菜单的状态、饮料、售价、当前成本和数据问题。",
+      "note": "所管分店的菜单与线上饮料。没有 POS 数据，不显示销量。",
+      "notArchived": "全部（不含已归档）",
+      "costExplain": "成本为当前估算。售价为线上菜单价格，不含未发布的修改。",
+      "drinkCount": "{count, plural, =0 {没有饮料} other {# 款饮料}}"
+    },
+    "filters": {
+      "basis": "成本口径",
+      "outlet": "分店",
+      "menu": "菜单",
+      "style": "类别",
+      "from": "开始日期",
+      "to": "结束日期",
+      "person": "人员",
+      "purpose": "用途",
+      "status": "状态"
+    },
+    "columns": {
+      "drink": "饮料",
+      "recipe": "配方",
+      "outlet": "分店",
+      "version": "版本",
+      "style": "类别",
+      "temp": "温度",
+      "cost": "成本 (MYR)",
+      "price": "售价 (MYR)",
+      "margin": "毛利",
+      "costRate": "成本率",
+      "status": "状态",
+      "purpose": "用途",
+      "author": "创建人",
+      "created": "创建",
+      "submitted": "提交",
+      "approved": "批准",
+      "changeSummary": "修改摘要",
+      "tastingNotes": "试饮备注",
+      "flavour": "风味",
+      "approvalCost": "批准时成本",
+      "costChange": "成本变化",
+      "menu": "菜单",
+      "menuStatus": "菜单状态",
+      "issues": "问题"
+    },
+    "issues": {
+      "RECIPE_NOT_APPROVED": "配方已不是批准状态",
+      "NOT_OFFICIAL_RELEASE": "研发配方在菜单上",
+      "COST_INCOMPLETE": "成本不完整"
+    },
+    "csv": {
+      "report": "报表",
+      "currency": "币种",
+      "basis": "成本口径",
+      "filters": "筛选条件",
+      "generatedAt": "生成时间"
+    },
+    "reasons": {
+      "QUANTITY_MISSING": "缺用量或单位",
+      "COST_PACK_MISSING": "未指定计价包装",
+      "PRICE_MISSING": "缺已批准采购价",
+      "UNIT_MISMATCH": "单位不符",
+      "PREP_NOT_APPROVED": "预制原料未批准",
+      "YIELD_MISSING": "预制原料缺产量",
+      "PREP_COST_INCOMPLETE": "预制原料成本不完整",
+      "CYCLE_DETECTED": "通过预制原料引用自己",
+      "NO_INGREDIENTS": "没有原料",
+      "NO_SNAPSHOT": "没有批准时快照",
+      "UNKNOWN": "无法取得成本"
+    }
   }
 }
