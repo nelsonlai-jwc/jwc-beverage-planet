@@ -2095,6 +2095,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_recipe_version: {
+        Args: { p_idempotency_key: string; p_version_id: string }
+        Returns: Json
+      }
+      copy_recipe: {
+        Args: {
+          p_idempotency_key: string
+          p_prep_mapping: Json
+          p_product_name: string
+          p_source_recipe_id: string
+          p_target_outlet_id: string
+        }
+        Returns: Json
+      }
       create_invitation: {
         Args: {
           p_email: string
@@ -2107,6 +2121,15 @@ export type Database = {
           token: string
         }[]
       }
+      create_recipe: {
+        Args: {
+          p_is_prep: boolean
+          p_outlet_id: string
+          p_product_name: string
+        }
+        Returns: string
+      }
+      create_recipe_version: { Args: { p_recipe_id: string }; Returns: string }
       get_invitation: {
         Args: { p_token: string }
         Returns: {
@@ -2118,13 +2141,29 @@ export type Database = {
         }[]
       }
       my_business_date: { Args: never; Returns: string }
+      return_recipe_version: {
+        Args: { p_reason: string; p_version_id: string }
+        Returns: undefined
+      }
       reveal_identity_number: { Args: { p_user_id: string }; Returns: string }
+      save_recipe_draft: {
+        Args: { p_draft: Json; p_revision: number; p_version_id: string }
+        Returns: number
+      }
       revoke_invitation: {
         Args: { p_invitation_id: string }
         Returns: undefined
       }
       set_my_locale: {
         Args: { p_locale: Database["public"]["Enums"]["app_locale"] }
+        Returns: undefined
+      }
+      submit_recipe_version: {
+        Args: { p_revision: number; p_version_id: string }
+        Returns: Json
+      }
+      withdraw_recipe_version: {
+        Args: { p_version_id: string }
         Returns: undefined
       }
     }
