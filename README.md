@@ -23,6 +23,6 @@ Beverage R&D and prep data platform. Next.js (App Router, TypeScript) + Supabase
 Schema, row-level security and the invite sign-up hook live in `supabase/migrations/` (one file per module: identity, materials, recipes, menus/calibration/cost/audit). File names match the versions applied to the Supabase project, so add new changes as new migration files rather than editing old ones.
 
 - Permissions are enforced in the database (RLS). Status changes such as approve, publish and copy go through `SECURITY DEFINER` functions; direct API writes can only create and edit drafts.
-- Accounts are created only from an invitation: an Admin calls `create_invitation(email, role, outlet_ids)`, sends the link `/{locale}/invite/{token}`, and the `on_auth_user_created` trigger checks the token when the person signs up.
+- Accounts are created only from an invitation: an Admin calls `create_invitation(email, role, outlet_ids)`, sends the link `/en/invite/{token}` (English by default; the page has a language switch), and the `on_auth_user_created` trigger checks the token when the person signs up.
 - Supabase Auth must have **Confirm email** turned off, because the invite link already proves the email address.
 - `src/types/database.ts` is generated from the schema (Supabase `generate_typescript_types`); regenerate it after each migration.
