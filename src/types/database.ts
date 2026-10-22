@@ -2234,6 +2234,22 @@ export type Database = {
         Returns: number
       }
       publish_menu: { Args: { p_menu_id: string }; Returns: undefined }
+      report_current_costs: {
+        Args: { p_outlet_id?: string }
+        Returns: {
+          cost: Json
+          outlet_id: string
+          recipe_id: string
+          version_id: string
+        }[]
+      }
+      report_version_people: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       return_material: {
         Args: { p_material_id: string; p_reason: string }
         Returns: undefined
