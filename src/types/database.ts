@@ -232,6 +232,13 @@ export type Database = {
             foreignKeyName: "calibrations_coffee_bean_material_id_fkey"
             columns: ["coffee_bean_material_id"]
             isOneToOne: false
+            referencedRelation: "material_current_costs"
+            referencedColumns: ["material_id"]
+          },
+          {
+            foreignKeyName: "calibrations_coffee_bean_material_id_fkey"
+            columns: ["coffee_bean_material_id"]
+            isOneToOne: false
             referencedRelation: "materials"
             referencedColumns: ["id"]
           },
@@ -330,6 +337,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "material_conversions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cost_snapshot_lines_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "material_current_costs"
+            referencedColumns: ["material_id"]
           },
           {
             foreignKeyName: "cost_snapshot_lines_material_id_fkey"
@@ -651,6 +665,13 @@ export type Database = {
             foreignKeyName: "material_conversions_material_id_fkey"
             columns: ["material_id"]
             isOneToOne: false
+            referencedRelation: "material_current_costs"
+            referencedColumns: ["material_id"]
+          },
+          {
+            foreignKeyName: "material_conversions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
             referencedRelation: "materials"
             referencedColumns: ["id"]
           },
@@ -713,6 +734,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_packs_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "material_current_costs"
+            referencedColumns: ["material_id"]
           },
           {
             foreignKeyName: "material_packs_material_id_fkey"
@@ -855,6 +883,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_revisions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "material_current_costs"
+            referencedColumns: ["material_id"]
           },
           {
             foreignKeyName: "material_revisions_material_id_fkey"
@@ -1659,6 +1694,13 @@ export type Database = {
             foreignKeyName: "recipe_ingredients_material_id_fkey"
             columns: ["material_id"]
             isOneToOne: false
+            referencedRelation: "material_current_costs"
+            referencedColumns: ["material_id"]
+          },
+          {
+            foreignKeyName: "recipe_ingredients_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
             referencedRelation: "materials"
             referencedColumns: ["id"]
           },
@@ -2092,9 +2134,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      material_current_costs: {
+        Row: {
+          material_id: string | null
+          pack_id: string | null
+          pack_quantity: number | null
+          price: number | null
+          price_version_id: string | null
+          reason: string | null
+          unit: Database["public"]["Enums"]["measure_unit"] | null
+          unit_cost: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      approve_material: { Args: { p_material_id: string }; Returns: undefined }
+      approve_material_pack: { Args: { p_pack_id: string }; Returns: undefined }
+      approve_material_price: {
+        Args: { p_price_id: string }
+        Returns: undefined
+      }
+      approve_packaging_item: {
+        Args: { p_item_id: string }
+        Returns: undefined
+      }
+      approve_packaging_price: {
+        Args: { p_price_id: string }
+        Returns: undefined
+      }
+      calculate_recipe_cost: { Args: { p_version_id: string }; Returns: Json }
       create_invitation: {
         Args: {
           p_email: string
@@ -2117,7 +2186,36 @@ export type Database = {
           status: Database["public"]["Enums"]["invitation_status"]
         }[]
       }
+      material_affected_recipe_count: {
+        Args: { p_material_id: string }
+        Returns: number
+      }
+      material_unit_cost: { Args: { p_material_id: string }; Returns: Json }
       my_business_date: { Args: never; Returns: string }
+      packaging_affected_recipe_count: {
+        Args: { p_packaging_item_id: string }
+        Returns: number
+      }
+      return_material: {
+        Args: { p_material_id: string; p_reason: string }
+        Returns: undefined
+      }
+      return_material_pack: {
+        Args: { p_pack_id: string; p_reason: string }
+        Returns: undefined
+      }
+      return_material_price: {
+        Args: { p_price_id: string; p_reason: string }
+        Returns: undefined
+      }
+      return_packaging_item: {
+        Args: { p_item_id: string; p_reason: string }
+        Returns: undefined
+      }
+      return_packaging_price: {
+        Args: { p_price_id: string; p_reason: string }
+        Returns: undefined
+      }
       reveal_identity_number: { Args: { p_user_id: string }; Returns: string }
       revoke_invitation: {
         Args: { p_invitation_id: string }
@@ -2125,6 +2223,17 @@ export type Database = {
       }
       set_my_locale: {
         Args: { p_locale: Database["public"]["Enums"]["app_locale"] }
+        Returns: undefined
+      }
+      submit_material: { Args: { p_material_id: string }; Returns: undefined }
+      submit_material_pack: { Args: { p_pack_id: string }; Returns: undefined }
+      submit_material_price: {
+        Args: { p_price_id: string }
+        Returns: undefined
+      }
+      submit_packaging_item: { Args: { p_item_id: string }; Returns: undefined }
+      submit_packaging_price: {
+        Args: { p_price_id: string }
         Returns: undefined
       }
     }
