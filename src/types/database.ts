@@ -2095,6 +2095,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user: {
+        Args: {
+          p_expected_revision: number
+          p_outlet_ids: string[]
+          p_role: Database["public"]["Enums"]["user_role"]
+          p_status: Database["public"]["Enums"]["user_status"]
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      archive_menu: {
+        Args: { p_menu_id: string; p_reason?: string }
+        Returns: undefined
+      }
       create_invitation: {
         Args: {
           p_email: string
@@ -2118,6 +2132,7 @@ export type Database = {
         }[]
       }
       my_business_date: { Args: never; Returns: string }
+      publish_menu: { Args: { p_menu_id: string }; Returns: undefined }
       reveal_identity_number: { Args: { p_user_id: string }; Returns: string }
       revoke_invitation: {
         Args: { p_invitation_id: string }
@@ -2125,6 +2140,10 @@ export type Database = {
       }
       set_my_locale: {
         Args: { p_locale: Database["public"]["Enums"]["app_locale"] }
+        Returns: undefined
+      }
+      unpublish_menu: {
+        Args: { p_menu_id: string; p_reason?: string }
         Returns: undefined
       }
     }

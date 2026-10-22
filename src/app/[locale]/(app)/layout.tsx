@@ -1,7 +1,9 @@
 import { AppShell } from "@/components/shell/AppShell";
+import { getCurrentUser } from "@/lib/auth/currentUser";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return <AppShell>{children}</AppShell>;
+  const user = await getCurrentUser();
+  return <AppShell user={user}>{children}</AppShell>;
 }
