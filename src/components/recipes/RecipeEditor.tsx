@@ -1,0 +1,789 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useRouter } from "@/i18n/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { getRecipeCost, MEDIA_BUCKET } from "@/lib/recipes/data";
+import {
+  STYLES,
+  TASTES,
+  TEMPS,
+  UNITS,
+  type CostResult,
+  type FullVersion,
+  type MeasureUnit,
+  type Photo,
+  type Taste,
+  type ValidationError,
+} from "@/lib/recipes/types";
+import type { Json } from "@/types/database";
+import { CostSummary } from "./CostSummary";
+import { SopView } from "./SopView";
+import {
+  StatusBadge,
+  alertClass,
+  card,
+  inputClass,
+  primaryButton,
+  secondaryButton,
+  smallButton,
+  textareaClass,
+} from "./ui";
+
+type Option = { id: string; name: string; approved?: boolean };
+type IngredientLine = {
+  key: string;
+  ref: string; // "m:<material id>" or "p:<prep recipe id>"
+  quantity: string;
+  unit: MeasureUnit | "";
+  notes: string;
+};
+type PackagingLine = { key: string; itemId: string; pieces: string };
+type StepLine = { key: string; instruction: string; mediaAssetId: string | null };
+
+const MAX_PHOTOS = 5;
+const MAX_BYTES = 10 * 1024 * 1024;
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const TEXT_FIELDS = ["cup_type", "serving_size", "garnish", "storage_method", "shelf_life", "tasting_notes"] as const;
+
+type Props = {
+  recipeId: string;
+  outletId: string;
+  outletName: string;
+  isPrep: boolean;
+  version: FullVersion;
+  returnReason: string | null;
+  materials: Option[];
+  preps: Option[];
+  packagingItems: Option[];
+  initialCost: CostResult | null;
+};
+
+const newKey = () => crypto.randomUUID();
+const numberOrNull = (value: string) => (value.trim() === "" ? null : Number(value));
+
+function move<T>(list: T[], index: number, delta: number) {
+  const next = [...list];
+  const target = index + delta;
+  if (target < 0 || target >= next.length) return list;
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+export function RecipeEditor(props: Props) {
+  const { recipeId, outletId, outletName, isPrep, version, materials, preps, packagingItems } = props;
+  const t = useTranslations("Recipes");
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
+  const [fields, setFields] = useState({
+    product_name: version.product_name ?? "",
+    purpose: version.purpose,
+    style: version.style ?? "",
+    temperature: version.temperature ?? "",
+    yield_quantity: version.yield_quantity?.toString() ?? "",
+    yield_unit: version.yield_unit ?? "",
+    appearance_notes: version.appearance_notes ?? "",
+    change_summary: version.change_summary ?? "",
+    ...Object.fromEntries(TEXT_FIELDS.map((f) => [f, version[f] ?? ""])),
+  } as Record<string, string>);
+  const [tastes, setTastes] = useState<Record<Taste, string>>(
+    Object.fromEntries(TASTES.map((k) => [k, version[`taste_${k}`]?.toString() ?? ""])) as Record<Taste, string>,
+  );
+  const [ingredients, setIngredients] = useState<IngredientLine[]>(
+    version.ingredients.map((i) => ({
+      key: i.id,
+      ref: i.prep_recipe_id ? `p:${i.prep_recipe_id}` : `m:${i.material_id}`,
+      quantity: i.quantity?.toString() ?? "",
+      unit: i.unit ?? "",
+      notes: i.notes ?? "",
+    })),
+  );
+  const [packaging, setPackaging] = useState<PackagingLine[]>(
+    version.packaging.map((p) => ({ key: p.id, itemId: p.packaging_item_id, pieces: p.pieces.toString() })),
+  );
+  const [steps, setSteps] = useState<StepLine[]>(
+    version.steps.length
+      ? version.steps.map((s) => ({ key: s.id, instruction: s.instruction, mediaAssetId: s.media_asset_id }))
+      : [{ key: newKey(), instruction: "", mediaAssetId: null }],
+  );
+  const [removedStep, setRemovedStep] = useState<{ step: StepLine; index: number } | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>(version.photos);
+  const [revision, setRevision] = useState(version.revision);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState<"idle" | "saving" | "submitting" | "uploading">("idle");
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [cost, setCost] = useState<CostResult | null>(props.initialCost);
+  const [showPreview, setShowPreview] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  // Warn before leaving with unsaved changes (ch. 21).
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  function change<T>(setter: (value: T) => void) {
+    return (value: T) => {
+      setter(value);
+      setDirty(true);
+    };
+  }
+  const setField = (name: string, value: string) => change(setFields)({ ...fields, [name]: value });
+  const updateIngredients = change(setIngredients);
+  const updatePackaging = change(setPackaging);
+  const updateSteps = change(setSteps);
+  const updatePhotos = change(setPhotos);
+
+  const optionName = (ref: string) =>
+    ref.startsWith("p:")
+      ? (preps.find((p) => `p:${p.id}` === ref)?.name ?? "—")
+      : (materials.find((m) => `m:${m.id}` === ref)?.name ?? "—");
+
+  function draftPayload(): Json {
+    return {
+      ...fields,
+      style: isPrep ? "PREP_MATERIAL" : fields.style || null,
+      temperature: fields.temperature || null,
+      yield_quantity: isPrep ? numberOrNull(fields.yield_quantity) : null,
+      yield_unit: isPrep ? fields.yield_unit || null : null,
+      ...Object.fromEntries(TASTES.map((k) => [`taste_${k}`, numberOrNull(tastes[k])])),
+      ingredients: ingredients
+        .filter((i) => i.ref)
+        .map((i) => ({
+          material_id: i.ref.startsWith("m:") ? i.ref.slice(2) : null,
+          prep_recipe_id: i.ref.startsWith("p:") ? i.ref.slice(2) : null,
+          quantity: numberOrNull(i.quantity),
+          unit: i.unit || null,
+          notes: i.notes || null,
+        })),
+      packaging: packaging
+        .filter((p) => p.itemId && Number(p.pieces) > 0)
+        .map((p) => ({ packaging_item_id: p.itemId, pieces: Number(p.pieces) })),
+      steps: steps.map((s) => ({ instruction: s.instruction, media_asset_id: s.mediaAssetId })),
+      photos: photos.map((p) => p.id),
+    };
+  }
+
+  async function save(): Promise<number | null> {
+    const { data, error } = await supabase.rpc("save_recipe_draft", {
+      p_version_id: version.id,
+      p_revision: revision,
+      p_draft: draftPayload(),
+    });
+    if (error) {
+      setMessage(error.code === "40001" ? t("conflict") : `${t("saveFailed")} ${error.message}`);
+      return null;
+    }
+    setRevision(data);
+    setDirty(false);
+    setSavedAt(new Date());
+    setCost(await getRecipeCost(supabase, version.id));
+    return data;
+  }
+
+  async function handleSave() {
+    setSaving("saving");
+    setMessage(null);
+    await save();
+    setSaving("idle");
+  }
+
+  async function handleSubmit() {
+    setSaving("submitting");
+    setMessage(null);
+    setErrors([]);
+    const saved = await save();
+    if (saved == null) {
+      setSaving("idle");
+      return;
+    }
+    const { data, error } = await supabase.rpc("submit_recipe_version", {
+      p_version_id: version.id,
+      p_revision: saved,
+    });
+    setSaving("idle");
+    if (error) {
+      setMessage(`${t("actionFailed")} ${error.message}`);
+      return;
+    }
+    const result = data as { errors?: ValidationError[] };
+    if (result.errors?.length) {
+      setErrors(result.errors);
+      document.getElementById("submit-errors")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    router.push(`/recipes/${recipeId}`);
+  }
+
+  async function handlePhotos(files: FileList | null) {
+    if (!files?.length) return;
+    setMessage(null);
+    const room = MAX_PHOTOS - photos.length;
+    const chosen = Array.from(files).slice(0, room);
+    if (files.length > room) setMessage(t("photoLimit", { max: MAX_PHOTOS }));
+    setSaving("uploading");
+    const added: Photo[] = [];
+    for (const file of chosen) {
+      if (!PHOTO_TYPES.includes(file.type)) {
+        setMessage(t("photoType"));
+        continue;
+      }
+      if (file.size > MAX_BYTES) {
+        setMessage(t("photoSize"));
+        continue;
+      }
+      const id = crypto.randomUUID();
+      const path = `${outletId}/${id}.${file.type.split("/")[1]}`;
+      const upload = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, { contentType: file.type });
+      if (upload.error) {
+        setMessage(`${t("uploadFailed")} ${upload.error.message}`);
+        continue;
+      }
+      // No .select(): the new row is not visible to the select policy within the insert.
+      const insert = await supabase.from("media_assets").insert({
+        id,
+        bucket: MEDIA_BUCKET,
+        object_path: path,
+        mime_type: file.type,
+        size_bytes: file.size,
+        owner_outlet_id: outletId,
+        upload_status: "READY",
+      });
+      if (insert.error) {
+        setMessage(`${t("uploadFailed")} ${insert.error.message}`);
+        continue;
+      }
+      const signed = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
+      added.push({ id, url: signed.data?.signedUrl ?? null });
+    }
+    if (added.length) updatePhotos([...photos, ...added]);
+    setSaving("idle");
+    if (fileInput.current) fileInput.current.value = "";
+  }
+
+  const errorFor = (field: string, line?: number) =>
+    errors.filter((e) => e.field === field && (line === undefined || e.line === line));
+  const fieldError = (field: string) =>
+    errorFor(field).length > 0 ? "ring-2 ring-brand-red ring-offset-2" : "";
+
+  const sopData = {
+    productName: fields.product_name,
+    style: isPrep ? ("PREP_MATERIAL" as const) : (fields.style || null) as FullVersion["style"],
+    temperature: (fields.temperature || null) as FullVersion["temperature"],
+    versionNo: version.version_no,
+    yieldQuantity: isPrep ? numberOrNull(fields.yield_quantity) : null,
+    yieldUnit: (fields.yield_unit || null) as MeasureUnit | null,
+    appearanceNotes: fields.appearance_notes || null,
+    ingredients: ingredients
+      .filter((i) => i.ref)
+      .map((i) => ({
+        key: i.key,
+        name: optionName(i.ref),
+        isPrep: i.ref.startsWith("p:"),
+        quantity: numberOrNull(i.quantity),
+        unit: (i.unit || null) as MeasureUnit | null,
+      })),
+    steps: steps.map((s) => ({ key: s.key, instruction: s.instruction })),
+    photos,
+  };
+
+  const busy = saving !== "idle";
+  const completion = [
+    Boolean(fields.product_name.trim()),
+    isPrep || Boolean(fields.style),
+    isPrep ? Boolean(fields.yield_quantity) : Boolean(fields.temperature),
+    ingredients.some((i) => i.ref && i.quantity && i.unit),
+    steps.some((s) => s.instruction.trim()),
+    photos.length > 0,
+  ];
+
+  return (
+    <div className="flex flex-col gap-6 pb-28">
+      <div className="flex flex-col gap-2">
+        <Link href={`/recipes/${recipeId}`} className="text-sm underline">
+          {t("backToRecipe")}
+        </Link>
+        <h1 className="font-serif text-[32px] font-normal">{fields.product_name || t("untitled")}</h1>
+        <p className="flex flex-wrap items-center gap-2 text-sm text-[#3d3f3a]">
+          <span>{outletName}</span>
+          <span>·</span>
+          <span>{isPrep ? t("prep") : t("drink")}</span>
+          <span>·</span>
+          <span>V{version.version_no}</span>
+          <StatusBadge status={version.status} />
+          <span>· {t("completion", { done: completion.filter(Boolean).length, total: completion.length })}</span>
+        </p>
+        {props.returnReason && (
+          <p className={alertClass}>
+            <span className="font-semibold">{t("returnReason")}</span> {props.returnReason}
+          </p>
+        )}
+      </div>
+
+      {errors.length > 0 && (
+        <div id="submit-errors" role="alert" className={`${alertClass} flex flex-col gap-1`}>
+          <p className="font-semibold">{t("submitBlocked")}</p>
+          <ul className="list-disc pl-5">
+            {errors.map((e, index) => (
+              <li key={index}>
+                <a href={`#field-${e.field}`} className="underline">
+                  {t(`errors.${e.code}`)}
+                  {e.line ? ` (${t("line", { no: e.line })})` : ""}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex gap-1 lg:hidden" role="tablist">
+        {[false, true].map((preview) => (
+          <button
+            key={String(preview)}
+            type="button"
+            role="tab"
+            aria-selected={showPreview === preview}
+            onClick={() => setShowPreview(preview)}
+            className={
+              showPreview === preview
+                ? "rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                : "rounded-full px-4 py-2 text-sm hover:bg-black/10"
+            }
+          >
+            {preview ? t("preview") : t("edit")}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
+        <div className={`flex flex-col gap-4 ${showPreview ? "hidden lg:flex" : ""}`}>
+          {/* Basic Details */}
+          <section className={card} aria-labelledby="sec-basic">
+            <h2 id="sec-basic" className="text-base font-semibold">
+              {t("sections.basic")}
+            </h2>
+            <label className="flex flex-col gap-1.5" id="field-product_name">
+              <span className="text-sm font-semibold">{t("fields.productName")} *</span>
+              <input
+                value={fields.product_name}
+                maxLength={80}
+                onChange={(e) => setField("product_name", e.target.value)}
+                className={`${inputClass} ${fieldError("product_name")}`}
+              />
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-semibold">{t("fields.purpose")}</span>
+                <select value={fields.purpose} onChange={(e) => setField("purpose", e.target.value)} className={inputClass}>
+                  <option value="RND">{t("purpose.RND")}</option>
+                  <option value="OFFICIAL_RELEASE">{t("purpose.OFFICIAL_RELEASE")}</option>
+                </select>
+              </label>
+              {!isPrep && (
+                <label className="flex flex-col gap-1.5" id="field-style">
+                  <span className="text-sm font-semibold">{t("fields.style")} *</span>
+                  <select
+                    value={fields.style}
+                    onChange={(e) => setField("style", e.target.value)}
+                    className={`${inputClass} ${fieldError("style")}`}
+                  >
+                    <option value="">—</option>
+                    {STYLES.map((s) => (
+                      <option key={s} value={s}>
+                        {t(`style.${s}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label className="flex flex-col gap-1.5" id="field-temperature">
+                <span className="text-sm font-semibold">
+                  {t("fields.temperature")}
+                  {!isPrep && " *"}
+                </span>
+                <select
+                  value={fields.temperature}
+                  onChange={(e) => setField("temperature", e.target.value)}
+                  className={`${inputClass} ${fieldError("temperature")}`}
+                >
+                  <option value="">—</option>
+                  {TEMPS.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`temp.${s}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {isPrep && (
+                <div className="flex flex-col gap-1.5" id="field-yield_quantity">
+                  <span className="text-sm font-semibold">{t("fields.yield")} *</span>
+                  <div className="flex gap-2">
+                    <input
+                      inputMode="decimal"
+                      value={fields.yield_quantity}
+                      onChange={(e) => setField("yield_quantity", e.target.value)}
+                      aria-label={t("fields.yield")}
+                      className={`${inputClass} ${fieldError("yield_quantity")}`}
+                    />
+                    <select
+                      value={fields.yield_unit}
+                      onChange={(e) => setField("yield_unit", e.target.value)}
+                      aria-label={t("fields.unit")}
+                      className={`${inputClass} w-24`}
+                    >
+                      <option value="">—</option>
+                      {UNITS.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">{t("fields.changeSummary")}</span>
+              <input
+                value={fields.change_summary}
+                onChange={(e) => setField("change_summary", e.target.value)}
+                className={inputClass}
+              />
+            </label>
+          </section>
+
+          {/* Ingredients */}
+          <section className={card} aria-labelledby="sec-ingredients" id="field-ingredients">
+            <h2 id="sec-ingredients" className="text-base font-semibold">
+              {t("sections.ingredients")} *
+            </h2>
+            <ol className="flex flex-col gap-3">
+              {ingredients.map((line, index) => (
+                <li
+                  key={line.key}
+                  className={`flex flex-col gap-2 rounded-[12px] border border-black/15 p-3 ${
+                    errorFor("ingredients", index + 1).length ? "ring-2 ring-brand-red" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 shrink-0 text-sm font-semibold">{index + 1}</span>
+                    <select
+                      value={line.ref}
+                      aria-label={t("fields.ingredient")}
+                      onChange={(e) =>
+                        updateIngredients(ingredients.map((l) => (l.key === line.key ? { ...l, ref: e.target.value } : l)))
+                      }
+                      className={inputClass}
+                    >
+                      <option value="">{t("chooseIngredient")}</option>
+                      <optgroup label={t("sharedMaterials")}>
+                        {materials.map((m) => (
+                          <option key={m.id} value={`m:${m.id}`}>
+                            {m.name}
+                            {m.approved ? "" : ` (${t("notApproved")})`}
+                          </option>
+                        ))}
+                      </optgroup>
+                      {preps.length > 0 && (
+                        <optgroup label={t("outletPreps")}>
+                          {preps.map((p) => (
+                            <option key={p.id} value={`p:${p.id}`}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 pl-8">
+                    <input
+                      inputMode="decimal"
+                      value={line.quantity}
+                      placeholder={t("fields.quantity")}
+                      aria-label={t("fields.quantity")}
+                      onChange={(e) =>
+                        updateIngredients(
+                          ingredients.map((l) => (l.key === line.key ? { ...l, quantity: e.target.value.replace(",", ".") } : l)),
+                        )
+                      }
+                      className={`${inputClass} w-28`}
+                    />
+                    <select
+                      value={line.unit}
+                      aria-label={t("fields.unit")}
+                      onChange={(e) =>
+                        updateIngredients(
+                          ingredients.map((l) => (l.key === line.key ? { ...l, unit: e.target.value as MeasureUnit } : l)),
+                        )
+                      }
+                      className={`${inputClass} w-20`}
+                    >
+                      <option value="">—</option>
+                      {UNITS.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="ml-auto flex gap-1">
+                      <button type="button" className={smallButton} aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateIngredients(move(ingredients, index, -1))}>
+                        ↑
+                      </button>
+                      <button type="button" className={smallButton} aria-label={t("moveDown")} disabled={index === ingredients.length - 1} onClick={() => updateIngredients(move(ingredients, index, 1))}>
+                        ↓
+                      </button>
+                      <button type="button" className={smallButton} aria-label={t("remove")} onClick={() => updateIngredients(ingredients.filter((l) => l.key !== line.key))}>
+                        ✕
+                      </button>
+                    </span>
+                  </div>
+                  {errorFor("ingredients", index + 1).map((e, i) => (
+                    <p key={i} className="pl-8 text-sm font-semibold">
+                      {t(`errors.${e.code}`)}
+                    </p>
+                  ))}
+                </li>
+              ))}
+            </ol>
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={() => updateIngredients([...ingredients, { key: newKey(), ref: "", quantity: "", unit: "", notes: "" }])}
+            >
+              {t("addIngredient")}
+            </button>
+
+            <h3 className="pt-2 text-sm font-semibold" id="field-packaging">
+              {t("packaging")}
+            </h3>
+            {packaging.map((line, index) => (
+              <div key={line.key} className="flex flex-wrap items-center gap-2">
+                <select
+                  value={line.itemId}
+                  aria-label={t("packaging")}
+                  onChange={(e) => updatePackaging(packaging.map((l) => (l.key === line.key ? { ...l, itemId: e.target.value } : l)))}
+                  className={`${inputClass} min-w-0 flex-1 basis-48 ${errorFor("packaging", index + 1).length ? "ring-2 ring-brand-red" : ""}`}
+                >
+                  <option value="">—</option>
+                  {packagingItems.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                      {p.approved ? "" : ` (${t("notApproved")})`}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  inputMode="decimal"
+                  value={line.pieces}
+                  aria-label={t("pieces")}
+                  placeholder={t("pieces")}
+                  onChange={(e) => updatePackaging(packaging.map((l) => (l.key === line.key ? { ...l, pieces: e.target.value } : l)))}
+                  className={`${inputClass} w-24`}
+                />
+                <button type="button" className={smallButton} aria-label={t("remove")} onClick={() => updatePackaging(packaging.filter((l) => l.key !== line.key))}>
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={() => updatePackaging([...packaging, { key: newKey(), itemId: "", pieces: "1" }])}
+            >
+              {t("addPackaging")}
+            </button>
+          </section>
+
+          {/* Processing Method */}
+          <section className={`${card} ${fieldError("steps")}`} aria-labelledby="sec-method" id="field-steps">
+            <h2 id="sec-method" className="text-base font-semibold">
+              {t("sections.method")} *
+            </h2>
+            <ol className="flex flex-col gap-3">
+              {steps.map((step, index) => (
+                <li key={step.key} className="flex flex-col gap-2 rounded-[12px] border border-black/15 p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="ml-auto flex gap-1">
+                      <button type="button" className={smallButton} aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateSteps(move(steps, index, -1))}>
+                        ↑
+                      </button>
+                      <button type="button" className={smallButton} aria-label={t("moveDown")} disabled={index === steps.length - 1} onClick={() => updateSteps(move(steps, index, 1))}>
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className={smallButton}
+                        aria-label={t("remove")}
+                        onClick={() => {
+                          setRemovedStep({ step, index });
+                          updateSteps(steps.filter((s) => s.key !== step.key));
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  </div>
+                  <textarea
+                    value={step.instruction}
+                    aria-label={t("stepLabel", { no: index + 1 })}
+                    onChange={(e) => updateSteps(steps.map((s) => (s.key === step.key ? { ...s, instruction: e.target.value } : s)))}
+                    className={textareaClass}
+                  />
+                </li>
+              ))}
+            </ol>
+            {removedStep && (
+              <p className="flex items-center gap-2 text-sm">
+                {t("stepRemoved")}
+                <button
+                  type="button"
+                  className="font-semibold underline"
+                  onClick={() => {
+                    const next = [...steps];
+                    next.splice(Math.min(removedStep.index, next.length), 0, removedStep.step);
+                    updateSteps(next);
+                    setRemovedStep(null);
+                  }}
+                >
+                  {t("undo")}
+                </button>
+              </p>
+            )}
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={() => updateSteps([...steps, { key: newKey(), instruction: "", mediaAssetId: null }])}
+            >
+              {t("addStep")}
+            </button>
+          </section>
+
+          {/* Appearance */}
+          <section className={`${card} ${fieldError("photos")}`} aria-labelledby="sec-appearance" id="field-photos">
+            <h2 id="sec-appearance" className="text-base font-semibold">
+              {t("sections.appearance")} *
+            </h2>
+            <p className="text-[13px] text-[#3d3f3a]">{t("photoRules", { max: MAX_PHOTOS })}</p>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {photos.map((photo, index) => (
+                <li key={photo.id} className="flex flex-col gap-1.5">
+                  {photo.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- signed storage URLs
+                    <img src={photo.url} alt={t("photoAlt", { no: index + 1 })} className="aspect-square w-full rounded-[10px] object-cover" />
+                  ) : (
+                    <div className="aspect-square w-full rounded-[10px] bg-[#eceee8]" />
+                  )}
+                  <span className="flex gap-1">
+                    <button type="button" className={smallButton} aria-label={t("moveUp")} disabled={index === 0} onClick={() => updatePhotos(move(photos, index, -1))}>
+                      ←
+                    </button>
+                    <button type="button" className={smallButton} aria-label={t("moveDown")} disabled={index === photos.length - 1} onClick={() => updatePhotos(move(photos, index, 1))}>
+                      →
+                    </button>
+                    <button type="button" className={smallButton} aria-label={t("remove")} onClick={() => updatePhotos(photos.filter((p) => p.id !== photo.id))}>
+                      ✕
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {photos.length < MAX_PHOTOS && (
+              <label className={`${secondaryButton} cursor-pointer`}>
+                {saving === "uploading" ? t("uploading") : t("addPhoto")}
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={PHOTO_TYPES.join(",")}
+                  multiple
+                  className="sr-only"
+                  disabled={busy}
+                  onChange={(e) => handlePhotos(e.target.files)}
+                />
+              </label>
+            )}
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">{t("fields.appearanceNotes")}</span>
+              <textarea
+                value={fields.appearance_notes}
+                onChange={(e) => setField("appearance_notes", e.target.value)}
+                className={textareaClass}
+              />
+            </label>
+          </section>
+
+          {/* Supplementary */}
+          <details className={card}>
+            <summary className="cursor-pointer text-base font-semibold">{t("sections.more")}</summary>
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-2 text-sm font-semibold">{t("fields.taste")}</legend>
+              <p className="text-[13px] text-[#3d3f3a]">{t("tasteHint")}</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {TASTES.map((k) => (
+                  <label key={k} className="flex flex-col gap-1">
+                    <span className="text-sm">{t(`taste.${k}`)}</span>
+                    <select
+                      value={tastes[k]}
+                      onChange={(e) => change(setTastes)({ ...tastes, [k]: e.target.value })}
+                      className={inputClass}
+                    >
+                      <option value="">{t("notAssessed")}</option>
+                      {[0, 1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {TEXT_FIELDS.map((f) => (
+                <label key={f} className="flex flex-col gap-1.5">
+                  <span className="text-sm font-semibold">{t(`fields.${f}`)}</span>
+                  <input value={fields[f]} onChange={(e) => setField(f, e.target.value)} className={inputClass} />
+                </label>
+              ))}
+            </div>
+          </details>
+        </div>
+
+        <aside className={`flex flex-col gap-4 lg:sticky lg:top-4 ${showPreview ? "" : "hidden lg:flex"}`}>
+          <SopView data={sopData} draft />
+          <CostSummary cost={cost} title={t("estimatedCost")} />
+        </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/15 bg-brand-base/95 px-4 py-3 backdrop-blur md:left-60 md:px-8">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="mr-auto text-sm" aria-live="polite">
+            {saving === "saving" || saving === "submitting"
+              ? t("saving")
+              : message
+                ? message
+                : dirty
+                  ? t("unsaved")
+                  : savedAt
+                    ? t("savedAt", { time: savedAt.toLocaleTimeString() })
+                    : ""}
+          </p>
+          <button type="button" className={secondaryButton} disabled={busy} onClick={handleSave}>
+            {t("saveDraft")}
+          </button>
+          <button type="button" className={primaryButton} disabled={busy} onClick={handleSubmit}>
+            {t("submit")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
