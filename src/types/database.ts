@@ -2149,6 +2149,16 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_user: {
+        Args: {
+          p_expected_revision: number
+          p_outlet_ids: string[]
+          p_role: Database["public"]["Enums"]["user_role"]
+          p_status: Database["public"]["Enums"]["user_status"]
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       approve_material: { Args: { p_material_id: string }; Returns: undefined }
       approve_material_pack: { Args: { p_pack_id: string }; Returns: undefined }
       approve_material_price: {
@@ -2163,7 +2173,25 @@ export type Database = {
         Args: { p_price_id: string }
         Returns: undefined
       }
+      approve_recipe_version: {
+        Args: { p_idempotency_key: string; p_version_id: string }
+        Returns: Json
+      }
+      archive_menu: {
+        Args: { p_menu_id: string; p_reason?: string }
+        Returns: undefined
+      }
       calculate_recipe_cost: { Args: { p_version_id: string }; Returns: Json }
+      copy_recipe: {
+        Args: {
+          p_idempotency_key: string
+          p_prep_mapping: Json
+          p_product_name: string
+          p_source_recipe_id: string
+          p_target_outlet_id: string
+        }
+        Returns: Json
+      }
       create_invitation: {
         Args: {
           p_email: string
@@ -2176,6 +2204,15 @@ export type Database = {
           token: string
         }[]
       }
+      create_recipe: {
+        Args: {
+          p_is_prep: boolean
+          p_outlet_id: string
+          p_product_name: string
+        }
+        Returns: string
+      }
+      create_recipe_version: { Args: { p_recipe_id: string }; Returns: string }
       get_invitation: {
         Args: { p_token: string }
         Returns: {
@@ -2196,6 +2233,7 @@ export type Database = {
         Args: { p_packaging_item_id: string }
         Returns: number
       }
+      publish_menu: { Args: { p_menu_id: string }; Returns: undefined }
       return_material: {
         Args: { p_material_id: string; p_reason: string }
         Returns: undefined
@@ -2216,10 +2254,18 @@ export type Database = {
         Args: { p_price_id: string; p_reason: string }
         Returns: undefined
       }
+      return_recipe_version: {
+        Args: { p_reason: string; p_version_id: string }
+        Returns: undefined
+      }
       reveal_identity_number: { Args: { p_user_id: string }; Returns: string }
       revoke_invitation: {
         Args: { p_invitation_id: string }
         Returns: undefined
+      }
+      save_recipe_draft: {
+        Args: { p_draft: Json; p_revision: number; p_version_id: string }
+        Returns: number
       }
       set_my_locale: {
         Args: { p_locale: Database["public"]["Enums"]["app_locale"] }
@@ -2234,6 +2280,18 @@ export type Database = {
       submit_packaging_item: { Args: { p_item_id: string }; Returns: undefined }
       submit_packaging_price: {
         Args: { p_price_id: string }
+        Returns: undefined
+      }
+      submit_recipe_version: {
+        Args: { p_revision: number; p_version_id: string }
+        Returns: Json
+      }
+      unpublish_menu: {
+        Args: { p_menu_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      withdraw_recipe_version: {
+        Args: { p_version_id: string }
         Returns: undefined
       }
     }

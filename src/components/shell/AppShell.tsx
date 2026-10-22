@@ -1,14 +1,22 @@
 import { useTranslations } from "next-intl";
+import type { CurrentUser } from "@/lib/auth/currentUser";
 import { LocaleSwitch } from "./LocaleSwitch";
 import { Logo } from "./Logo";
 import { MobileNav } from "./MobileNav";
 import { NavLinks } from "./NavLinks";
 
-// Placeholder identity until auth and roles are connected.
-const demoRole = "ADMIN";
-
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  user,
+  children,
+}: {
+  user: CurrentUser | null;
+  children: React.ReactNode;
+}) {
   const t = useTranslations("Shell");
+  const outletScope =
+    user?.role === "ADMIN"
+      ? t("allOutlets")
+      : user?.outlets.map((outlet) => outlet.name).join(", ") || "—";
 
   return (
     <div className="min-h-dvh bg-brand-base text-black md:flex">
@@ -24,11 +32,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <dl className="order-last flex w-full flex-wrap gap-x-4 gap-y-1 text-sm md:order-none md:w-auto">
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("role")}</dt>
-              <dd className="font-semibold">{demoRole}</dd>
+              <dd className="font-semibold">{user?.role ?? "—"}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("outletScope")}</dt>
-              <dd className="font-semibold">{t("allOutlets")}</dd>
+              <dd className="font-semibold">{outletScope}</dd>
             </div>
           </dl>
           <div className="ml-auto flex items-center gap-2">
