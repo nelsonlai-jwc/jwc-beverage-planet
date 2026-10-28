@@ -1,10 +1,7 @@
-const FROM = "JWC Beverage Planet <noreply@justwantcoffee.com>";
+import { sendEmail } from "./resend";
 
 /** Sends the invite link through Resend, English first then Chinese. Returns false on any failure. */
 export async function sendInviteEmail({ to, url }: { to: string; url: string }): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return false;
-
   const text = [
     "You have been invited to JWC Beverage Planet.",
     "Open this link to set up your account. It is valid for 72 hours and works once:",
@@ -26,22 +23,10 @@ export async function sendInviteEmail({ to, url }: { to: string; url: string }):
 <p style="color:#555;font-size:13px">${url}</p>
 </div>`;
 
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: FROM,
-        to: [to],
-        subject: "Your JWC Beverage Planet invitation / JWC Beverage Planet 邀请",
-        text,
-        html,
-      }),
-    });
-    if (!response.ok) console.error("Invite email failed", response.status, await response.text());
-    return response.ok;
-  } catch (error) {
-    console.error("Invite email failed", error);
-    return false;
-  }
+  return sendEmail({
+    to,
+    subject: "Your JWC Beverage Planet invitation / JWC Beverage Planet 邀请",
+    text,
+    html,
+  });
 }

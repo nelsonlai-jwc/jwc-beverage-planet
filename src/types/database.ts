@@ -272,6 +272,85 @@ export type Database = {
           },
         ]
       }
+      change_requests: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          old_values: Json | null
+          outlet_id: string | null
+          reason: string | null
+          requested_by: string
+          review_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          old_values?: Json | null
+          outlet_id?: string | null
+          reason?: string | null
+          requested_by?: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          old_values?: Json | null
+          outlet_id?: string | null
+          reason?: string | null
+          requested_by?: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "change_requests_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "change_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cost_snapshot_lines: {
         Row: {
           conversion_id: string | null
@@ -2222,6 +2301,50 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["invitation_status"]
         }[]
+      }
+      delete_material_draft: { Args: { p_material_id: string }; Returns: undefined }
+      delete_packaging_draft: { Args: { p_item_id: string }; Returns: undefined }
+      import_materials: { Args: { p_approve?: boolean; p_rows: Json }; Returns: number }
+      import_packaging_items: { Args: { p_approve?: boolean; p_rows: Json }; Returns: number }
+      item_change_log: {
+        Args: { p_entity_id: string; p_entity_type: string }
+        Returns: {
+          action: string
+          actor_name: string | null
+          happened_at: string
+          new_values: Json | null
+          old_values: Json | null
+          reason: string | null
+          record_id: string | null
+          source: string
+          table_name: string | null
+        }[]
+      }
+      item_usage: {
+        Args: { p_material_id: string | null; p_packaging_item_id: string | null }
+        Returns: {
+          is_prep: boolean
+          outlet_name: string
+          product_name: string | null
+          recipe_id: string
+          usage: string
+          via_prep_name: string | null
+        }[]
+      }
+      request_change: {
+        Args: {
+          p_action: string
+          p_changes?: Json | null
+          p_entity_id: string
+          p_entity_type: string
+          p_reason?: string | null
+        }
+        Returns: string
+      }
+      restore_archived: { Args: { p_entity_id: string; p_entity_type: string }; Returns: undefined }
+      review_change_request: {
+        Args: { p_approve: boolean; p_reason?: string | null; p_request_id: string }
+        Returns: undefined
       }
       material_affected_recipe_count: {
         Args: { p_material_id: string }

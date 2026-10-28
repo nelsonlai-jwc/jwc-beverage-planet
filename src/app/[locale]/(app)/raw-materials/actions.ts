@@ -2,6 +2,7 @@
 
 import type { PostgrestError } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { notifyReviewResult } from "@/lib/email/approval";
 import { isDecimal, isPositiveDecimal } from "@/lib/materials/decimal";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -21,6 +22,13 @@ const KNOWN_ERRORS = [
   "PACKAGING_NOT_APPROVED",
   "PRICE_ALREADY_PENDING",
   "REASON_REQUIRED",
+  "NOT_EDITABLE",
+  "NOT_ARCHIVABLE",
+  "NOT_ARCHIVED",
+  "NOT_DELETABLE",
+  "IN_USE",
+  "NO_CHANGES",
+  "REQUEST_ALREADY_PENDING",
 ];
 
 function fail(error: PostgrestError | null): ActionResult {
@@ -65,6 +73,7 @@ export type MaterialInput = {
   abv: string;
   bx: string;
   isCoffeeBean: boolean;
+  photoAssetId: string | null;
   packId?: string;
   packQuantity: string;
   unit: Unit;
@@ -75,24 +84,26 @@ export type MaterialInput = {
   submit: boolean;
 };
 
-function checkMaterial(input: MaterialInput): string | null {
+function checkIdentity(input: MaterialDetails): string | null {
   if (blank(input.name)) return "NAME_REQUIRED";
   if (!input.noBrand && blank(input.brand)) return "BRAND_REQUIRED";
   if (blank(input.materialTypeId)) return "TYPE_REQUIRED";
-  if (!isPositiveDecimal(input.packQuantity)) return "PACK_QUANTITY_INVALID";
   for (const value of [input.abv, input.bx]) {
     if (blank(value)) continue;
     if (!isDecimal(value) || Number(value) > 100) return "PERCENT_INVALID";
   }
+  return null;
+}
+
+function checkMaterial(input: MaterialInput): string | null {
+  const invalid = checkIdentity(input);
+  if (invalid) return invalid;
+  if (!isPositiveDecimal(input.packQuantity)) return "PACK_QUANTITY_INVALID";
   return checkPrice(input.price, input.freeReason);
 }
 
-export async function saveMaterial(input: MaterialInput): Promise<ActionResult> {
-  const invalid = checkMaterial(input);
-  if (invalid) return { ok: false, error: invalid };
-
-  const supabase = await createClient();
-  const fields = {
+function materialFields(input: MaterialDetails) {
+  return {
     name: input.name.trim(),
     brand: input.noBrand ? null : input.brand.trim(),
     no_brand: input.noBrand,
@@ -102,7 +113,16 @@ export async function saveMaterial(input: MaterialInput): Promise<ActionResult> 
     abv: percent(input.abv),
     bx: percent(input.bx),
     is_coffee_bean: input.isCoffeeBean,
+    photo_asset_id: input.photoAssetId,
   };
+}
+
+export async function saveMaterial(input: MaterialInput): Promise<ActionResult> {
+  const invalid = checkMaterial(input);
+  if (invalid) return { ok: false, error: invalid };
+
+  const supabase = await createClient();
+  const fields = materialFields(input);
   const pack = {
     pack_quantity: Number(input.packQuantity),
     unit: input.unit,
@@ -162,6 +182,106 @@ export async function saveMaterial(input: MaterialInput): Promise<ActionResult> 
   }
   refresh();
   return { ok: true, id: materialId };
+}
+
+/** Identity fields only: what an edit of an approved material may change. */
+export type MaterialDetails = Pick<
+  MaterialInput,
+  | "name"
+  | "brand"
+  | "noBrand"
+  | "materialTypeId"
+  | "specification"
+  | "description"
+  | "abv"
+  | "bx"
+  | "isCoffeeBean"
+  | "photoAssetId"
+>;
+
+export type ChangeResult = { ok: true; outcome: "APPLIED" | "REQUESTED" } | { ok: false; error: string };
+
+type ChangeEntity = "MATERIAL" | "PACKAGING_ITEM";
+
+async function requestChange(
+  entity: ChangeEntity,
+  id: string,
+  action: "EDIT" | "ARCHIVE",
+  changes: Record<string, unknown> | null,
+  reason: string,
+): Promise<ChangeResult> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("request_change", {
+    p_entity_type: entity,
+    p_entity_id: id,
+    p_action: action,
+    p_changes: changes as Database["public"]["Tables"]["change_requests"]["Row"]["changes"],
+    p_reason: blank(reason) ? null : reason.trim(),
+  });
+  refresh();
+  if (error) return fail(error) as ChangeResult;
+  return { ok: true, outcome: data === "APPLIED" ? "APPLIED" : "REQUESTED" };
+}
+
+/** Approved material: an Admin's edit applies at once, a Manager's goes to the Admin. */
+export async function editApprovedMaterial(
+  id: string,
+  input: MaterialDetails,
+  reason: string,
+): Promise<ChangeResult> {
+  const invalid = checkIdentity(input);
+  if (invalid) return { ok: false, error: invalid };
+  return requestChange("MATERIAL", id, "EDIT", materialFields(input), reason);
+}
+
+export async function editApprovedPackaging(
+  id: string,
+  input: Pick<PackagingInput, "name" | "brand" | "description">,
+  reason: string,
+): Promise<ChangeResult> {
+  if (blank(input.name)) return { ok: false, error: "NAME_REQUIRED" };
+  return requestChange("PACKAGING_ITEM", id, "EDIT", packagingFields(input), reason);
+}
+
+/** Archive ("delete") a returned or approved item; a Manager's request for approved items needs a reason. */
+export async function archiveItem(entity: ChangeEntity, id: string, reason: string): Promise<ChangeResult> {
+  return requestChange(entity, id, "ARCHIVE", null, reason);
+}
+
+export async function restoreItem(entity: ChangeEntity, id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("restore_archived", { p_entity_type: entity, p_entity_id: id });
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
+/** Really deletes a draft that was never submitted. */
+export async function deleteDraft(entity: ChangeEntity, id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } =
+    entity === "MATERIAL"
+      ? await supabase.rpc("delete_material_draft", { p_material_id: id })
+      : await supabase.rpc("delete_packaging_draft", { p_item_id: id });
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
+export async function reviewChangeRequest(
+  id: string,
+  decision: "approve" | "return",
+  reason = "",
+): Promise<ActionResult> {
+  if (decision === "return" && blank(reason)) return { ok: false, error: "REASON_REQUIRED" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("review_change_request", {
+    p_request_id: id,
+    p_approve: decision === "approve",
+    p_reason: blank(reason) ? null : reason.trim(),
+  });
+  refresh();
+  if (error) return fail(error);
+  await notifyReviewResult(supabase, { kind: "change", id, approved: decision === "approve", reason });
+  return { ok: true };
 }
 
 export async function submitMaterial(materialId: string): Promise<ActionResult> {
@@ -255,17 +375,21 @@ export type PackagingInput = {
   submit: boolean;
 };
 
+function packagingFields(input: Pick<PackagingInput, "name" | "brand" | "description">) {
+  return {
+    name: input.name.trim(),
+    brand: blank(input.brand) ? null : input.brand.trim(),
+    description: blank(input.description) ? null : input.description.trim(),
+  };
+}
+
 export async function savePackaging(input: PackagingInput): Promise<ActionResult> {
   if (blank(input.name)) return { ok: false, error: "NAME_REQUIRED" };
   const invalid = checkPrice(input.price, input.freeReason);
   if (invalid) return { ok: false, error: invalid };
 
   const supabase = await createClient();
-  const fields = {
-    name: input.name.trim(),
-    brand: blank(input.brand) ? null : input.brand.trim(),
-    description: blank(input.description) ? null : input.description.trim(),
-  };
+  const fields = packagingFields(input);
   let itemId = input.id;
   if (itemId) {
     const { error } = await supabase.from("packaging_items").update(fields).eq("id", itemId);
@@ -369,5 +493,27 @@ export async function review(
             : supabase.rpc("return_packaging_price", { p_price_id: id, p_reason: reason })));
   }
   refresh();
-  return error ? fail(error) : { ok: true };
+  if (error) return fail(error);
+  await notifyReviewResult(supabase, { kind, id, approved: decision === "approve", reason });
+  return { ok: true };
+}
+
+// CSV import ------------------------------------------------------------
+
+/** Creates every row in one transaction; the page has already checked each row. */
+export async function importItems(
+  kind: "materials" | "packaging",
+  rows: Record<string, unknown>[],
+  approve: boolean,
+): Promise<ActionResult & { count?: number }> {
+  if (rows.length === 0) return { ok: false, error: "IMPORT_EMPTY" };
+  const supabase = await createClient();
+  const args = { p_rows: rows as Database["public"]["Tables"]["change_requests"]["Row"]["changes"], p_approve: approve };
+  const { data, error } =
+    kind === "materials"
+      ? await supabase.rpc("import_materials", args)
+      : await supabase.rpc("import_packaging_items", args);
+  refresh();
+  if (error) return fail(error);
+  return { ok: true, count: data ?? 0 };
 }

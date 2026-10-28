@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AddPackForm } from "@/components/materials/AddPackForm";
+import { DeleteButton, RestoreButton } from "@/components/materials/ItemActions";
+import { ChangeRequestNotice, UsageSection } from "@/components/materials/ItemSections";
 import {
   PriceChangeForm,
   ReviewActions,
@@ -16,6 +18,7 @@ import { Link } from "@/i18n/navigation";
 import { PriceComparison } from "@/components/materials/PriceComparison";
 import { divide, formatMoney, formatUnitCost } from "@/lib/materials/decimal";
 import { getViewer } from "@/lib/materials/viewer";
+import { signedMediaUrl } from "@/lib/media/signedUrl";
 import { proposeMaterialPrice, submitMaterial } from "../actions";
 
 export default async function MaterialPage({
@@ -26,7 +29,7 @@ export default async function MaterialPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
-  const { supabase, role } = await getViewer();
+  const { supabase, role, userId } = await getViewer();
 
   if (role !== "ADMIN" && role !== "MANAGER") {
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
@@ -54,7 +57,19 @@ export default async function MaterialPage({
   ]);
 
   const isAdmin = role === "ADMIN";
-  const editable = material.status === "DRAFT" || material.status === "RETURNED";
+  const isOwner = isAdmin || material.created_by === userId;
+  const editable = isOwner && (material.status === "DRAFT" || material.status === "RETURNED");
+  const deleteMode =
+    material.status === "DRAFT" && isOwner
+      ? "delete"
+      : material.status === "RETURNED" && isOwner
+        ? "archive"
+        : material.status === "APPROVED"
+          ? isAdmin
+            ? "archive"
+            : "request"
+          : null;
+  const photoUrl = await signedMediaUrl(supabase, material.photo_asset_id);
   const packs = material.material_packs
     .filter((p) => p.status !== "ARCHIVED")
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -80,15 +95,34 @@ export default async function MaterialPage({
             {brand} · {material.material_types?.name}
           </p>
         </div>
-        {editable && (
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
+          {(editable || material.status === "APPROVED") && (
             <Link href={`/raw-materials/${id}/edit`} className={secondaryButtonClass}>
               {t("detail.edit")}
             </Link>
-            <SubmitButton id={id} action={submitMaterial} />
-          </div>
-        )}
+          )}
+          <Link href={`/raw-materials/${id}/history`} className={secondaryButtonClass}>
+            {t("history.open")}
+          </Link>
+          {editable && <SubmitButton id={id} action={submitMaterial} />}
+          {deleteMode && (
+            <DeleteButton entity="MATERIAL" id={id} mode={deleteMode} listHref="/raw-materials" />
+          )}
+        </div>
       </div>
+
+      {material.status === "ARCHIVED" && (
+        <div role="status" className="flex flex-col gap-3 rounded-[20px] bg-white p-5">
+          <p className="text-sm font-semibold">{t("remove.archivedTitle")}</p>
+          <p className="text-[13px] text-[#3d3f3a]">{t("remove.archivedNote")}</p>
+          {isAdmin && (
+            <div className="self-start">
+              <RestoreButton entity="MATERIAL" id={id} />
+            </div>
+          )}
+        </div>
+      )}
+      <ChangeRequestNotice entity="MATERIAL" id={id} isAdmin={isAdmin} />
 
       {material.status === "RETURNED" && returns?.[0] && (
         <div role="status" className="rounded-[20px] border-[1.5px] border-brand-red bg-white p-5">
@@ -127,6 +161,10 @@ export default async function MaterialPage({
             <Detail label={t("detail.usedBy")} value={t("detail.recipes", { count: affected ?? 0 })} />
           </dl>
           {material.description && <p className="text-sm whitespace-pre-line">{material.description}</p>}
+          {photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+            <img src={photoUrl} alt={t("photo.alt")} className="h-48 w-48 rounded-[14px] object-cover" />
+          )}
         </section>
 
         <section className={cardClass} aria-labelledby="packs">
@@ -212,6 +250,8 @@ export default async function MaterialPage({
           </ul>
           {material.status === "APPROVED" && <AddPackForm materialId={id} />}
         </section>
+
+        <UsageSection entity="MATERIAL" id={id} />
       </div>
     </div>
   );
