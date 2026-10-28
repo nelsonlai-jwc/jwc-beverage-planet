@@ -487,7 +487,9 @@
       "UNIT_INVALID": "单位必须是 g 或 ml。",
       "YES_NO_INVALID": "请填 yes 或 no。",
       "DUPLICATE_EXISTING": "系统里已经有这个项目。",
-      "DUPLICATE_IN_FILE": "文件里重复出现。"
+      "DUPLICATE_IN_FILE": "文件里重复出现。",
+      "ON_MENU": "这个配方在已发布的菜单上，请先从菜单移除。",
+      "VERSION_PENDING": "这个配方有版本正在等待审批，请先审批。"
     },
     "export": "导出 CSV",
     "import": {
@@ -680,7 +682,7 @@
     "returnReason": "退回原因：",
     "editDraft": "编辑草稿",
     "withdraw": "撤回",
-    "newVersion": "建立新版本",
+    "newVersion": "编辑",
     "deleteDraft": "删除草稿",
     "deleteDraftConfirm": "确定删除此草稿？删除后无法恢复。",
     "actionFailed": "操作失败。",
@@ -869,7 +871,71 @@
     "copyNow": "复制为草稿",
     "noCopyTargets": "你没有可复制到的其他分店。",
     "createNotAllowed": "只有经理和管理员可以新建配方。",
-    "unitPiece": "件"
+    "unitPiece": "件",
+    "exportCsv": "导出 CSV",
+    "dragToSort": "拖动排序",
+    "ingredientLetter": "原料 {letter}",
+    "insertIngredient": "插入原料：",
+    "insertLetter": "插入 [{letter}] {name}",
+    "saveAndApply": "保存并生效",
+    "photoConvert": "这张 HEIC 照片无法转换，请先导出为 JPEG 再上传。",
+    "actionErrors": {
+      "NOT_ALLOWED": "你没有权限做这个操作。",
+      "NOT_ARCHIVABLE": "这个配方不能归档。",
+      "NOT_ARCHIVED": "这个配方没有归档。",
+      "IN_USE": "有已批准的配方把它当预制原料使用，请先在那里移除。",
+      "ON_MENU": "这个配方在已发布的菜单上，请先从菜单移除。",
+      "VERSION_PENDING": "有版本正在等待审批，请先撤回或审批。",
+      "REASON_REQUIRED": "请填写原因。",
+      "REQUEST_ALREADY_PENDING": "这个配方已有申请在等 Admin 审批。",
+      "RECIPE_ARCHIVED": "这个配方已归档。",
+      "UNKNOWN": "出错了。"
+    },
+    "changeLog": {
+      "open": "修改记录",
+      "title": "修改记录",
+      "empty": "还没有修改记录。",
+      "summary": "修改说明",
+      "version": {
+        "CREATE": "建立配方",
+        "NEW_VERSION": "开始新版本"
+      },
+      "direct": {
+        "ARCHIVE": "删除（归档）",
+        "RESTORE": "已恢复"
+      },
+      "requested": {
+        "ARCHIVE": "申请删除",
+        "RESTORE": "申请恢复"
+      },
+      "kind": {
+        "ARCHIVE": "删除申请",
+        "RESTORE": "恢复"
+      },
+      "reviewed": {
+        "APPROVED": "{action}已批准",
+        "RETURNED": "{action}已退回"
+      }
+    },
+    "archive": {
+      "delete": "删除",
+      "request": "申请删除",
+      "requested": "删除申请已送给 Admin。",
+      "archiveNote": "配方会被归档：从列表消失，也不能再使用。版本、成本和审批记录都会保留，Admin 可以恢复。",
+      "requestNote": "已批准的配方要 Admin 批准后才会删除，在那之前仍然有效。",
+      "reason": "原因",
+      "reasonOptional": "原因（可选）",
+      "confirmArchive": "删除（归档）",
+      "confirmRequest": "送出申请",
+      "cancel": "取消",
+      "restore": "恢复",
+      "archivedTitle": "已归档",
+      "archivedNote": "列表里看不到。版本、成本和审批记录都保留。",
+      "pendingTitle": "删除等待 Admin 审批",
+      "waiting": "Admin 决定前，这个配方继续有效。",
+      "returnedTitle": "你的删除申请被退回",
+      "requestsTitle": "删除申请"
+    }
   },
   "Reports": {
     "title": "报表",

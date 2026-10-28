@@ -29,6 +29,8 @@ const KNOWN_ERRORS = [
   "IN_USE",
   "NO_CHANGES",
   "REQUEST_ALREADY_PENDING",
+  "ON_MENU",
+  "VERSION_PENDING",
 ];
 
 function fail(error: PostgrestError | null): ActionResult {

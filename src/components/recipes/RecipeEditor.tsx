@@ -2,9 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { publishRecipeVersion } from "@/app/[locale]/(app)/recipes/actions";
 import { Link, useRouter } from "@/i18n/navigation";
+import { prepareImage } from "@/lib/media/prepareImage";
 import { createClient } from "@/lib/supabase/client";
 import { getRecipeCost, MEDIA_BUCKET } from "@/lib/recipes/data";
+import { letterFor, relabelSteps } from "@/lib/recipes/letters";
 import {
   STYLES,
   TASTES,
@@ -19,6 +22,7 @@ import {
 } from "@/lib/recipes/types";
 import type { Json } from "@/types/database";
 import { CostSummary } from "./CostSummary";
+import { explainApprovalError } from "./ReviewActions";
 import { SopView } from "./SopView";
 import {
   StatusBadge,
@@ -30,6 +34,7 @@ import {
   smallButton,
   textareaClass,
 } from "./ui";
+import { useDragSort } from "./useDragSort";
 
 type Option = { id: string; name: string; approved?: boolean };
 type IngredientLine = {
@@ -43,8 +48,9 @@ type PackagingLine = { key: string; itemId: string; pieces: string };
 type StepLine = { key: string; instruction: string; mediaAssetId: string | null };
 
 const MAX_PHOTOS = 5;
-const MAX_BYTES = 10 * 1024 * 1024;
-const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PHOTO_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
+// Unsaved changes are saved as a draft this long after the last edit.
+const AUTOSAVE_MS = 3000;
 const TEXT_FIELDS = ["cup_type", "serving_size", "garnish", "storage_method", "shelf_life", "tasting_notes"] as const;
 
 type Props = {
@@ -58,6 +64,8 @@ type Props = {
   preps: Option[];
   packagingItems: Option[];
   initialCost: CostResult | null;
+  // Admin editing an approved recipe: saving makes the new version live at once.
+  adminDirect: boolean;
 };
 
 const newKey = () => crypto.randomUUID();
@@ -72,7 +80,7 @@ function move<T>(list: T[], index: number, delta: number) {
 }
 
 export function RecipeEditor(props: Props) {
-  const { recipeId, outletId, outletName, isPrep, version, materials, preps, packagingItems } = props;
+  const { recipeId, outletId, outletName, isPrep, version, materials, preps, packagingItems, adminDirect } = props;
   const t = useTranslations("Recipes");
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -118,7 +126,15 @@ export function RecipeEditor(props: Props) {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [cost, setCost] = useState<CostResult | null>(props.initialCost);
   const [showPreview, setShowPreview] = useState(false);
+  const [publishErrors, setPublishErrors] = useState<string[] | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  // Counts edits, so a save that finishes after a newer edit leaves the draft marked unsaved.
+  const [edits, setEdits] = useState(0);
+  const editsRef = useRef(0);
+  const saveRunning = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  // One key per page load, so a double click cannot publish twice.
+  const idempotencyKey = useMemo(() => crypto.randomUUID(), []);
 
   // Warn before leaving with unsaved changes (ch. 21).
   useEffect(() => {
@@ -132,20 +148,62 @@ export function RecipeEditor(props: Props) {
     return (value: T) => {
       setter(value);
       setDirty(true);
+      editsRef.current += 1;
+      setEdits(editsRef.current);
     };
   }
   const setField = (name: string, value: string) => change(setFields)({ ...fields, [name]: value });
-  const updateIngredients = change(setIngredients);
+  const setIngredientLines = change(setIngredients);
+  // Reordering or removing ingredients moves their letters; steps follow along.
+  const updateIngredients = (next: IngredientLine[]) => {
+    const before = ingredients.map((line) => ({ key: line.key, name: optionName(line.ref) }));
+    const relabelled = relabelSteps(
+      steps.map((step) => step.instruction),
+      before,
+      next,
+    );
+    if (relabelled.some((text, index) => text !== steps[index].instruction)) {
+      updateSteps(steps.map((step, index) => ({ ...step, instruction: relabelled[index] })));
+    }
+    setIngredientLines(next);
+  };
   const updatePackaging = change(setPackaging);
   const updateSteps = change(setSteps);
   const updatePhotos = change(setPhotos);
+  const ingredientDrag = useDragSort(ingredients, (next) => updateIngredients(next));
+  const stepDrag = useDragSort(steps, (next) => updateSteps(next));
+
+  // Puts [A] at the cursor of a step, or at its end.
+  function insertReference(key: string, letter: string) {
+    const field = document.getElementById(`step-${key}`) as HTMLTextAreaElement | null;
+    const step = steps.find((s) => s.key === key);
+    if (!step) return;
+    const at = field && document.activeElement === field ? field.selectionStart : step.instruction.length;
+    const token = `[${letter}]`;
+    const instruction = step.instruction.slice(0, at) + token + step.instruction.slice(at);
+    updateSteps(steps.map((s) => (s.key === key ? { ...s, instruction } : s)));
+    requestAnimationFrame(() => {
+      field?.focus();
+      field?.setSelectionRange(at + token.length, at + token.length);
+    });
+  }
 
   const optionName = (ref: string) =>
     ref.startsWith("p:")
       ? (preps.find((p) => `p:${p.id}` === ref)?.name ?? "—")
       : (materials.find((m) => `m:${m.id}` === ref)?.name ?? "—");
 
+  // Empty ingredient lines are not saved, so letters after them move up.
+  function savedInstructions() {
+    return relabelSteps(
+      steps.map((step) => step.instruction),
+      ingredients.map((line) => ({ key: line.key, name: optionName(line.ref) })),
+      ingredients.filter((i) => i.ref),
+    );
+  }
+
   function draftPayload(): Json {
+    const instructions = savedInstructions();
     return {
       ...fields,
       style: isPrep ? "PREP_MATERIAL" : fields.style || null,
@@ -165,27 +223,47 @@ export function RecipeEditor(props: Props) {
       packaging: packaging
         .filter((p) => p.itemId && Number(p.pieces) > 0)
         .map((p) => ({ packaging_item_id: p.itemId, pieces: Number(p.pieces) })),
-      steps: steps.map((s) => ({ instruction: s.instruction, media_asset_id: s.mediaAssetId })),
+      steps: steps.map((s, index) => ({ instruction: instructions[index], media_asset_id: s.mediaAssetId })),
       photos: photos.map((p) => p.id),
     };
   }
 
   async function save(): Promise<number | null> {
+    saveRunning.current = true;
+    const startEdits = editsRef.current;
     const { data, error } = await supabase.rpc("save_recipe_draft", {
       p_version_id: version.id,
       p_revision: revision,
       p_draft: draftPayload(),
     });
+    saveRunning.current = false;
     if (error) {
       setMessage(error.code === "40001" ? t("conflict") : `${t("saveFailed")} ${error.message}`);
+      setSaveFailed(true);
       return null;
     }
+    setSaveFailed(false);
     setRevision(data);
-    setDirty(false);
+    setDirty(editsRef.current !== startEdits);
     setSavedAt(new Date());
     setCost(await getRecipeCost(supabase, version.id));
     return data;
   }
+
+  // Autosave: a few seconds after the last edit, unless a save is already running or
+  // the last one failed (the message stays until the person acts).
+  useEffect(() => {
+    if (!dirty || saving !== "idle" || saveFailed) return;
+    const timer = window.setTimeout(async () => {
+      if (saveRunning.current) return;
+      setSaving("saving");
+      await save();
+      setSaving("idle");
+    }, AUTOSAVE_MS);
+    return () => window.clearTimeout(timer);
+    // save() reads the latest state through this render's closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [edits, dirty, saving, saveFailed]);
 
   async function handleSave() {
     setSaving("saving");
@@ -221,6 +299,31 @@ export function RecipeEditor(props: Props) {
     router.push(`/recipes/${recipeId}`);
   }
 
+  // Admin: save, then submit and approve in one step; the checks are those of approval.
+  async function handlePublish() {
+    setSaving("submitting");
+    setMessage(null);
+    setErrors([]);
+    setPublishErrors(null);
+    const saved = await save();
+    if (saved == null) {
+      setSaving("idle");
+      return;
+    }
+    const result = await publishRecipeVersion(version.id, saved, idempotencyKey);
+    setSaving("idle");
+    if (result.ok) {
+      router.push(`/recipes/${recipeId}`);
+      return;
+    }
+    if ("errors" in result) {
+      setErrors(result.errors);
+    } else {
+      setPublishErrors(explainApprovalError(t, result.message ?? result.error, result.details));
+    }
+    document.getElementById("submit-errors")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   async function handlePhotos(files: FileList | null) {
     if (!files?.length) return;
     setMessage(null);
@@ -229,15 +332,16 @@ export function RecipeEditor(props: Props) {
     if (files.length > room) setMessage(t("photoLimit", { max: MAX_PHOTOS }));
     setSaving("uploading");
     const added: Photo[] = [];
-    for (const file of chosen) {
-      if (!PHOTO_TYPES.includes(file.type)) {
-        setMessage(t("photoType"));
+    for (const original of chosen) {
+      // HEIC/HEIF from iPhones is converted to JPEG first.
+      const prepared = await prepareImage(original);
+      if (!prepared.ok) {
+        setMessage(
+          prepared.error === "size" ? t("photoSize") : prepared.error === "convert" ? t("photoConvert") : t("photoType"),
+        );
         continue;
       }
-      if (file.size > MAX_BYTES) {
-        setMessage(t("photoSize"));
-        continue;
-      }
+      const file = prepared.file;
       const id = crypto.randomUUID();
       const path = `${outletId}/${id}.${file.type.split("/")[1]}`;
       const upload = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, { contentType: file.type });
@@ -289,7 +393,7 @@ export function RecipeEditor(props: Props) {
         quantity: numberOrNull(i.quantity),
         unit: (i.unit || null) as MeasureUnit | null,
       })),
-    steps: steps.map((s) => ({ key: s.key, instruction: s.instruction })),
+    steps: savedInstructions().map((instruction, index) => ({ key: steps[index].key, instruction })),
     photos,
   };
 
@@ -325,6 +429,16 @@ export function RecipeEditor(props: Props) {
           </p>
         )}
       </div>
+
+      {publishErrors && (
+        <ul id="submit-errors" role="alert" className={`${alertClass} flex flex-col gap-1`}>
+          {publishErrors.map((line, index) => (
+            <li key={index} className={index === 0 ? "font-semibold" : ""}>
+              {line}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {errors.length > 0 && (
         <div id="submit-errors" role="alert" className={`${alertClass} flex flex-col gap-1`}>
@@ -467,12 +581,28 @@ export function RecipeEditor(props: Props) {
               {ingredients.map((line, index) => (
                 <li
                   key={line.key}
+                  ref={ingredientDrag.rowRef(index)}
                   className={`flex flex-col gap-2 rounded-[12px] border border-black/15 p-3 ${
                     errorFor("ingredients", index + 1).length ? "ring-2 ring-brand-red" : ""
+                  } ${ingredientDrag.dragging === index ? "opacity-50" : ""} ${
+                    ingredientDrag.over === index && ingredientDrag.dragging !== index ? "ring-2 ring-black" : ""
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-6 shrink-0 text-sm font-semibold">{index + 1}</span>
+                    <span
+                      {...ingredientDrag.handleProps(index)}
+                      aria-hidden
+                      title={t("dragToSort")}
+                      className="flex h-11 w-5 shrink-0 cursor-grab select-none items-center justify-center text-lg text-[#3d3f3a]"
+                    >
+                      ⠿
+                    </span>
+                    <span
+                      className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md border-[1.5px] border-black px-1 text-xs font-semibold"
+                      aria-label={t("ingredientLetter", { letter: letterFor(index) })}
+                    >
+                      {letterFor(index)}
+                    </span>
                     <select
                       value={line.ref}
                       aria-label={t("fields.ingredient")}
@@ -501,7 +631,7 @@ export function RecipeEditor(props: Props) {
                       )}
                     </select>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 pl-8">
+                  <div className="flex flex-wrap items-center gap-2 pl-[3.25rem]">
                     <input
                       inputMode="decimal"
                       value={line.quantity}
@@ -544,7 +674,7 @@ export function RecipeEditor(props: Props) {
                     </span>
                   </div>
                   {errorFor("ingredients", index + 1).map((e, i) => (
-                    <p key={i} className="pl-8 text-sm font-semibold">
+                    <p key={i} className="pl-[3.25rem] text-sm font-semibold">
                       {t(`errors.${e.code}`)}
                     </p>
                   ))}
@@ -607,8 +737,22 @@ export function RecipeEditor(props: Props) {
             </h2>
             <ol className="flex flex-col gap-3">
               {steps.map((step, index) => (
-                <li key={step.key} className="flex flex-col gap-2 rounded-[12px] border border-black/15 p-3">
+                <li
+                  key={step.key}
+                  ref={stepDrag.rowRef(index)}
+                  className={`flex flex-col gap-2 rounded-[12px] border border-black/15 p-3 ${
+                    stepDrag.dragging === index ? "opacity-50" : ""
+                  } ${stepDrag.over === index && stepDrag.dragging !== index ? "ring-2 ring-black" : ""}`}
+                >
                   <div className="flex items-center gap-2">
+                    <span
+                      {...stepDrag.handleProps(index)}
+                      aria-hidden
+                      title={t("dragToSort")}
+                      className="flex h-11 w-5 shrink-0 cursor-grab select-none items-center justify-center text-lg text-[#3d3f3a]"
+                    >
+                      ⠿
+                    </span>
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
                       {index + 1}
                     </span>
@@ -633,11 +777,31 @@ export function RecipeEditor(props: Props) {
                     </span>
                   </div>
                   <textarea
+                    id={`step-${step.key}`}
                     value={step.instruction}
                     aria-label={t("stepLabel", { no: index + 1 })}
                     onChange={(e) => updateSteps(steps.map((s) => (s.key === step.key ? { ...s, instruction: e.target.value } : s)))}
                     className={textareaClass}
                   />
+                  {ingredients.some((i) => i.ref) && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[13px] text-[#3d3f3a]">{t("insertIngredient")}</span>
+                      {ingredients.map((line, i) =>
+                        line.ref ? (
+                          <button
+                            key={line.key}
+                            type="button"
+                            title={optionName(line.ref)}
+                            aria-label={t("insertLetter", { letter: letterFor(i), name: optionName(line.ref) })}
+                            onClick={() => insertReference(step.key, letterFor(i))}
+                            className="flex h-8 min-w-8 items-center justify-center rounded-md border-[1.5px] border-black px-1.5 text-xs font-semibold hover:bg-black hover:text-white"
+                          >
+                            {letterFor(i)}
+                          </button>
+                        ) : null,
+                      )}
+                    </div>
+                  )}
                 </li>
               ))}
             </ol>
@@ -702,7 +866,7 @@ export function RecipeEditor(props: Props) {
                 <input
                   ref={fileInput}
                   type="file"
-                  accept={PHOTO_TYPES.join(",")}
+                  accept={PHOTO_ACCEPT}
                   multiple
                   className="sr-only"
                   disabled={busy}
@@ -779,9 +943,15 @@ export function RecipeEditor(props: Props) {
           <button type="button" className={secondaryButton} disabled={busy} onClick={handleSave}>
             {t("saveDraft")}
           </button>
-          <button type="button" className={primaryButton} disabled={busy} onClick={handleSubmit}>
-            {t("submit")}
-          </button>
+          {adminDirect ? (
+            <button type="button" className={primaryButton} disabled={busy} onClick={handlePublish}>
+              {t("saveAndApply")}
+            </button>
+          ) : (
+            <button type="button" className={primaryButton} disabled={busy} onClick={handleSubmit}>
+              {t("submit")}
+            </button>
+          )}
         </div>
       </div>
     </div>

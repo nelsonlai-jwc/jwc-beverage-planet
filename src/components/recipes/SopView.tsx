@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { letterFor, splitReferences } from "@/lib/recipes/letters";
 import type { BeverageStyle, BeverageTemp, MeasureUnit, Photo } from "@/lib/recipes/types";
 
 export type SopData = {
@@ -15,7 +16,16 @@ export type SopData = {
   photos: Photo[];
 };
 
+function Letter({ letter }: { letter: string }) {
+  return (
+    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border-[1.5px] border-black px-1 text-xs font-semibold leading-none">
+      {letter}
+    </span>
+  );
+}
+
 // Barista layout: photo, ingredients with amounts, steps. Never shows cost (ch. 12.3, 20.3).
+// Ingredients carry letters A, B, C…; steps that mention [A] show the same letter.
 export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
   const t = useTranslations("Recipes");
   const cover = data.photos.find((p) => p.url);
@@ -52,10 +62,11 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
           <p className="text-sm text-[#3d3f3a]">—</p>
         ) : (
           <ul className="flex flex-col divide-y divide-black/10">
-            {data.ingredients.map((i) => (
+            {data.ingredients.map((i, index) => (
               <li key={i.key} className="flex justify-between gap-3 py-2 text-sm">
-                <span>
-                  {i.name}
+                <span className="flex items-baseline gap-2">
+                  <Letter letter={letterFor(index)} />
+                  <span>{i.name}</span>
                   {i.isPrep && <span className="ml-2 text-xs font-semibold text-[#3d3f3a]">{t("prep")}</span>}
                 </span>
                 <span className="shrink-0 font-semibold tabular-nums">
@@ -77,7 +88,11 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
                   {index + 1}
                 </span>
-                <span className="whitespace-pre-wrap pt-0.5">{s.instruction}</span>
+                <span className="whitespace-pre-wrap pt-0.5">
+                  {splitReferences(s.instruction, data.ingredients.length).map((part, i) =>
+                    "letter" in part ? <Letter key={i} letter={part.letter} /> : <span key={i}>{part.text}</span>,
+                  )}
+                </span>
               </li>
             ))}
         </ol>

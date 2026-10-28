@@ -2346,6 +2346,21 @@ export type Database = {
         Args: { p_approve: boolean; p_reason?: string | null; p_request_id: string }
         Returns: undefined
       }
+      publish_recipe_version: {
+        Args: { p_idempotency_key: string; p_revision: number; p_version_id: string }
+        Returns: Json
+      }
+      recipe_change_log: {
+        Args: { p_recipe_id: string }
+        Returns: {
+          action: string
+          actor_name: string | null
+          happened_at: string
+          reason: string | null
+          source: string
+          version_no: number | null
+        }[]
+      }
       material_affected_recipe_count: {
         Args: { p_material_id: string }
         Returns: number

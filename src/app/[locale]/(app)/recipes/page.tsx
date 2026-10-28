@@ -64,6 +64,9 @@ export default async function RecipesPage({
       </div>
       {!isStaff && (
         <div className="flex flex-wrap gap-2">
+          <a href={`/${locale}/recipes/export`} className={secondaryButton}>
+            {t("exportCsv")}
+          </a>
           <Link href="/recipes?tab=catalogue" className={secondaryButton}>
             {t("copyApproved")}
           </Link>
@@ -139,11 +142,46 @@ export default async function RecipesPage({
 
   if (tab === "pending") {
     const pending = rows.filter((r) => r.open?.status === "PENDING" && matches(r.name));
+    const { data: archiveRequests } = await supabase
+      .from("change_requests")
+      .select("id, entity_id, reason, created_at")
+      .eq("entity_type", "RECIPE")
+      .eq("status", "PENDING")
+      .order("created_at");
+    const recipeById = new Map(rows.map((r) => [r.id, r]));
     return (
       <div className="flex flex-col gap-6">
         {header}
         {tabBar}
-        {pending.length === 0 ? (
+        {(archiveRequests ?? []).length > 0 && (
+          <section className="flex flex-col gap-3" aria-labelledby="archive-requests">
+            <h2 id="archive-requests" className="text-base font-semibold">
+              {t("archive.requestsTitle")}
+            </h2>
+            <ul className="flex flex-col gap-3">
+              {(archiveRequests ?? []).map((request) => {
+                const r = recipeById.get(request.entity_id);
+                return (
+                  <li key={request.id}>
+                    <Link
+                      href={`/recipes/${request.entity_id}`}
+                      className={`${card} flex-row flex-wrap items-center justify-between hover:ring-2 hover:ring-black`}
+                    >
+                      <span className="flex flex-col gap-1">
+                        <span className="text-base font-semibold">{r?.name ?? t("untitled")}</span>
+                        <span className="text-sm text-[#3d3f3a]">
+                          {r ? outletName(r.outlet_id) : "—"} · {request.reason}
+                        </span>
+                      </span>
+                      <span className="text-sm font-semibold underline">{t("review")}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+        {pending.length === 0 && (archiveRequests ?? []).length > 0 ? null : pending.length === 0 ? (
           <p className={card}>{t("pendingEmpty")}</p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -219,12 +257,18 @@ export default async function RecipesPage({
   // Own outlets' recipes.
   const managed = rows.filter((r) => viewer.managedOutletIds.includes(r.outlet_id));
   const outletFilter = viewer.managedOutletIds.includes(query.outlet ?? "") ? query.outlet : undefined;
-  const statusFilter = ["DRAFT", "PENDING", "RETURNED", "APPROVED"].includes(query.status ?? "") ? query.status : undefined;
+  const statusFilter = ["DRAFT", "PENDING", "RETURNED", "APPROVED", "ARCHIVED"].includes(query.status ?? "")
+    ? query.status
+    : undefined;
+  // Archived recipes show only when that filter is chosen.
   const mine = managed.filter(
     (r) =>
       matches(r.name) &&
       (!outletFilter || r.outlet_id === outletFilter) &&
-      (!statusFilter || (statusFilter === "APPROVED" ? !r.open && r.approved : r.open?.status === statusFilter)),
+      (statusFilter === "ARCHIVED"
+        ? r.status === "ARCHIVED"
+        : r.status === "ACTIVE" &&
+          (!statusFilter || (statusFilter === "APPROVED" ? !r.open && r.approved : r.open?.status === statusFilter))),
   );
 
   return (
@@ -250,7 +294,7 @@ export default async function RecipesPage({
             <span className="sr-only">{t("statusLabel")}</span>
             <select name="status" defaultValue={statusFilter ?? ""} className={inputClass}>
               <option value="">{t("allStatuses")}</option>
-              {(["DRAFT", "PENDING", "RETURNED", "APPROVED"] as const).map((s) => (
+              {(["DRAFT", "PENDING", "RETURNED", "APPROVED", "ARCHIVED"] as const).map((s) => (
                 <option key={s} value={s}>
                   {t(`status.${s}`)}
                 </option>
@@ -269,7 +313,8 @@ export default async function RecipesPage({
                 <span className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-base font-semibold">{r.name}</span>
                   <span className="flex flex-wrap gap-1.5">
-                    {r.approved && <StatusBadge status="APPROVED" />}
+                    {r.status === "ARCHIVED" && <StatusBadge status="ARCHIVED" />}
+                    {r.approved && r.status === "ACTIVE" && <StatusBadge status="APPROVED" />}
                     {r.open && <StatusBadge status={r.open.status} />}
                   </span>
                 </span>
