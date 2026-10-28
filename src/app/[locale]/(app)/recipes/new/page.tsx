@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getViewer } from "@/lib/recipes/data";
 import { createClient } from "@/lib/supabase/server";
 import { NewRecipeForm } from "@/components/recipes/NewRecipeForm";
+import { card } from "@/components/recipes/ui";
 
 export default async function NewRecipePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -11,7 +11,7 @@ export default async function NewRecipePage({ params }: { params: Promise<{ loca
   const t = await getTranslations("Recipes");
   const supabase = await createClient();
   const viewer = await getViewer(supabase);
-  if (!viewer || viewer.role === "BARISTA") notFound();
+  if (!viewer || viewer.role === "BARISTA") return <p className={card}>{t("createNotAllowed")}</p>;
   const outlets = (await getOutlets(supabase)).filter((o) => viewer.managedOutletIds.includes(o.id));
 
   return (

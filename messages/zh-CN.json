@@ -32,7 +32,13 @@
     "closeMenu": "关闭",
     "role": "角色",
     "outletScope": "分店",
-    "allOutlets": "全部分店"
+    "allOutlets": "全部分店",
+    "logout": "退出登录",
+    "roles": {
+      "ADMIN": "管理员",
+      "MANAGER": "经理",
+      "BARISTA": "咖啡师"
+    }
   },
   "Placeholder": {
     "comingSoon": "此页面尚未开发。"
@@ -42,37 +48,47 @@
     "readOnlyNote": "以下为设计计划书的初始值。接入数据管理前仅供查看。",
     "groups": {
       "strength": {
-        "label": "Strength",
+        "label": "浓度",
         "rule": "固定为 0 至 5，数值意义不变。"
       },
       "beverageStyle": {
-        "label": "Beverage Style",
+        "label": "饮料类别",
         "rule": "已被引用的选项只能停用。"
       },
       "unit": {
-        "label": "Unit",
+        "label": "单位",
         "rule": "仅 g 和 ml，不是自由文本。"
       },
       "temp": {
-        "label": "Temp",
+        "label": "温度",
         "rule": "固定系统选项。"
       },
       "materialType": {
-        "label": "Material Type",
+        "label": "原料类型",
         "rule": "已被引用的选项只能停用。"
       },
       "outlet": {
-        "label": "Outlet",
+        "label": "分店",
         "rule": "八间初始分店。"
       },
       "currency": {
-        "label": "Currency",
+        "label": "币种",
         "rule": "首发仅 MYR，日后可扩展；不提供换汇功能。"
       },
       "language": {
-        "label": "Language",
+        "label": "语言",
         "rule": "已启用英文和简体中文，马来文后续加入。"
       }
+    },
+    "values": {
+      "Coffee": "咖啡",
+      "Tea": "茶",
+      "Cocktail": "鸡尾酒",
+      "Mocktail": "无酒精鸡尾酒",
+      "Prep Material": "预制原料",
+      "Hot": "热",
+      "Cold": "冷",
+      "Frozen": "冰沙"
     }
   },
   "Invite": {
@@ -188,7 +204,8 @@
       "NOT_OFFICIAL_RELEASE": "研发配方不能上菜单。",
       "DEPENDENCY_INVALID": "所用的预制原料未获批准。",
       "PRICE_CONFLICT": "本店另一份已发布菜单的售价不同。"
-    }
+    },
+    "invalidPrice": "请修正标红的售价，售价必须大于零。"
   },
   "Calibration": {
     "title": "每日咖啡校准",
@@ -513,11 +530,11 @@
       "OFFICIAL_RELEASE": "正式发布"
     },
     "style": {
-      "COFFEE": "Coffee",
-      "TEA": "Tea",
-      "COCKTAIL": "Cocktail",
-      "MOCKTAIL": "Mocktail",
-      "PREP_MATERIAL": "Prep Material"
+      "COFFEE": "咖啡",
+      "TEA": "茶",
+      "COCKTAIL": "鸡尾酒",
+      "MOCKTAIL": "无酒精鸡尾酒",
+      "PREP_MATERIAL": "预制原料"
     },
     "temp": {
       "HOT": "热",
@@ -549,7 +566,7 @@
       "type": "类型",
       "productName": "产品名称",
       "purpose": "用途",
-      "style": "Style",
+      "style": "类别",
       "temperature": "温度",
       "yield": "实际可用产量",
       "unit": "单位",
@@ -662,7 +679,9 @@
     "useExisting": "使用已有配方",
     "createAnother": "另建配方",
     "copyNow": "复制为草稿",
-    "noCopyTargets": "你没有可复制到的其他分店。"
+    "noCopyTargets": "你没有可复制到的其他分店。",
+    "createNotAllowed": "只有经理和管理员可以新建配方。",
+    "unitPiece": "件"
   },
   "Reports": {
     "title": "报表",
@@ -768,6 +787,7 @@
       "NO_INGREDIENTS": "没有原料",
       "NO_SNAPSHOT": "没有批准时快照",
       "UNKNOWN": "无法取得成本"
-    }
+    },
+    "unitPiece": "件"
   }
 }

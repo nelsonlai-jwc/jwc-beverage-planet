@@ -2,9 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import type { UserRole } from "@/lib/auth/currentUser";
+import { LogoutButton } from "./LogoutButton";
 import { NavLinks } from "./NavLinks";
 
-export function MobileNav() {
+export function MobileNav({ role }: { role: UserRole | null }) {
   const t = useTranslations("Shell");
   const [open, setOpen] = useState(false);
 
@@ -30,7 +32,8 @@ export function MobileNav() {
           aria-label={t("mainNav")}
           className="absolute inset-x-0 top-full z-20 border-b border-black/15 bg-brand-base px-4 pt-2 pb-4 shadow-lg"
         >
-          <NavLinks onNavigate={() => setOpen(false)} />
+          <NavLinks role={role} onNavigate={() => setOpen(false)} />
+          <LogoutButton className="mt-1 flex min-h-11 w-full items-center rounded-xl px-3.5 text-sm hover:bg-black/10 disabled:opacity-50" />
         </nav>
       )}
     </div>

@@ -39,7 +39,7 @@ export default function SettingsPage({
                   key={value}
                   className="rounded-full border-[1.5px] border-black px-3 py-1 text-sm"
                 >
-                  {value}
+                  {t.has(`values.${value}`) ? t(`values.${value}`) : value}
                 </li>
               ))}
             </ul>
