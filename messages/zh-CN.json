@@ -323,7 +323,13 @@
     "saving": "正在保存…",
     "cancel": "取消",
     "conflict": "其他人已修改此用户。已显示最新资料，请重试。",
-    "lastAdmin": "不能移除最后一位有效管理员。"
+    "lastAdmin": "不能移除最后一位有效管理员。",
+    "resetPassword": "寄重设密码邮件",
+    "resetSending": "寄送中…",
+    "resetConfirm": "要寄重设密码邮件给 {email} 吗？",
+    "resetSent": "重设邮件已寄给 {email}。",
+    "resetRateLimited": "寄出的邮件太多，请稍后再试。",
+    "resetFailed": "无法寄出重设邮件，请重试。"
   },
   "RawMaterials": {
     "title": "原料",
@@ -808,5 +814,37 @@
       "UNKNOWN": "无法取得成本"
     },
     "unitPiece": "件"
+  },
+  "ForgotPassword": {
+    "title": "忘记密码",
+    "intro": "输入您的邮箱。如果该邮箱有账号，我们会寄出设置新密码的链接。",
+    "email": "邮箱",
+    "submit": "寄出重设链接",
+    "submitting": "寄送中…",
+    "sent": "如果这个邮箱有账号，重设链接已寄出。请查看收件箱和垃圾邮件。",
+    "rateLimited": "请求太多，请稍后再试。",
+    "networkError": "无法连接服务器，请检查网络后重试。",
+    "failed": "无法寄出邮件，请重试。",
+    "backToLogin": "返回登录"
+  },
+  "ResetPassword": {
+    "title": "设置新密码",
+    "checking": "正在检查链接…",
+    "invalidLink": "链接无效或已过期。",
+    "requestNew": "重新申请链接",
+    "rule": "至少 {min} 位。",
+    "new": "新密码",
+    "confirm": "确认新密码",
+    "show": "显示",
+    "hide": "隐藏",
+    "submit": "保存新密码",
+    "saving": "保存中…",
+    "saved": "密码已修改，请用新密码登录。",
+    "toLogin": "前往登录",
+    "tooShort": "新密码至少需要 {min} 位。",
+    "mismatch": "两次输入的新密码不一致。",
+    "samePassword": "新密码不能和当前密码相同。",
+    "networkError": "无法连接服务器，请检查网络后重试。",
+    "failed": "无法修改密码，请重新申请链接。"
   }
 }

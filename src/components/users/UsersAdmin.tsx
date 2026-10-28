@@ -15,6 +15,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import type { Outlet, UserRole } from "@/lib/auth/currentUser";
 import { inviteUser } from "@/app/[locale]/(app)/users/actions";
+import { sendPasswordResetEmail } from "@/lib/auth/passwordReset";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import { OutletPicker } from "./OutletPicker";
@@ -206,6 +207,28 @@ export function UsersAdmin({
     }
     setEditing(null);
     router.refresh();
+  }
+
+  // Password reset ---------------------------------------------------------
+  const [resetBusy, setResetBusy] = useState<string | null>(null);
+  const [resetResult, setResetResult] = useState<Record<string, { ok: boolean; message: string }>>({});
+
+  async function sendReset(user: User) {
+    if (resetBusy || !window.confirm(t("resetConfirm", { email: user.email }))) return;
+    setResetBusy(user.id);
+    // English by default; the reset page has a language switch.
+    const result = await sendPasswordResetEmail(user.email, "en");
+    setResetBusy(null);
+    setResetResult({
+      ...resetResult,
+      [user.id]:
+        result === "sent"
+          ? { ok: true, message: t("resetSent", { email: user.email }) }
+          : {
+              ok: false,
+              message: result === "rateLimited" ? t("resetRateLimited") : t("resetFailed"),
+            },
+    });
   }
 
   async function reveal(user: User) {
@@ -445,9 +468,29 @@ export function UsersAdmin({
                   </div>
                 </form>
               ) : (
-                <button type="button" onClick={() => startEdit(user)} className={`${secondaryButton} self-start`}>
-                  {t("edit")}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => startEdit(user)} className={secondaryButton}>
+                    {t("edit")}
+                  </button>
+                  {user.status === "ACTIVE" && (
+                    <button
+                      type="button"
+                      disabled={resetBusy !== null}
+                      onClick={() => sendReset(user)}
+                      className={secondaryButton}
+                    >
+                      {resetBusy === user.id ? t("resetSending") : t("resetPassword")}
+                    </button>
+                  )}
+                </div>
+              )}
+              {resetResult[user.id] && (
+                <p
+                  role={resetResult[user.id].ok ? "status" : "alert"}
+                  className={resetResult[user.id].ok ? "text-sm font-semibold text-[#2f6b1f]" : errorText}
+                >
+                  {resetResult[user.id].message}
+                </p>
               )}
             </li>
           ))}

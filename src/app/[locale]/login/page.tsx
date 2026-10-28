@@ -1,14 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { AuthLayout } from "@/components/login/AuthLayout";
 import { LoginForm } from "@/components/login/LoginForm";
-import { ThreeDPaperBackground } from "@/components/login/ThreeDPaperBackground";
-import { Link } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
-
-const localeLabels: Record<string, string> = {
-  en: "EN",
-  "zh-CN": "简体中文",
-};
 
 export default function LoginPage({
   params,
@@ -19,35 +12,8 @@ export default function LoginPage({
   setRequestLocale(locale);
 
   return (
-    <div className="flex min-h-dvh flex-wrap bg-[#c7c9c2] text-black">
-      <section
-        aria-label="JWC Beverage Planet"
-        className="h-[300px] flex-[1_1_100%] md:h-auto md:min-h-dvh md:flex-[1_1_560px]"
-      >
-        <ThreeDPaperBackground />
-      </section>
-      <main className="flex flex-[1_1_480px] flex-col gap-6 px-5 py-6 md:px-12 md:py-8">
-        <nav aria-label="Language" className="flex justify-end gap-1">
-          {routing.locales.map((code) => (
-            <Link
-              key={code}
-              href="/login"
-              locale={code}
-              aria-current={code === locale ? "true" : undefined}
-              className={
-                code === locale
-                  ? "rounded-full bg-black px-3.5 py-2 text-sm font-semibold text-white"
-                  : "rounded-full px-3.5 py-2 text-sm"
-              }
-            >
-              {localeLabels[code]}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex flex-1 items-start justify-center md:items-center">
-          <LoginForm />
-        </div>
-      </main>
-    </div>
+    <AuthLayout locale={locale} path="/login">
+      <LoginForm />
+    </AuthLayout>
   );
 }
