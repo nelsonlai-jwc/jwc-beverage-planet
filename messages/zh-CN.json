@@ -45,6 +45,7 @@
   },
   "Settings": {
     "title": "设置",
+    "systemValues": "系统参数",
     "readOnlyNote": "以下为设计计划书的初始值。接入数据管理前仅供查看。",
     "groups": {
       "strength": {
@@ -89,6 +90,24 @@
       "Hot": "热",
       "Cold": "冷",
       "Frozen": "冰沙"
+    },
+    "password": {
+      "title": "修改密码",
+      "rule": "至少 {min} 位。修改后保持登录。",
+      "current": "当前密码",
+      "new": "新密码",
+      "confirm": "确认新密码",
+      "show": "显示",
+      "hide": "隐藏",
+      "submit": "修改密码",
+      "saving": "保存中…",
+      "saved": "密码已修改。",
+      "tooShort": "新密码至少需要 {min} 位。",
+      "mismatch": "两次输入的新密码不一致。",
+      "samePassword": "新密码不能和当前密码相同。",
+      "wrongCurrent": "当前密码不正确。",
+      "networkError": "网络错误，请重试。",
+      "failed": "无法修改密码，请重试。"
     }
   },
   "Invite": {
