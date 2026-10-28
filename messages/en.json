@@ -45,6 +45,7 @@
   },
   "Settings": {
     "title": "Setting",
+    "systemValues": "System values",
     "readOnlyNote": "Initial values from the design plan. Read-only until data management is connected.",
     "groups": {
       "strength": {
@@ -89,6 +90,24 @@
       "Hot": "Hot",
       "Cold": "Cold",
       "Frozen": "Frozen"
+    },
+    "password": {
+      "title": "Change password",
+      "rule": "At least {min} characters. You stay signed in after the change.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "show": "Show",
+      "hide": "Hide",
+      "submit": "Change password",
+      "saving": "Saving…",
+      "saved": "Password changed.",
+      "tooShort": "The new password needs at least {min} characters.",
+      "mismatch": "The two new passwords do not match.",
+      "samePassword": "The new password must be different from the current one.",
+      "wrongCurrent": "The current password is incorrect.",
+      "networkError": "Network error. Please try again.",
+      "failed": "Could not change the password. Please try again."
     }
   },
   "Invite": {
