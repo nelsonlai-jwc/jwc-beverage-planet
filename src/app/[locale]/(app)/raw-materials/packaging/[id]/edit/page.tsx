@@ -12,7 +12,7 @@ export default async function EditPackagingPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
-  const { supabase, role } = await getViewer();
+  const { supabase, role, userId } = await getViewer();
 
   if (role !== "ADMIN" && role !== "MANAGER") {
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
@@ -23,7 +23,10 @@ export default async function EditPackagingPage({
     .eq("id", id)
     .maybeSingle();
   if (!item) notFound();
-  if (item.status !== "DRAFT" && item.status !== "RETURNED") {
+  const isAdmin = role === "ADMIN";
+  const approved = item.status === "APPROVED";
+  const draft = item.status === "DRAFT" || item.status === "RETURNED";
+  if (!(approved || (draft && (isAdmin || item.created_by === userId)))) {
     return (
       <div className="flex flex-col gap-6">
         <BackLink href={`/raw-materials/packaging/${id}`} label={item.name} />
@@ -38,6 +41,7 @@ export default async function EditPackagingPage({
       <BackLink href={`/raw-materials/packaging/${id}`} label={item.name} />
       <h1 className="font-serif text-[32px] font-normal">{t("detail.edit")}</h1>
       <PackagingForm
+        approved={approved ? { isAdmin } : undefined}
         initial={{
           id: item.id,
           name: item.name,

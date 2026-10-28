@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PriceComparison } from "@/components/materials/PriceComparison";
+import { ChangeTable, describeChanges } from "@/components/materials/ItemSections";
 import { ReviewActions } from "@/components/materials/ReviewActions";
 import { BackLink, cardClass } from "@/components/materials/ui";
 import { Link } from "@/i18n/navigation";
@@ -26,7 +27,7 @@ export default async function ApprovalsPage({
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
   }
 
-  const [materials, packs, prices, packagingItems, packagingPrices] = await Promise.all([
+  const [materials, packs, prices, packagingItems, packagingPrices, requests] = await Promise.all([
     supabase
       .from("materials")
       .select(
@@ -59,7 +60,37 @@ export default async function ApprovalsPage({
       )
       .eq("status", "PENDING")
       .eq("packaging_items.status", "APPROVED"),
+    supabase
+      .from("change_requests")
+      .select("id, entity_type, entity_id, action, changes, old_values, reason")
+      .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
+      .eq("status", "PENDING")
+      .order("created_at"),
   ]);
+
+  const requestRows = await Promise.all(
+    (requests.data ?? []).map(async (request) => {
+      const entity = request.entity_type as "MATERIAL" | "PACKAGING_ITEM";
+      const isMaterial = entity === "MATERIAL";
+      const { data: item } = isMaterial
+        ? await supabase.from("materials").select("name, brand").eq("id", request.entity_id).maybeSingle()
+        : await supabase.from("packaging_items").select("name, brand").eq("id", request.entity_id).maybeSingle();
+      return {
+        ...request,
+        title: item?.name ?? "",
+        subtitle: item?.brand ?? "",
+        href: isMaterial ? `/raw-materials/${request.entity_id}` : `/raw-materials/packaging/${request.entity_id}`,
+        changes:
+          request.action === "EDIT"
+            ? await describeChanges(
+                entity,
+                request.old_values as Record<string, unknown> | null,
+                request.changes as Record<string, unknown> | null,
+              )
+            : [],
+      };
+    }),
+  );
 
   const priceRows = await Promise.all(
     (prices.data ?? []).map(async (row) => {
@@ -100,7 +131,8 @@ export default async function ApprovalsPage({
     (packs.data?.length ?? 0) +
     priceRows.length +
     (packagingItems.data?.length ?? 0) +
-    packagingPriceRows.length;
+    packagingPriceRows.length +
+    requestRows.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -230,6 +262,24 @@ export default async function ApprovalsPage({
             />
             <p className="text-[13px] text-[#3d3f3a]">{t("priceChange.affected", { count: row.affected })}</p>
             <ReviewActions kind="packagingPrice" id={row.id} />
+          </article>
+        ))}
+
+        {requestRows.map((row) => (
+          <article key={row.id} className={cardClass}>
+            <Header
+              kind={row.action === "EDIT" ? t("approvalKinds.edit") : t("approvalKinds.archive")}
+              title={row.title}
+              subtitle={row.subtitle}
+              href={row.href}
+            />
+            {row.changes.length > 0 && <ChangeTable changes={row.changes} />}
+            {row.reason && (
+              <p className="text-sm">
+                {t("requests.reason")}: {row.reason}
+              </p>
+            )}
+            <ReviewActions kind="change" id={row.id} />
           </article>
         ))}
       </div>

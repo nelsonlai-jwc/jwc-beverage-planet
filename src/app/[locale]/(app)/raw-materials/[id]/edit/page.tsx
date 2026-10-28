@@ -3,8 +3,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MaterialForm } from "@/components/materials/MaterialForm";
 import { BackLink } from "@/components/materials/ui";
 import { getViewer } from "@/lib/materials/viewer";
+import { signedMediaUrl } from "@/lib/media/signedUrl";
 
-// Only drafts and returned materials are edited in place; approved ones change through proposals.
+// Drafts and returned materials are edited in place by their creator or an Admin. For an
+// approved material only the product details change here: at once for an Admin, as a
+// request for a Manager. Packs and prices keep their own approval on the detail page.
 export default async function EditMaterialPage({
   params,
 }: {
@@ -13,7 +16,7 @@ export default async function EditMaterialPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
-  const { supabase, role } = await getViewer();
+  const { supabase, role, userId } = await getViewer();
 
   if (role !== "ADMIN" && role !== "MANAGER") {
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
@@ -29,7 +32,10 @@ export default async function EditMaterialPage({
     supabase.from("material_types").select("id, name").eq("is_active", true).order("sort_order"),
   ]);
   if (!material) notFound();
-  if (material.status !== "DRAFT" && material.status !== "RETURNED") {
+  const isAdmin = role === "ADMIN";
+  const approved = material.status === "APPROVED";
+  const draft = material.status === "DRAFT" || material.status === "RETURNED";
+  if (!(approved || (draft && (isAdmin || material.created_by === userId)))) {
     return (
       <div className="flex flex-col gap-6">
         <BackLink href={`/raw-materials/${id}`} label={material.name} />
@@ -50,6 +56,8 @@ export default async function EditMaterialPage({
       <h1 className="font-serif text-[32px] font-normal">{t("detail.edit")}</h1>
       <MaterialForm
         types={types ?? []}
+        photoUrl={await signedMediaUrl(supabase, material.photo_asset_id)}
+        approved={approved ? { isAdmin } : undefined}
         initial={{
           id: material.id,
           name: material.name,
@@ -61,6 +69,7 @@ export default async function EditMaterialPage({
           abv: material.abv?.toString() ?? "",
           bx: material.bx?.toString() ?? "",
           isCoffeeBean: material.is_coffee_bean,
+          photoAssetId: material.photo_asset_id,
           packId: pack?.id,
           packQuantity: pack ? String(pack.pack_quantity) : "",
           unit: pack?.unit ?? "ml",

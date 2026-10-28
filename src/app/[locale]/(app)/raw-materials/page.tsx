@@ -78,6 +78,11 @@ export default async function RawMaterialsPage({
       .select("id, packaging_items!inner(status)", { count: "exact", head: true })
       .eq("status", "PENDING")
       .eq("packaging_items.status", "APPROVED"),
+    supabase
+      .from("change_requests")
+      .select("id", { count: "exact", head: true })
+      .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
+      .eq("status", "PENDING"),
   ]);
   const waiting = counts.reduce((sum, { count }) => sum + (count ?? 0), 0);
 
@@ -97,6 +102,12 @@ export default async function RawMaterialsPage({
               )}
             </Link>
           )}
+          <a href={`/${locale}/raw-materials/export?tab=${tab}`} className={secondaryButtonClass}>
+            {t("export")}
+          </a>
+          <Link href={`/raw-materials/import?tab=${tab}`} className={secondaryButtonClass}>
+            {t("import.open")}
+          </Link>
           <Link
             href={tab === "packaging" ? "/raw-materials/packaging/new" : "/raw-materials/new"}
             className={primaryButtonClass}

@@ -4,13 +4,14 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import {
   review,
+  reviewChangeRequest,
   type ActionResult,
   type ReviewKind,
 } from "@/app/[locale]/(app)/raw-materials/actions";
 import { useRouter } from "@/i18n/navigation";
 import { errorClass, inputClass, primaryButtonClass, secondaryButtonClass } from "./ui";
 
-function useAction() {
+export function useAction() {
   const t = useTranslations("RawMaterials");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -31,10 +32,12 @@ function useAction() {
   return { error, pending, run };
 }
 
-/** Admin: Approve, or Return with a reason (ch. 19.3). */
-export function ReviewActions({ kind, id }: { kind: ReviewKind; id: string }) {
+/** Admin: Approve, or Return with a reason (ch. 19.3). "change" is an edit or delete request. */
+export function ReviewActions({ kind, id }: { kind: ReviewKind | "change"; id: string }) {
   const t = useTranslations("RawMaterials.review");
   const { error, pending, run } = useAction();
+  const decide = (decision: "approve" | "return", reason = "") =>
+    kind === "change" ? reviewChangeRequest(id, decision, reason) : review(kind, id, decision, reason);
   const [returning, setReturning] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -56,7 +59,7 @@ export function ReviewActions({ kind, id }: { kind: ReviewKind; id: string }) {
             <button
               type="button"
               disabled={pending || !reason.trim()}
-              onClick={() => run(() => review(kind, id, "return", reason), () => setReturning(false))}
+              onClick={() => run(() => decide("return", reason), () => setReturning(false))}
               className={primaryButtonClass}
             >
               {t("confirmReturn")}
@@ -71,7 +74,7 @@ export function ReviewActions({ kind, id }: { kind: ReviewKind; id: string }) {
           <button
             type="button"
             disabled={pending}
-            onClick={() => run(() => review(kind, id, "approve"))}
+            onClick={() => run(() => decide("approve"))}
             className={primaryButtonClass}
           >
             {t("approve")}

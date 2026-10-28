@@ -373,7 +373,9 @@
       "pack": "New pack",
       "price": "Price change",
       "packaging": "New packaging",
-      "packagingPrice": "Packaging price change"
+      "packagingPrice": "Packaging price change",
+      "edit": "Edit request",
+      "archive": "Deletion request"
     },
     "form": {
       "identity": "Product identity",
@@ -412,7 +414,7 @@
     },
     "detail": {
       "edit": "Edit",
-      "notEditable": "Submitted and approved materials can't be edited here. Use a price change or a new pack instead.",
+      "notEditable": "This item can't be edited now: it is waiting for approval, archived, or someone else's draft.",
       "returnedTitle": "Returned by Admin",
       "pendingTitle": "Waiting for Admin approval",
       "pendingNote": "Packs and prices are approved together with the material.",
@@ -471,7 +473,168 @@
       "PERCENT_INVALID": "ABV and Bx must be between 0 and 100.",
       "PRICE_INVALID": "Enter a valid price.",
       "FREE_REASON_REQUIRED": "A price of 0 needs a reason.",
-      "UNKNOWN": "Something went wrong. Check your connection and try again."
+      "UNKNOWN": "Something went wrong. Check your connection and try again.",
+      "NOT_EDITABLE": "Only approved items can be edited this way. Refresh the page.",
+      "NOT_ARCHIVABLE": "Items waiting for approval can't be deleted. Wait for Admin to approve or return it.",
+      "NOT_ARCHIVED": "This item is not archived.",
+      "NOT_DELETABLE": "Only drafts that were never submitted can be deleted for good.",
+      "IN_USE": "Live recipes still use this item. Replace it in those recipes first.",
+      "NO_CHANGES": "Nothing was changed.",
+      "REQUEST_ALREADY_PENDING": "A request for this item is already waiting for Admin.",
+      "IMPORT_EMPTY": "The file has no rows to import.",
+      "NAME_TOO_LONG": "Name is longer than 120 characters.",
+      "TYPE_UNKNOWN": "Type is not one of the material types in Setting.",
+      "UNIT_INVALID": "Unit must be g or ml.",
+      "YES_NO_INVALID": "Use yes or no.",
+      "DUPLICATE_EXISTING": "Already exists in the system.",
+      "DUPLICATE_IN_FILE": "Appears twice in the file."
+    },
+    "export": "Export CSV",
+    "import": {
+      "open": "Import CSV",
+      "title": "Import from CSV",
+      "intro": "Add many items at once. Every row is checked first; nothing is saved until all rows are correct.",
+      "step1": "1. Choose a file",
+      "materialsHint": "Use the template. Required columns: name, type, pack_size and unit (g or ml). Write yes in no_brand for products without a brand. Leave the price blank if unknown.",
+      "packagingHint": "Use the template. Required column: name. The price is per piece; leave it blank if unknown.",
+      "template": "Download template",
+      "choose": "Choose CSV file",
+      "chooseAgain": "Choose another file",
+      "step2": "2. Check",
+      "missingColumns": "The file is missing these columns: {columns}",
+      "allGood": "{count, plural, one {# row is ready to import.} other {# rows are ready to import.}}",
+      "someBad": "{bad} of {count} rows need fixing. Correct the file and choose it again.",
+      "line": "Row {line}",
+      "ok": "OK",
+      "step3": "3. Import",
+      "approveNow": "Approve right away (otherwise they are saved as drafts)",
+      "asDrafts": "Items are saved as your drafts. Open each one and submit it for approval.",
+      "importing": "Importing…",
+      "submit": "{count, plural, one {Import # row} other {Import # rows}}"
+    },
+    "photo": {
+      "label": "Photo (optional)",
+      "alt": "Product photo",
+      "uploading": "Uploading…",
+      "replace": "Replace photo",
+      "add": "Add photo",
+      "remove": "Remove photo",
+      "hint": "JPEG, PNG, WebP or iPhone HEIC, up to 10 MB. HEIC is converted to JPEG.",
+      "errors": {
+        "type": "Use a JPEG, PNG, WebP or HEIC photo.",
+        "size": "The photo is larger than 10 MB.",
+        "convert": "This HEIC photo could not be converted. Try exporting it as JPEG.",
+        "upload": "Upload failed. Check your connection and try again."
+      }
+    },
+    "edit": {
+      "reason": "Why the change? (optional)",
+      "adminNote": "This item is approved. Your changes take effect as soon as you save; the old values stay in the change log.",
+      "managerNote": "This item is approved. Your changes are sent to Admin and take effect after approval.",
+      "save": "Save changes",
+      "request": "Send for approval"
+    },
+    "remove": {
+      "delete": "Delete",
+      "request": "Request deletion",
+      "requested": "Deletion request sent to Admin.",
+      "deleteNote": "This draft was never submitted, so it will be deleted for good.",
+      "archiveNote": "The item will be archived: it disappears from lists and can't be used in new recipes. Past costs and approvals are kept, and an Admin can restore it.",
+      "requestNote": "Approved items are deleted only after Admin approval. The item stays in use until then.",
+      "reason": "Reason",
+      "reasonOptional": "Reason (optional)",
+      "confirmDelete": "Delete draft",
+      "confirmArchive": "Delete (archive)",
+      "confirmRequest": "Send request",
+      "cancel": "Cancel",
+      "restore": "Restore",
+      "archivedTitle": "Archived",
+      "archivedNote": "Hidden from lists and new recipes. Past costs and approvals are kept."
+    },
+    "usage": {
+      "title": "Used in recipes",
+      "none": "No recipe uses this yet.",
+      "untitled": "Untitled recipe",
+      "viaPrep": "through {name}",
+      "live": "Live",
+      "draft": "Draft",
+      "blocksArchive": "Live recipes must stop using it before it can be deleted."
+    },
+    "requests": {
+      "editPending": "Edit waiting for Admin approval",
+      "archivePending": "Deletion waiting for Admin approval",
+      "editReturned": "Your edit request was returned",
+      "archiveReturned": "Your deletion request was returned",
+      "reason": "Reason",
+      "waiting": "The current approved details stay in effect until Admin decides."
+    },
+    "history": {
+      "open": "Change log",
+      "title": "Change log",
+      "empty": "No changes recorded yet.",
+      "system": "System",
+      "photoChanged": "Changed",
+      "before": "Before",
+      "created": {
+        "item": "Created",
+        "pack": "Pack added",
+        "price": "Price entered"
+      },
+      "edited": {
+        "item": "Edited",
+        "pack": "Pack edited",
+        "price": "Price edited"
+      },
+      "subject": {
+        "item": "Item",
+        "pack": "Pack",
+        "price": "Price"
+      },
+      "approval": {
+        "SUBMIT": "Submitted for approval",
+        "APPROVE": "Approved",
+        "RETURN": "Returned",
+        "WITHDRAW": "Withdrawn",
+        "ARCHIVE": "Archived",
+        "ROLLBACK": "Rolled back"
+      },
+      "direct": {
+        "EDIT": "Edited by Admin",
+        "ARCHIVE": "Deleted (archived)",
+        "RESTORE": "Restored"
+      },
+      "requested": {
+        "EDIT": "Edit requested",
+        "ARCHIVE": "Deletion requested",
+        "RESTORE": "Restore requested"
+      },
+      "requestKind": {
+        "EDIT": "Edit request",
+        "ARCHIVE": "Deletion request",
+        "RESTORE": "Restore"
+      },
+      "reviewed": {
+        "APPROVED": "{action} approved",
+        "RETURNED": "{action} returned"
+      }
+    },
+    "fields": {
+      "name": "Name",
+      "brand": "Brand",
+      "no_brand": "No brand",
+      "specification": "Specification",
+      "material_type_id": "Material type",
+      "description": "Details",
+      "abv": "ABV",
+      "bx": "Bx",
+      "is_coffee_bean": "Coffee bean",
+      "photo_asset_id": "Photo",
+      "pack_quantity": "Pack size",
+      "unit": "Unit",
+      "price": "Price",
+      "price_per_piece": "Price per piece",
+      "free_reason": "Why free",
+      "status": "Status"
     }
   },
   "Recipes": {

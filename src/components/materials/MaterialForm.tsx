@@ -3,12 +3,14 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import {
+  editApprovedMaterial,
   saveMaterial,
   type MaterialInput,
 } from "@/app/[locale]/(app)/raw-materials/actions";
 import { Link, useRouter } from "@/i18n/navigation";
 import { divide, formatUnitCost, isDecimal, isPositiveDecimal } from "@/lib/materials/decimal";
 import { createClient } from "@/lib/supabase/client";
+import { PhotoField } from "./PhotoField";
 import {
   cardClass,
   errorClass,
@@ -32,6 +34,7 @@ const emptyValues: MaterialFormValues = {
   abv: "",
   bx: "",
   isCoffeeBean: false,
+  photoAssetId: null,
   packQuantity: "",
   unit: "ml",
   packDescription: "",
@@ -61,12 +64,21 @@ function Field({
   );
 }
 
+/**
+ * New or draft material with its first pack and price. With `approved`, only the
+ * product details of an approved material: an Admin's save applies at once, a
+ * Manager's save is sent to the Admin.
+ */
 export function MaterialForm({
   types,
   initial,
+  photoUrl = null,
+  approved,
 }: {
   types: { id: string; name: string }[];
   initial?: MaterialFormValues;
+  photoUrl?: string | null;
+  approved?: { isAdmin: boolean };
 }) {
   const t = useTranslations("RawMaterials");
   const router = useRouter();
@@ -74,6 +86,7 @@ export function MaterialForm({
   const [matches, setMatches] = useState<Match[]>([]);
   const [missing, setMissing] = useState<{ field: string; label: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
 
   function set<K extends keyof MaterialFormValues>(key: K, value: MaterialFormValues[K]) {
@@ -123,11 +136,11 @@ export function MaterialForm({
     if (!values.name.trim()) list.push({ field: "name", label: t("form.name") });
     if (!values.noBrand && !values.brand.trim()) list.push({ field: "brand", label: t("form.brand") });
     if (!values.materialTypeId) list.push({ field: "type", label: t("form.type") });
-    if (!isPositiveDecimal(values.packQuantity))
+    if (!approved && !isPositiveDecimal(values.packQuantity))
       list.push({ field: "packQuantity", label: t("form.packQuantity") });
-    if (values.price !== "" && !isDecimal(values.price))
+    if (!approved && values.price !== "" && !isDecimal(values.price))
       list.push({ field: "price", label: t("form.price") });
-    if (isFree && !values.freeReason.trim())
+    if (!approved && isFree && !values.freeReason.trim())
       list.push({ field: "freeReason", label: t("form.freeReason") });
     for (const key of ["abv", "bx"] as const) {
       const value = values[key];
@@ -143,12 +156,15 @@ export function MaterialForm({
     setError(null);
     if (list.length > 0) return;
     startTransition(async () => {
-      const result = await saveMaterial({ ...values, submit });
+      const result =
+        approved && values.id
+          ? await editApprovedMaterial(values.id, values, reason)
+          : await saveMaterial({ ...values, submit });
       if (!result.ok) {
         setError(t.has(`errors.${result.error}`) ? t(`errors.${result.error}`) : t("errors.UNKNOWN"));
         return;
       }
-      router.push(`/raw-materials/${result.id}`);
+      router.push(`/raw-materials/${values.id ?? ("id" in result ? result.id : "")}`);
       router.refresh();
     });
   }
@@ -165,7 +181,7 @@ export function MaterialForm({
 
   return (
     <form
-      className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"
+      className={`grid items-start gap-6 ${approved ? "max-w-3xl" : "lg:grid-cols-[minmax(0,1fr)_320px]"}`}
       onSubmit={(event) => {
         event.preventDefault();
         save(true);
@@ -274,66 +290,73 @@ export function MaterialForm({
               className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
             />
           </Field>
+          <PhotoField
+            assetId={values.photoAssetId}
+            url={photoUrl}
+            onChange={(assetId) => set("photoAssetId", assetId)}
+          />
         </section>
 
-        <section className={cardClass} aria-labelledby="pack-heading">
-          <h2 id="pack-heading" className="text-base font-semibold">
-            {t("form.packAndPrice")}
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-            <Field id="packQuantity" label={t("form.packQuantity")}>
-              <input
-                id="packQuantity"
-                inputMode="decimal"
-                value={values.packQuantity}
-                onChange={(event) => set("packQuantity", event.target.value.replace(",", "."))}
-                className={inputClass}
-              />
-            </Field>
-            <Field id="unit" label={t("form.unit")}>
-              <select
-                id="unit"
-                value={values.unit}
-                onChange={(event) => set("unit", event.target.value as MaterialFormValues["unit"])}
-                className={inputClass}
-              >
-                <option value="ml">ml</option>
-                <option value="g">g</option>
-              </select>
-            </Field>
-          </div>
-          <Field id="price" label={t("form.price")} hint={t("form.priceHint")}>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">RM</span>
-              <input
-                id="price"
-                inputMode="decimal"
-                value={values.price}
-                onChange={(event) => set("price", event.target.value.replace(",", "."))}
-                className={inputClass}
-              />
+        {!approved && (
+          <section className={cardClass} aria-labelledby="pack-heading">
+            <h2 id="pack-heading" className="text-base font-semibold">
+              {t("form.packAndPrice")}
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+              <Field id="packQuantity" label={t("form.packQuantity")}>
+                <input
+                  id="packQuantity"
+                  inputMode="decimal"
+                  value={values.packQuantity}
+                  onChange={(event) => set("packQuantity", event.target.value.replace(",", "."))}
+                  className={inputClass}
+                />
+              </Field>
+              <Field id="unit" label={t("form.unit")}>
+                <select
+                  id="unit"
+                  value={values.unit}
+                  onChange={(event) => set("unit", event.target.value as MaterialFormValues["unit"])}
+                  className={inputClass}
+                >
+                  <option value="ml">ml</option>
+                  <option value="g">g</option>
+                </select>
+              </Field>
             </div>
-          </Field>
-          {isFree && (
-            <Field id="freeReason" label={t("form.freeReason")}>
+            <Field id="price" label={t("form.price")} hint={t("form.priceHint")}>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold">RM</span>
+                <input
+                  id="price"
+                  inputMode="decimal"
+                  value={values.price}
+                  onChange={(event) => set("price", event.target.value.replace(",", "."))}
+                  className={inputClass}
+                />
+              </div>
+            </Field>
+            {isFree && (
+              <Field id="freeReason" label={t("form.freeReason")}>
+                <input
+                  id="freeReason"
+                  value={values.freeReason}
+                  onChange={(event) => set("freeReason", event.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+            )}
+            <Field id="packDescription" label={t("form.packDescription")}>
               <input
-                id="freeReason"
-                value={values.freeReason}
-                onChange={(event) => set("freeReason", event.target.value)}
+                id="packDescription"
+                value={values.packDescription}
+                onChange={(event) => set("packDescription", event.target.value)}
                 className={inputClass}
               />
             </Field>
-          )}
-          <Field id="packDescription" label={t("form.packDescription")}>
-            <input
-              id="packDescription"
-              value={values.packDescription}
-              onChange={(event) => set("packDescription", event.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <div className="rounded-[14px] bg-brand-base/60 p-4 lg:hidden">{summary}</div>
-        </section>
+            <div className="rounded-[14px] bg-brand-base/60 p-4 lg:hidden">{summary}</div>
+          </section>
+        )}
 
         <details className={cardClass} open={Boolean(values.abv || values.bx || values.isCoffeeBean)}>
           <summary className="cursor-pointer text-base font-semibold">{t("form.additional")}</summary>
@@ -368,45 +391,71 @@ export function MaterialForm({
           </label>
         </details>
 
+        {approved && !approved.isAdmin && (
+          <Field id="changeReason" label={t("edit.reason")}>
+            <textarea
+              id="changeReason"
+              rows={2}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
+            />
+          </Field>
+        )}
         {error && (
           <p role="alert" className={errorClass}>
             {error}
           </p>
         )}
-        <div className="flex flex-wrap gap-3">
-          <button type="button" disabled={pending} onClick={() => save(false)} className={secondaryButtonClass}>
-            {t("form.saveDraft")}
-          </button>
-          <button type="submit" disabled={pending} className={primaryButtonClass}>
-            {pending ? t("form.saving") : t("form.submit")}
-          </button>
-        </div>
+        {approved ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-[13px] text-[#3d3f3a]">
+              {approved.isAdmin ? t("edit.adminNote") : t("edit.managerNote")}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button type="submit" disabled={pending} className={primaryButtonClass}>
+                {pending ? t("form.saving") : approved.isAdmin ? t("edit.save") : t("edit.request")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            <button type="button" disabled={pending} onClick={() => save(false)} className={secondaryButtonClass}>
+              {t("form.saveDraft")}
+            </button>
+            <button type="submit" disabled={pending} className={primaryButtonClass}>
+              {pending ? t("form.saving") : t("form.submit")}
+            </button>
+          </div>
+        )}
       </div>
 
-      <aside className={`${cardClass} sticky top-6 hidden lg:flex`} aria-label={t("form.summary")}>
-        <h2 className="text-base font-semibold">{t("form.summary")}</h2>
-        <dl className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between gap-3">
-            <dt className="text-[#3d3f3a]">{t("form.name")}</dt>
-            <dd className="text-right font-semibold">{values.name || "—"}</dd>
-          </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-[#3d3f3a]">{t("form.brand")}</dt>
-            <dd className="text-right">{values.noBrand ? t("noBrand") : values.brand || "—"}</dd>
-          </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-[#3d3f3a]">{t("form.pack")}</dt>
-            <dd className="text-right tabular-nums">
-              {values.packQuantity ? `${values.packQuantity} ${values.unit}` : "—"}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-[#3d3f3a]">{t("form.price")}</dt>
-            <dd className="text-right tabular-nums">{values.price ? `RM${values.price}` : "—"}</dd>
-          </div>
-        </dl>
-        <div className="border-t border-black/15 pt-4">{summary}</div>
-      </aside>
+      {!approved && (
+        <aside className={`${cardClass} sticky top-6 hidden lg:flex`} aria-label={t("form.summary")}>
+          <h2 className="text-base font-semibold">{t("form.summary")}</h2>
+          <dl className="flex flex-col gap-2 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-[#3d3f3a]">{t("form.name")}</dt>
+              <dd className="text-right font-semibold">{values.name || "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[#3d3f3a]">{t("form.brand")}</dt>
+              <dd className="text-right">{values.noBrand ? t("noBrand") : values.brand || "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[#3d3f3a]">{t("form.pack")}</dt>
+              <dd className="text-right tabular-nums">
+                {values.packQuantity ? `${values.packQuantity} ${values.unit}` : "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-[#3d3f3a]">{t("form.price")}</dt>
+              <dd className="text-right tabular-nums">{values.price ? `RM${values.price}` : "—"}</dd>
+            </div>
+          </dl>
+          <div className="border-t border-black/15 pt-4">{summary}</div>
+        </aside>
+      )}
     </form>
   );
 }

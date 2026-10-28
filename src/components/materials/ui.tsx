@@ -35,11 +35,17 @@ export function StatusBadge({ status }: { status: ApprovalStatus }) {
   );
 }
 
-export function SectionTabs({ active }: { active: "materials" | "packaging" }) {
+export function SectionTabs({
+  active,
+  basePath = "/raw-materials",
+}: {
+  active: "materials" | "packaging";
+  basePath?: string;
+}) {
   const t = useTranslations("RawMaterials");
   const tabs = [
-    { key: "materials", href: "/raw-materials", label: t("tabMaterials") },
-    { key: "packaging", href: "/raw-materials?tab=packaging", label: t("tabPackaging") },
+    { key: "materials", href: basePath, label: t("tabMaterials") },
+    { key: "packaging", href: `${basePath}?tab=packaging`, label: t("tabPackaging") },
   ] as const;
   return (
     <nav aria-label={t("sections")} className="flex gap-2">
