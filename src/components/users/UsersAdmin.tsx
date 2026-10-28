@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/styles";
 import { useRouter } from "@/i18n/navigation";
 import type { Outlet, UserRole } from "@/lib/auth/currentUser";
+import { inviteUser } from "@/app/[locale]/(app)/users/actions";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import { OutletPicker } from "./OutletPicker";
@@ -94,36 +95,33 @@ export function UsersAdmin({
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [link, setLink] = useState<{ email: string; url: string; expiresAt: string } | null>(null);
+  const [sent, setSent] = useState<{ email: string; expiresAt: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function createInvite(target: { email: string; role: UserRole; outletIds: string[] }) {
     setInviteBusy(true);
     setInviteError(null);
     setLink(null);
+    setSent(null);
     setCopied(false);
-    const { data, error } = await createClient().rpc("create_invitation", {
-      p_email: target.email,
-      p_role: target.role,
-      p_outlet_ids: target.outletIds,
-    });
+    const result = await inviteUser(target).catch(() => null);
     setInviteBusy(false);
-    if (error || !data?.[0]) {
+    if (!result?.ok) {
       setInviteError(
-        error?.code === "23505"
+        result?.error === "EMAIL_HAS_ACCOUNT"
           ? t("emailHasAccount")
-          : error?.code === "23514"
+          : result?.error === "OUTLET_RULE"
             ? t("outletRule")
             : t("inviteFailed"),
       );
       return false;
     }
-    // Only shown now: the database keeps a hash of the token, not the token.
-    // English by default; the invite page has a language switch.
-    setLink({
-      email: target.email,
-      url: `${window.location.origin}/en/invite/${data[0].token}`,
-      expiresAt: data[0].expires_at,
-    });
+    if (result.emailed) {
+      setSent({ email: result.email, expiresAt: result.expiresAt });
+    } else {
+      // Only shown now: the database keeps a hash of the token, not the token.
+      setLink({ email: result.email, url: result.url, expiresAt: result.expiresAt });
+    }
     router.refresh();
     return true;
   }
@@ -274,9 +272,15 @@ export function UsersAdmin({
         <button type="submit" disabled={inviteBusy} className={`${primaryButton} self-start`}>
           {inviteBusy ? t("creatingLink") : t("createLink")}
         </button>
-        {link && (
+        {sent && (
           <div className="flex flex-col gap-2 rounded-[14px] border-[1.5px] border-brand-leaf p-4" role="status">
-            <p className="text-sm font-semibold">{t("linkReady", { email: link.email })}</p>
+            <p className="text-sm font-semibold">{t("emailSent", { email: sent.email })}</p>
+            <p className={mutedText}>{t("emailSentNote", { date: dateTime(sent.expiresAt) })}</p>
+          </div>
+        )}
+        {link && (
+          <div className="flex flex-col gap-2 rounded-[14px] border-[1.5px] border-brand-orange p-4" role="status">
+            <p className="text-sm font-semibold">{t("emailFailed", { email: link.email })}</p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 readOnly
