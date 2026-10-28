@@ -27,7 +27,7 @@ export function CostLines({ lines, depth = 0 }: { lines: CostNode[]; depth?: num
               {line.quantity !== null && (
                 <span className="text-[#3d3f3a]">
                   {" "}
-                  · {format.number(line.quantity)} {line.unit}
+                  · {format.number(line.quantity)} {line.unit === "piece" ? t("unitPiece") : line.unit}
                 </span>
               )}
             </span>

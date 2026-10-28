@@ -38,12 +38,13 @@ export function CostSummary({ cost, title }: { cost: CostResult | null; title: s
 }
 
 function CostRow({ line }: { line: CostLine }) {
+  const t = useTranslations("Recipes");
   return (
     <li className="flex justify-between gap-3 py-1.5">
       <span>
         {line.display_name}
         <span className="ml-1 text-[#3d3f3a]">
-          {line.quantity} {line.unit}
+          {line.quantity} {line.unit === "piece" ? t("unitPiece") : line.unit}
         </span>
       </span>
       <span className="shrink-0 tabular-nums">{formatMoney(line.line_cost)}</span>

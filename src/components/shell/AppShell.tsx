@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import type { CurrentUser } from "@/lib/auth/currentUser";
 import { LocaleSwitch } from "./LocaleSwitch";
 import { Logo } from "./Logo";
+import { LogoutButton } from "./LogoutButton";
 import { MobileNav } from "./MobileNav";
 import { NavLinks } from "./NavLinks";
 
@@ -23,7 +24,7 @@ export function AppShell({
       <aside className="sticky top-0 hidden h-dvh print:hidden w-60 shrink-0 flex-col gap-6 border-r border-black/15 px-4 py-6 md:flex">
         <Logo className="px-3.5" />
         <nav aria-label={t("mainNav")}>
-          <NavLinks />
+          <NavLinks role={user?.role ?? null} />
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -32,7 +33,7 @@ export function AppShell({
           <dl className="order-last flex w-full flex-wrap gap-x-4 gap-y-1 text-sm md:order-none md:w-auto">
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("role")}</dt>
-              <dd className="font-semibold">{user?.role ?? "—"}</dd>
+              <dd className="font-semibold">{user ? t(`roles.${user.role}`) : "—"}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("outletScope")}</dt>
@@ -41,7 +42,8 @@ export function AppShell({
           </dl>
           <div className="ml-auto flex items-center gap-2">
             <LocaleSwitch />
-            <MobileNav />
+            <LogoutButton className="hidden rounded-full px-3 py-1.5 text-sm hover:bg-black/10 disabled:opacity-50 md:block" />
+            <MobileNav role={user?.role ?? null} />
           </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>

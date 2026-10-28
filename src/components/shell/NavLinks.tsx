@@ -2,15 +2,16 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import type { UserRole } from "@/lib/auth/currentUser";
 import { navItems } from "./navItems";
 
-export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function NavLinks({ role, onNavigate }: { role: UserRole | null; onNavigate?: () => void }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
 
   return (
     <ul className="flex flex-col gap-1">
-      {navItems.map((item) => {
+      {navItems.filter((item) => role && (item.roles as readonly UserRole[]).includes(role)).map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (

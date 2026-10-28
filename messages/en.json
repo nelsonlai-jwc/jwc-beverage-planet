@@ -32,7 +32,13 @@
     "closeMenu": "Close",
     "role": "Role",
     "outletScope": "Outlets",
-    "allOutlets": "All outlets"
+    "allOutlets": "All outlets",
+    "logout": "Log out",
+    "roles": {
+      "ADMIN": "Admin",
+      "MANAGER": "Manager",
+      "BARISTA": "Barista"
+    }
   },
   "Placeholder": {
     "comingSoon": "This page is not built yet."
@@ -73,6 +79,16 @@
         "label": "Language",
         "rule": "English and Simplified Chinese enabled. Malay later."
       }
+    },
+    "values": {
+      "Coffee": "Coffee",
+      "Tea": "Tea",
+      "Cocktail": "Cocktail",
+      "Mocktail": "Mocktail",
+      "Prep Material": "Prep Material",
+      "Hot": "Hot",
+      "Cold": "Cold",
+      "Frozen": "Frozen"
     }
   },
   "Invite": {
@@ -188,7 +204,8 @@
       "NOT_OFFICIAL_RELEASE": "R&D recipes cannot go on a menu.",
       "DEPENDENCY_INVALID": "A Prep Material it uses is not approved.",
       "PRICE_CONFLICT": "Another published menu of this outlet sells it at a different price."
-    }
+    },
+    "invalidPrice": "Fix the prices marked in red. Prices must be greater than zero."
   },
   "Calibration": {
     "title": "Daily Coffee Calibration",
@@ -662,7 +679,9 @@
     "useExisting": "Use existing recipe",
     "createAnother": "Create another",
     "copyNow": "Copy as draft",
-    "noCopyTargets": "You don't manage another outlet to copy into."
+    "noCopyTargets": "You don't manage another outlet to copy into.",
+    "createNotAllowed": "Only Managers and Admins can create recipes.",
+    "unitPiece": "piece"
   },
   "Reports": {
     "title": "Reports",
@@ -768,6 +787,7 @@
       "NO_INGREDIENTS": "No ingredients",
       "NO_SNAPSHOT": "No approval snapshot",
       "UNKNOWN": "Cost unavailable"
-    }
+    },
+    "unitPiece": "piece"
   }
 }

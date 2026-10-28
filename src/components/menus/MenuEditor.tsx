@@ -122,6 +122,15 @@ export function MenuEditor({
     return true;
   }
 
+  // The database rejects prices of zero or less; mark those rows instead of failing the save.
+  function pricesValid(): boolean {
+    const invalid = rows.filter((row) => row.price !== "" && !(Number(row.price) > 0));
+    if (invalid.length === 0) return true;
+    setProblems(invalid.map((row) => ({ recipe_id: row.recipeId, code: "PRICE_MISSING" })));
+    setError(t("invalidPrice"));
+    return false;
+  }
+
   async function run(action: () => Promise<boolean>) {
     if (busy) return;
     setBusy(true);
@@ -138,6 +147,7 @@ export function MenuEditor({
   function handleSave() {
     return run(async () => {
       setProblems([]);
+      if (!pricesValid()) return false;
       const ok = await saveDraft();
       if (!ok) setError(t("saveFailed"));
       else setNotice(t("draftSaved"));
@@ -148,6 +158,7 @@ export function MenuEditor({
   function handlePublish() {
     return run(async () => {
       setProblems([]);
+      if (!pricesValid()) return false;
       if (hasPending && !(await saveDraft())) {
         setError(t("saveFailed"));
         return false;
