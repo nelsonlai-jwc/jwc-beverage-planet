@@ -4,7 +4,9 @@ import { Link } from "@/i18n/navigation";
 import { getOutlets, getRecipeCost, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { formatDateTime, toSopData } from "@/lib/recipes/format";
 import { createClient } from "@/lib/supabase/server";
+import { ReviewActions as ChangeReview } from "@/components/materials/ReviewActions";
 import { CostSummary } from "@/components/recipes/CostSummary";
+import { ArchiveRecipeButton, RestoreRecipeButton } from "@/components/recipes/RecipeRemove";
 import { SopView } from "@/components/recipes/SopView";
 import { VersionActions } from "@/components/recipes/VersionActions";
 import { PurposeBadge, StatusBadge, card, primaryButton } from "@/components/recipes/ui";
@@ -38,7 +40,7 @@ export default async function RecipeDetailPage({
     : null;
   const approvedMeta = (versions ?? []).find((v) => v.id === recipe.current_approved_version_id);
 
-  const [events, provenance, menus, cost] = canManage
+  const [events, provenance, menus, cost, requests] = canManage
     ? await Promise.all([
         supabase
           .from("approval_events")
@@ -49,8 +51,24 @@ export default async function RecipeDetailPage({
         supabase.from("recipe_copy_provenance").select("source_recipe_id, source_outlet_id, copied_at").eq("target_recipe_id", recipeId).maybeSingle(),
         supabase.from("menu_items").select("menu_id, menus!inner(name, status)").eq("recipe_id", recipeId),
         approved ? getRecipeCost(supabase, approved.id) : Promise.resolve(null),
+        supabase
+          .from("change_requests")
+          .select("id, action, status, reason, review_reason, requested_by")
+          .eq("entity_type", "RECIPE")
+          .eq("entity_id", recipeId)
+          .eq("action", "ARCHIVE")
+          .order("created_at", { ascending: false })
+          .limit(1),
       ])
-    : [null, null, null, null];
+    : [null, null, null, null, null];
+
+  const archived = recipe.status === "ARCHIVED";
+  const request = requests?.data?.[0];
+  const pendingArchive = request?.status === "PENDING" ? request : null;
+  const returnedArchive = request?.status === "RETURNED" && request.requested_by === viewer.id ? request : null;
+  // Never submitted: really deleted with the draft (VersionActions). Otherwise archived.
+  const neverSubmitted = !approved && (versions ?? []).every((v) => v.status === "DRAFT");
+  const archiveMode = viewer.role === "ADMIN" || !approved ? "archive" : "request";
 
   const returnReason =
     open?.status === "RETURNED"
@@ -72,6 +90,13 @@ export default async function RecipeDetailPage({
           <span>{recipe.is_prep ? t("prep") : t("drink")}</span>
           {approved && <PurposeBadge purpose={approved.purpose} />}
         </p>
+        {archived && (
+          <div role="status" className="flex flex-col gap-2 rounded-[20px] border-[1.5px] border-black bg-white p-5">
+            <p className="text-sm font-semibold">{t("archive.archivedTitle")}</p>
+            <p className="text-sm">{t("archive.archivedNote")}</p>
+            {viewer.role === "ADMIN" && <RestoreRecipeButton recipeId={recipe.id} />}
+          </div>
+        )}
         {provenance?.data && (
           <p className="text-sm">
             {t("copiedFrom", {
@@ -111,16 +136,46 @@ export default async function RecipeDetailPage({
               ) : (
                 <p className="text-sm text-[#3d3f3a]">{t("noOpenVersion")}</p>
               )}
-              <VersionActions
-                recipeId={recipe.id}
-                open={
-                  open
-                    ? { id: open.id, status: open.status, versionNo: open.version_no, submittedByMe: open.submitted_by === viewer.id }
-                    : null
-                }
-                hasApproved={Boolean(approved)}
-                canReview={viewer.role === "ADMIN"}
-              />
+              {!archived && (
+                <VersionActions
+                  recipeId={recipe.id}
+                  open={
+                    open
+                      ? { id: open.id, status: open.status, versionNo: open.version_no, submittedByMe: open.submitted_by === viewer.id }
+                      : null
+                  }
+                  hasApproved={Boolean(approved)}
+                  canReview={viewer.role === "ADMIN"}
+                />
+              )}
+              {!archived && !neverSubmitted && !pendingArchive && (
+                <ArchiveRecipeButton recipeId={recipe.id} mode={archiveMode} />
+              )}
+              <Link href={`/recipes/${recipe.id}/history`} className="text-sm underline">
+                {t("changeLog.open")}
+              </Link>
+            </section>
+          )}
+
+          {pendingArchive && (
+            <section className="flex flex-col gap-3 rounded-[20px] border-[1.5px] border-brand-orange bg-white p-5">
+              <p className="text-sm font-semibold">{t("archive.pendingTitle")}</p>
+              {pendingArchive.reason && (
+                <p className="text-sm">
+                  {t("archive.reason")}: {pendingArchive.reason}
+                </p>
+              )}
+              {viewer.role === "ADMIN" ? (
+                <ChangeReview kind="change" id={pendingArchive.id} />
+              ) : (
+                <p className="text-[13px] text-[#3d3f3a]">{t("archive.waiting")}</p>
+              )}
+            </section>
+          )}
+          {returnedArchive && (
+            <section role="status" className="rounded-[20px] border-[1.5px] border-brand-red bg-white p-5">
+              <p className="text-sm font-semibold">{t("archive.returnedTitle")}</p>
+              <p className="mt-1 text-sm">{returnedArchive.review_reason}</p>
             </section>
           )}
 

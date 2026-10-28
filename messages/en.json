@@ -487,7 +487,9 @@
       "UNIT_INVALID": "Unit must be g or ml.",
       "YES_NO_INVALID": "Use yes or no.",
       "DUPLICATE_EXISTING": "Already exists in the system.",
-      "DUPLICATE_IN_FILE": "Appears twice in the file."
+      "DUPLICATE_IN_FILE": "Appears twice in the file.",
+      "ON_MENU": "This recipe is on a published menu. Take it off the menu first.",
+      "VERSION_PENDING": "A version of this recipe is waiting for approval. Review it first."
     },
     "export": "Export CSV",
     "import": {
@@ -680,7 +682,7 @@
     "returnReason": "Returned:",
     "editDraft": "Edit draft",
     "withdraw": "Withdraw",
-    "newVersion": "Create new version",
+    "newVersion": "Edit",
     "deleteDraft": "Delete draft",
     "deleteDraftConfirm": "Delete this draft? This can't be undone.",
     "actionFailed": "That didn't work.",
@@ -869,7 +871,71 @@
     "copyNow": "Copy as draft",
     "noCopyTargets": "You don't manage another outlet to copy into.",
     "createNotAllowed": "Only Managers and Admins can create recipes.",
-    "unitPiece": "piece"
+    "unitPiece": "piece",
+    "exportCsv": "Export CSV",
+    "dragToSort": "Drag to reorder",
+    "ingredientLetter": "Ingredient {letter}",
+    "insertIngredient": "Insert ingredient:",
+    "insertLetter": "Insert [{letter}] {name}",
+    "saveAndApply": "Save and apply",
+    "photoConvert": "This HEIC photo couldn't be converted. Try exporting it as JPEG.",
+    "actionErrors": {
+      "NOT_ALLOWED": "You don't have permission to do this.",
+      "NOT_ARCHIVABLE": "This recipe can't be archived.",
+      "NOT_ARCHIVED": "This recipe isn't archived.",
+      "IN_USE": "A live recipe uses this as Prep Material. Remove it there first.",
+      "ON_MENU": "This recipe is on a published menu. Take it off the menu first.",
+      "VERSION_PENDING": "A version is waiting for approval. Withdraw or review it first.",
+      "REASON_REQUIRED": "Please give a reason.",
+      "REQUEST_ALREADY_PENDING": "A request for this recipe is already waiting for Admin.",
+      "RECIPE_ARCHIVED": "This recipe is archived.",
+      "UNKNOWN": "Something went wrong."
+    },
+    "changeLog": {
+      "open": "Change log",
+      "title": "Change log",
+      "empty": "No changes yet.",
+      "summary": "Change summary",
+      "version": {
+        "CREATE": "Recipe created",
+        "NEW_VERSION": "New version started"
+      },
+      "direct": {
+        "ARCHIVE": "Deleted (archived)",
+        "RESTORE": "Restored"
+      },
+      "requested": {
+        "ARCHIVE": "Deletion requested",
+        "RESTORE": "Restore requested"
+      },
+      "kind": {
+        "ARCHIVE": "Deletion request",
+        "RESTORE": "Restore"
+      },
+      "reviewed": {
+        "APPROVED": "{action} approved",
+        "RETURNED": "{action} returned"
+      }
+    },
+    "archive": {
+      "delete": "Delete",
+      "request": "Request deletion",
+      "requested": "Deletion request sent to Admin.",
+      "archiveNote": "The recipe will be archived: it leaves the lists and can't be used any more. Its versions, cost and approval history are kept, and Admin can restore it.",
+      "requestNote": "An approved recipe is deleted only after Admin approves. Until then it stays in use.",
+      "reason": "Reason",
+      "reasonOptional": "Reason (optional)",
+      "confirmArchive": "Delete (archive)",
+      "confirmRequest": "Send request",
+      "cancel": "Cancel",
+      "restore": "Restore",
+      "archivedTitle": "Archived",
+      "archivedNote": "Hidden from the lists. Its versions, cost and approval history are kept.",
+      "pendingTitle": "Deletion waiting for Admin approval",
+      "waiting": "Until Admin decides, the recipe stays in use.",
+      "returnedTitle": "Your deletion request was returned",
+      "requestsTitle": "Deletion requests"
+    }
   },
   "Reports": {
     "title": "Reports",

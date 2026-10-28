@@ -15,6 +15,7 @@ export default async function EditRecipePage({
   const viewer = await getViewer(supabase);
   const { data: recipe } = await supabase.from("recipes").select("*").eq("id", recipeId).maybeSingle();
   if (!viewer || !recipe || !viewer.managedOutletIds.includes(recipe.outlet_id)) notFound();
+  if (recipe.status === "ARCHIVED") redirect(`/${locale}/recipes/${recipeId}`);
 
   const { data: open } = await supabase
     .from("recipe_versions")
@@ -68,6 +69,7 @@ export default async function EditRecipePage({
         approved: p.status === "APPROVED",
       }))}
       initialCost={cost}
+      adminDirect={viewer.role === "ADMIN" && Boolean(recipe.current_approved_version_id)}
     />
   );
 }
