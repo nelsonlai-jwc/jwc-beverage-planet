@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getOutlets, getRecipeCost, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
+import { STYLES, TEMPS } from "@/lib/recipes/types";
+import { getOptionLabels, orderOf } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 import { RecipeEditor } from "@/components/recipes/RecipeEditor";
 
@@ -47,6 +49,7 @@ export default async function EditRecipePage({
     getRecipeCost(supabase, open.id),
   ]);
   if (!version) notFound();
+  const labels = await getOptionLabels();
   const prepNames = await getRecipeNames(supabase, (preps.data ?? []).map((p) => p.id));
 
   return (
@@ -70,6 +73,8 @@ export default async function EditRecipePage({
       }))}
       initialCost={cost}
       adminDirect={viewer.role === "ADMIN" && Boolean(recipe.current_approved_version_id)}
+      styles={orderOf(labels, "STYLE", STYLES)}
+      temps={orderOf(labels, "TEMP", TEMPS)}
     />
   );
 }

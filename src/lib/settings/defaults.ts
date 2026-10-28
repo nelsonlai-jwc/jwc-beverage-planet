@@ -1,5 +1,6 @@
 // Initial values from design plan V0.2 chapter 16 (Admin Settings).
-// Read-only until the settings tables exist.
+// Material types, outlets, style, temp and strength now come from the database;
+// unit, currency and language stay fixed here.
 export const settingGroups = [
   { key: "strength", values: ["0", "1", "2", "3", "4", "5"] },
   {

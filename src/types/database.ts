@@ -1450,6 +1450,36 @@ export type Database = {
           },
         ]
       }
+      option_labels: {
+        Row: {
+          label_en: string
+          label_zh: string
+          option_group: string
+          revision: number
+          sort_order: number
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          label_en: string
+          label_zh: string
+          option_group: string
+          revision?: number
+          sort_order: number
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          label_en?: string
+          label_zh?: string
+          option_group?: string
+          revision?: number
+          sort_order?: number
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       outlets: {
         Row: {
           code: string
@@ -1458,6 +1488,7 @@ export type Database = {
           is_active: boolean
           name: string
           revision: number
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -1467,6 +1498,7 @@ export type Database = {
           is_active?: boolean
           name: string
           revision?: number
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -1476,6 +1508,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           revision?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -2346,6 +2379,8 @@ export type Database = {
         Args: { p_approve: boolean; p_reason?: string | null; p_request_id: string }
         Returns: undefined
       }
+      remove_setting_value: { Args: { p_group: string; p_id: string }; Returns: string }
+      reorder_setting_values: { Args: { p_group: string; p_ids: string[] }; Returns: undefined }
       publish_recipe_version: {
         Args: { p_idempotency_key: string; p_revision: number; p_version_id: string }
         Returns: Json
