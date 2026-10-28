@@ -7,7 +7,7 @@ import type { Database } from "./types/database";
 const intlMiddleware = createMiddleware(routing);
 
 // Pages reachable without signing in (path after the locale prefix).
-const publicPaths = [/^\/login$/, /^\/invite\/[^/]+$/];
+const publicPaths = [/^\/login$/, /^\/invite\/[^/]+$/, /^\/forgot-password$/, /^\/reset-password$/];
 
 export default async function middleware(request: NextRequest) {
   const response = intlMiddleware(request);

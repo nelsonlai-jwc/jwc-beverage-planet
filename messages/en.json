@@ -323,7 +323,13 @@
     "saving": "Saving…",
     "cancel": "Cancel",
     "conflict": "Someone else changed this user. The latest details are now shown; please try again.",
-    "lastAdmin": "You cannot remove the last active Admin."
+    "lastAdmin": "You cannot remove the last active Admin.",
+    "resetPassword": "Send password reset email",
+    "resetSending": "Sending…",
+    "resetConfirm": "Send a password reset email to {email}?",
+    "resetSent": "Reset email sent to {email}.",
+    "resetRateLimited": "Too many emails sent. Please wait a while and try again.",
+    "resetFailed": "Could not send the reset email. Please try again."
   },
   "RawMaterials": {
     "title": "Raw Material",
@@ -808,5 +814,37 @@
       "UNKNOWN": "Cost unavailable"
     },
     "unitPiece": "piece"
+  },
+  "ForgotPassword": {
+    "title": "Forgot password",
+    "intro": "Enter your email. If it has an account, we will send a link to set a new password.",
+    "email": "Email",
+    "submit": "Send reset link",
+    "submitting": "Sending…",
+    "sent": "If this email has an account, a reset link is on its way. Check your inbox and spam folder.",
+    "rateLimited": "Too many requests. Please wait a while and try again.",
+    "networkError": "Can't reach the server. Check your connection and try again.",
+    "failed": "Could not send the email. Please try again.",
+    "backToLogin": "Back to sign in"
+  },
+  "ResetPassword": {
+    "title": "Set a new password",
+    "checking": "Checking the link…",
+    "invalidLink": "This link is invalid or has expired.",
+    "requestNew": "Request a new link",
+    "rule": "At least {min} characters.",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "show": "Show",
+    "hide": "Hide",
+    "submit": "Save new password",
+    "saving": "Saving…",
+    "saved": "Password changed. Sign in with your new password.",
+    "toLogin": "Go to sign in",
+    "tooShort": "The new password needs at least {min} characters.",
+    "mismatch": "The two new passwords do not match.",
+    "samePassword": "The new password must be different from the current one.",
+    "networkError": "Can't reach the server. Check your connection and try again.",
+    "failed": "Could not change the password. Please request a new link."
   }
 }

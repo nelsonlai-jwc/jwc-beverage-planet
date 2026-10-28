@@ -3,7 +3,7 @@
 import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
@@ -97,9 +97,9 @@ export function LoginForm() {
           </button>
         </div>
       </div>
-      <a href="#" className="self-start text-sm underline">
+      <Link href="/forgot-password" className="self-start text-sm underline">
         {t("forgotPassword")}
-      </a>
+      </Link>
       {error && (
         <p role="alert" className="text-sm font-semibold text-[#c4161c]">
           {error}
