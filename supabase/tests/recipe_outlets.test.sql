@@ -182,4 +182,53 @@ exception when insufficient_privilege then
 end;
 $$;
 
+-- Admin changes a recipe's outlets --------------------------------------------------------
+do $$
+begin
+  perform public.set_recipe_outlets(current_setting('test.shared')::uuid,
+    (select array_agg(id) from public.outlets where code = 'KL-CABINET8'), false);
+  raise exception 'a Manager cannot change outlets';
+exception when insufficient_privilege then
+  null;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', true);
+do $$
+begin
+  -- JB-YOUBAR's published menu still lists it.
+  begin
+    perform public.set_recipe_outlets(current_setting('test.shared')::uuid,
+      (select array_agg(id) from public.outlets where code = 'JB-BROOOS'), false);
+    raise exception 'removing a menu outlet should fail';
+  exception when invalid_parameter_value then
+    assert sqlerrm = 'OUTLET_ON_MENU', sqlerrm;
+  end;
+  -- The House Syrup (all outlets) is used by the shared latte.
+  begin
+    perform public.set_recipe_outlets(current_setting('test.syrup')::uuid,
+      (select array_agg(id) from public.outlets where code = 'JB-BROOOS'), false);
+    raise exception 'narrowing a used Prep should fail';
+  exception when invalid_parameter_value then
+    assert sqlerrm = 'OUTLET_NEEDED', sqlerrm;
+  end;
+  perform public.set_recipe_outlets(current_setting('test.shared')::uuid,
+    (select array_agg(id) from public.outlets where code in ('JB-BROOOS', 'JB-YOUBAR', 'KL-CABINET8')), false);
+  assert (select count(*) from public.recipe_outlets where recipe_id = current_setting('test.shared')::uuid) = 3,
+    'three outlets now';
+  assert exists (select 1 from public.change_requests
+                  where entity_id = current_setting('test.shared')::uuid and action = 'EDIT' and status = 'APPROVED'),
+    'change is logged';
+end;
+$$;
+
+-- The KL Manager now sees it but still cannot edit it (does not manage the JB outlets).
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000d', true);
+do $$
+begin
+  assert exists (select 1 from public.recipes where id = current_setting('test.shared')::uuid), 'MK sees it now';
+  assert not private.can_manage_recipe(current_setting('test.shared')::uuid), 'MK still read-only';
+end;
+$$;
+
 rollback;

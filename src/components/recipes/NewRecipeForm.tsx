@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Outlet } from "@/lib/recipes/types";
+import { OutletChecklist } from "./OutletChecklist";
 import { alertClass, card, inputClass, primaryButton } from "./ui";
 
 // allowAll: an Admin can also make the recipe for every outlet.
@@ -49,36 +50,16 @@ export function NewRecipeForm({ outlets, allowAll }: { outlets: Outlet[]; allowA
     <form onSubmit={handleSubmit} className={card}>
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1.5 text-sm font-semibold">{t("fields.outlets")}</legend>
-        <div className="grid gap-x-4 sm:grid-cols-2">
-          {allowAll && (
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold sm:col-span-2">
-              <input
-                type="checkbox"
-                className="size-5 accent-black"
-                checked={allOutlets}
-                onChange={(e) => setAllOutlets(e.target.checked)}
-              />
-              {t("allOutletsOption")}
-            </label>
-          )}
-          {outlets.map((o) => (
-            <label
-              key={o.id}
-              className={`flex min-h-11 items-center gap-3 text-sm ${allOutlets ? "opacity-50" : "cursor-pointer"}`}
-            >
-              <input
-                type="checkbox"
-                className="size-5 accent-black"
-                disabled={allOutlets}
-                checked={allOutlets || outletIds.includes(o.id)}
-                onChange={(e) =>
-                  setOutletIds(e.target.checked ? [...outletIds, o.id] : outletIds.filter((id) => id !== o.id))
-                }
-              />
-              {o.name}
-            </label>
-          ))}
-        </div>
+        <OutletChecklist
+          outlets={outlets}
+          allowAll={allowAll}
+          outletIds={outletIds}
+          allOutlets={allOutlets}
+          onChange={(ids, all) => {
+            setOutletIds(ids);
+            setAllOutlets(all);
+          }}
+        />
         <span className="text-[13px] text-[#3d3f3a]">
           {allOutlets ? `${t("allOutletsHint")} ` : ""}
           {t("outletFixed")}

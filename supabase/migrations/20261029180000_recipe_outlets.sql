@@ -3,7 +3,7 @@
 --   * Staff see only their own outlet's recipes and menus (unchanged: published menus).
 --   * A Manager sees the recipes of the outlets they manage; the all-outlet catalogue is gone.
 --   * A new recipe can be made for several outlets (ticked on create); an Admin can also
---     make it for all outlets. The outlets are fixed after creation, as before.
+--     make it for all outlets. Only an Admin changes them later (set_recipe_outlets).
 --   * A Manager edits a recipe only when they manage every one of its outlets; otherwise
 --     they can only read it. Only an Admin edits an all-outlet recipe.
 -- recipes.outlet_id stays as the recipe's first outlet: approval events, cost snapshots
@@ -38,7 +38,8 @@ create trigger recipes_first_outlet after insert on public.recipes
 create or replace function private.recipes_guard() returns trigger
 language plpgsql set search_path = '' as $$
 begin
-  if new.outlet_id <> old.outlet_id or new.is_prep <> old.is_prep or new.all_outlets <> old.all_outlets then
+  if new.is_prep <> old.is_prep
+     or (private.is_api_caller() and (new.outlet_id <> old.outlet_id or new.all_outlets <> old.all_outlets)) then
     raise exception 'Recipe outlet and type are fixed; copy the recipe instead' using errcode = '23514';
   end if;
   if private.is_api_caller() and (
@@ -274,6 +275,94 @@ end;
 $$;
 revoke execute on function public.create_recipe(uuid[], boolean, boolean, text) from public, anon;
 grant execute on function public.create_recipe(uuid[], boolean, boolean, text) to authenticated;
+
+-- An Admin changes a recipe's outlets; applies at once and is logged as a direct EDIT.
+-- Refused when a menu of a removed outlet still lists it (OUTLET_ON_MENU), when a recipe
+-- using this Prep needs a removed outlet (OUTLET_NEEDED), or when a Prep it uses does not cover the
+-- new outlets (PREP_NOT_COVERED).
+create function private.recipe_outlets_label(p_recipe_id uuid) returns text
+language sql stable security definer set search_path = '' as $$
+  select case when r.all_outlets then 'ALL_OUTLETS' else (
+           select string_agg(o.name, ', ' order by o.sort_order, o.name)
+             from public.recipe_outlets ro join public.outlets o on o.id = ro.outlet_id
+            where ro.recipe_id = r.id) end
+    from public.recipes r where r.id = p_recipe_id;
+$$;
+
+create function public.set_recipe_outlets(p_recipe_id uuid, p_outlet_ids uuid[], p_all_outlets boolean)
+returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_outlets uuid[] := array(select distinct unnest(coalesce(p_outlet_ids, '{}')));
+  v_all boolean := coalesce(p_all_outlets, false);
+  v_recipe public.recipes;
+  v_old text;
+  v_new text;
+begin
+  perform private.require_admin();
+  select * into v_recipe from public.recipes where id = p_recipe_id for update;
+  if v_recipe.id is null then
+    raise exception 'NOT_FOUND' using errcode = '22023';
+  end if;
+  if v_all then
+    v_outlets := '{}';
+  else
+    if cardinality(v_outlets) = 0 then
+      raise exception 'OUTLET_REQUIRED' using errcode = '23514';
+    end if;
+    if (select count(*) from public.outlets where id = any (v_outlets) and is_active)
+       <> cardinality(v_outlets) then
+      raise exception 'Unknown or inactive outlet' using errcode = '23503';
+    end if;
+  end if;
+  v_old := private.recipe_outlets_label(p_recipe_id);
+
+  update public.recipes
+     set all_outlets = v_all,
+         outlet_id = case when v_all then outlet_id else
+           (select id from public.outlets where id = any (v_outlets) order by sort_order, name limit 1) end
+   where id = p_recipe_id;
+  delete from public.recipe_outlets where recipe_id = p_recipe_id;
+  insert into public.recipe_outlets (recipe_id, outlet_id)
+  select p_recipe_id, unnest(v_outlets);
+
+  if exists (
+    select 1 from public.menu_items mi join public.menus m on m.id = mi.menu_id
+     where mi.recipe_id = p_recipe_id and m.status <> 'ARCHIVED'
+       and not private.recipe_covers_outlet(p_recipe_id, m.outlet_id)) then
+    raise exception 'OUTLET_ON_MENU' using errcode = '22023';
+  end if;
+  if exists (
+    select 1 from public.recipe_ingredients ri
+      join public.recipe_versions v on v.id = ri.recipe_version_id
+      join public.recipes r on r.id = v.recipe_id
+     where ri.prep_recipe_id = p_recipe_id and r.status = 'ACTIVE'
+       and (v.id = r.current_approved_version_id or v.status in ('DRAFT', 'PENDING', 'RETURNED'))
+       and not private.recipe_covers_recipe(p_recipe_id, r.id)) then
+    raise exception 'OUTLET_NEEDED' using errcode = '22023';
+  end if;
+  if exists (
+    select 1 from public.recipe_ingredients ri
+      join public.recipe_versions v on v.id = ri.recipe_version_id
+     where v.recipe_id = p_recipe_id and ri.prep_recipe_id is not null
+       and (v.id = v_recipe.current_approved_version_id or v.status in ('DRAFT', 'PENDING', 'RETURNED'))
+       and not private.recipe_covers_recipe(ri.prep_recipe_id, p_recipe_id)) then
+    raise exception 'PREP_NOT_COVERED' using errcode = '22023';
+  end if;
+
+  v_new := private.recipe_outlets_label(p_recipe_id);
+  if v_new is distinct from v_old then
+    insert into public.change_requests
+      (entity_type, entity_id, outlet_id, action, changes, old_values, reason, status, reviewed_by, reviewed_at)
+    values
+      ('RECIPE', p_recipe_id, (select outlet_id from public.recipes where id = p_recipe_id), 'EDIT',
+       jsonb_build_object('outlets', v_new), jsonb_build_object('outlets', v_old),
+       v_old || ' → ' || v_new, 'APPROVED', auth.uid(), now());
+  end if;
+end;
+$$;
+revoke execute on function public.set_recipe_outlets(uuid, uuid[], boolean) from public, anon;
+grant execute on function public.set_recipe_outlets(uuid, uuid[], boolean) to authenticated;
 
 -- Workflow, copy, reports and usage follow the recipe's outlets ----------
 

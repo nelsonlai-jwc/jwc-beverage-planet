@@ -680,7 +680,7 @@
     "staffEmpty": "No published SOP for your outlet yet.",
     "noAccess": "Your account cannot view recipes.",
     "create": "Create recipe",
-    "createIntro": "Start a new draft for one or more of your outlets. The outlets can't be changed later; copy the recipe instead.",
+    "createIntro": "Start a new draft for one or more of your outlets. Only an Admin can change the outlets later.",
     "createDraft": "Create draft",
     "copyApproved": "Copy approved recipe",
     "tabsLabel": "Recipe views",
@@ -809,7 +809,7 @@
       "outlets": "Outlets"
     },
     "chooseOutlet": "Choose an outlet",
-    "outletFixed": "Fixed after creation.",
+    "outletFixed": "Only an Admin can change the outlets later.",
     "chooseIngredient": "Choose ingredient",
     "sharedMaterials": "Shared purchased material",
     "outletPreps": "This outlet's Prep Material",
@@ -925,7 +925,11 @@
       "REASON_REQUIRED": "Please give a reason.",
       "REQUEST_ALREADY_PENDING": "A request for this recipe is already waiting for Admin.",
       "RECIPE_ARCHIVED": "This recipe is archived.",
-      "UNKNOWN": "Something went wrong."
+      "UNKNOWN": "Something went wrong.",
+      "OUTLET_REQUIRED": "Choose at least one outlet.",
+      "OUTLET_ON_MENU": "A menu of an outlet you are removing still uses this recipe. Take it off that menu first.",
+      "OUTLET_NEEDED": "A recipe that uses this Prep Material is made for an outlet you are removing. Change that recipe first.",
+      "PREP_NOT_COVERED": "This recipe uses a Prep Material that is not made for every chosen outlet. Change the Prep Material's outlets first."
     },
     "changeLog": {
       "open": "Change log",
@@ -938,7 +942,8 @@
       },
       "direct": {
         "ARCHIVE": "Deleted (archived)",
-        "RESTORE": "Restored"
+        "RESTORE": "Restored",
+        "EDIT": "Outlets changed"
       },
       "requested": {
         "ARCHIVE": "Deletion requested",
@@ -951,7 +956,8 @@
       "reviewed": {
         "APPROVED": "{action} approved",
         "RETURNED": "{action} returned"
-      }
+      },
+      "outlets": "Outlets"
     },
     "archive": {
       "delete": "Delete",
@@ -987,7 +993,12 @@
     },
     "allOutletsOption": "All outlets",
     "allOutletsHint": "Every outlet, including ones added later.",
-    "readOnlyNote": "You can view this recipe. Only a Manager of all its outlets, or an Admin, can change it."
+    "readOnlyNote": "You can view this recipe. Only a Manager of all its outlets, or an Admin, can change it.",
+    "outletsEdit": {
+      "open": "Change outlets",
+      "save": "Save outlets",
+      "note": "Applies at once, without approval. Staff of removed outlets stop seeing this recipe."
+    }
   },
   "Reports": {
     "title": "Reports",

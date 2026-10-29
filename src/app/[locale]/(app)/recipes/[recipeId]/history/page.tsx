@@ -62,7 +62,12 @@ export default async function RecipeHistoryPage({
               </div>
               {row.reason && (
                 <p className="text-sm">
-                  {row.source === "VERSION" ? t("changeLog.summary") : t("archive.reason")}: {row.reason}
+                  {row.source === "VERSION"
+                    ? t("changeLog.summary")
+                    : row.action.startsWith("EDIT")
+                      ? t("changeLog.outlets")
+                      : t("archive.reason")}
+                  : {row.reason.replaceAll("ALL_OUTLETS", t("allOutletsOption"))}
                 </p>
               )}
             </li>

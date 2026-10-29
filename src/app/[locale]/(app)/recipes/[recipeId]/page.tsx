@@ -7,6 +7,7 @@ import { formatDateTime, toSopData } from "@/lib/recipes/format";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewActions as ChangeReview } from "@/components/materials/ReviewActions";
 import { CostSummary } from "@/components/recipes/CostSummary";
+import { RecipeOutletsEditor } from "@/components/recipes/RecipeOutletsEditor";
 import { ArchiveRecipeButton, RestoreRecipeButton } from "@/components/recipes/RecipeRemove";
 import { SopView } from "@/components/recipes/SopView";
 import { VersionActions } from "@/components/recipes/VersionActions";
@@ -122,6 +123,15 @@ export default async function RecipeDetailPage({
         </div>
 
         <aside className="flex flex-col gap-4">
+          {viewer.role === "ADMIN" && !archived && (
+            <RecipeOutletsEditor
+              recipeId={recipe.id}
+              outlets={outlets.filter((o) => viewer.managedOutletIds.includes(o.id))}
+              label={outletName}
+              initialOutletIds={recipe.recipe_outlets.map((o) => o.outlet_id)}
+              initialAllOutlets={recipe.all_outlets}
+            />
+          )}
           {canManage && (
             <section className={card}>
               <h2 className="text-base font-semibold">{t("versionPanel")}</h2>
