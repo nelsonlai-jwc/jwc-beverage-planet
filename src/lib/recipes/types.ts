@@ -44,11 +44,14 @@ export type Outlet = { id: string; name: string };
 
 export type Photo = { id: string; url: string | null };
 
+// Photo or video attached to one Processing Method step.
+export type StepMedia = { id: string; url: string | null; isVideo: boolean };
+
 // One version with everything needed to show or edit it.
 export type FullVersion = VersionRow & {
   ingredients: (IngredientRow & { name: string; isPrep: boolean })[];
   packaging: (PackagingRow & { name: string })[];
-  steps: StepRow[];
+  steps: (StepRow & { media: StepMedia | null })[];
   photos: Photo[];
 };
 

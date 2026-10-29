@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/types/database";
-import { asCost, type CostResult, type FullVersion, type Outlet, type Viewer } from "./types";
+import { asCost, type CostResult, type FullVersion, type Outlet, type StepMedia, type Viewer } from "./types";
 
 type Client = SupabaseClient<Database>;
 
@@ -73,6 +73,20 @@ export async function signPhotos(supabase: Client, mediaIds: string[]) {
   return urls;
 }
 
+// Signed URLs plus whether each file is a video, for step media.
+export async function signStepMedia(supabase: Client, mediaIds: string[]) {
+  const media = new Map<string, StepMedia>();
+  if (!mediaIds.length) return media;
+  const [{ data: assets }, urls] = await Promise.all([
+    supabase.from("media_assets").select("id, mime_type").in("id", mediaIds),
+    signPhotos(supabase, mediaIds),
+  ]);
+  for (const asset of assets ?? []) {
+    media.set(asset.id, { id: asset.id, url: urls.get(asset.id) ?? null, isVideo: asset.mime_type.startsWith("video/") });
+  }
+  return media;
+}
+
 export async function loadFullVersion(supabase: Client, versionId: string): Promise<FullVersion | null> {
   const { data: version } = await supabase
     .from("recipe_versions")
@@ -91,7 +105,8 @@ export async function loadFullVersion(supabase: Client, versionId: string): Prom
   const materialIds = (ingredients.data ?? []).flatMap((i) => (i.material_id ? [i.material_id] : []));
   const prepIds = (ingredients.data ?? []).flatMap((i) => (i.prep_recipe_id ? [i.prep_recipe_id] : []));
   const packagingIds = (packaging.data ?? []).map((p) => p.packaging_item_id);
-  const [materials, prepNames, packagingItems, photoUrls] = await Promise.all([
+  const stepMediaIds = (steps.data ?? []).flatMap((s) => (s.media_asset_id ? [s.media_asset_id] : []));
+  const [materials, prepNames, packagingItems, photoUrls, stepMedia] = await Promise.all([
     materialIds.length
       ? supabase.from("materials").select("id, name, brand").in("id", materialIds)
       : Promise.resolve({ data: [] as { id: string; name: string; brand: string | null }[] }),
@@ -100,6 +115,7 @@ export async function loadFullVersion(supabase: Client, versionId: string): Prom
       ? supabase.from("packaging_items").select("id, name, brand").in("id", packagingIds)
       : Promise.resolve({ data: [] as { id: string; name: string; brand: string | null }[] }),
     signPhotos(supabase, (media.data ?? []).map((m) => m.media_asset_id)),
+    signStepMedia(supabase, stepMediaIds),
   ]);
 
   const label = (item?: { name: string; brand: string | null }) =>
@@ -118,7 +134,10 @@ export async function loadFullVersion(supabase: Client, versionId: string): Prom
       ...p,
       name: label((packagingItems.data ?? []).find((m) => m.id === p.packaging_item_id)),
     })),
-    steps: steps.data ?? [],
+    steps: (steps.data ?? []).map((s) => ({
+      ...s,
+      media: s.media_asset_id ? (stepMedia.get(s.media_asset_id) ?? null) : null,
+    })),
     photos: (media.data ?? []).map((m) => ({ id: m.media_asset_id, url: photoUrls.get(m.media_asset_id) ?? null })),
   };
 }

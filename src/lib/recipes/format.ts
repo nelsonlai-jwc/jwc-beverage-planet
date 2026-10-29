@@ -28,7 +28,7 @@ export function toSopData(version: FullVersion, updatedAt?: string): SopData {
       quantity: i.quantity,
       unit: i.unit,
     })),
-    steps: version.steps.map((s) => ({ key: s.id, instruction: s.instruction })),
+    steps: version.steps.map((s) => ({ key: s.id, instruction: s.instruction, media: s.media })),
     photos: version.photos,
   };
 }
