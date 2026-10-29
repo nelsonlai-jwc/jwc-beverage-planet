@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { letterFor, splitReferences } from "@/lib/recipes/letters";
-import type { BeverageStyle, BeverageTemp, MeasureUnit, Photo } from "@/lib/recipes/types";
+import type { BeverageStyle, BeverageTemp, MeasureUnit, Photo, StepMedia } from "@/lib/recipes/types";
+import { StepMediaView } from "./StepMediaView";
 
 export type SopData = {
   productName: string | null;
@@ -12,7 +13,7 @@ export type SopData = {
   yieldUnit?: MeasureUnit | null;
   appearanceNotes: string | null;
   ingredients: { key: string; name: string; isPrep: boolean; quantity: number | null; unit: MeasureUnit | null }[];
-  steps: { key: string; instruction: string }[];
+  steps: { key: string; instruction: string; media?: StepMedia | null }[];
   photos: Photo[];
 };
 
@@ -88,11 +89,14 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
                   {index + 1}
                 </span>
-                <span className="whitespace-pre-wrap pt-0.5">
-                  {splitReferences(s.instruction, data.ingredients.length).map((part, i) =>
-                    "letter" in part ? <Letter key={i} letter={part.letter} /> : <span key={i}>{part.text}</span>,
-                  )}
-                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <span className="whitespace-pre-wrap pt-0.5">
+                    {splitReferences(s.instruction, data.ingredients.length).map((part, i) =>
+                      "letter" in part ? <Letter key={i} letter={part.letter} /> : <span key={i}>{part.text}</span>,
+                    )}
+                  </span>
+                  {s.media && <StepMediaView media={s.media} stepNo={index + 1} />}
+                </div>
               </li>
             ))}
         </ol>

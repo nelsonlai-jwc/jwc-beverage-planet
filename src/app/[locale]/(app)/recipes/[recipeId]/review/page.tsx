@@ -7,6 +7,7 @@ import type { FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { CostSummary, formatMoney } from "@/components/recipes/CostSummary";
 import { ReviewActions } from "@/components/recipes/ReviewActions";
+import { StepMediaView } from "@/components/recipes/StepMediaView";
 import { PurposeBadge, card } from "@/components/recipes/ui";
 
 type Change = "added" | "removed" | "changed" | "same";
@@ -139,14 +140,22 @@ export default async function ReviewRecipePage({
               {Array.from({ length: stepCount }, (_, index) => {
                 const before = current?.steps[index]?.instruction ?? "";
                 const after = next.steps[index]?.instruction ?? "";
-                const change: Change = !before ? "added" : !after ? "removed" : before === after ? "same" : "changed";
+                const beforeMedia = current?.steps[index]?.media ?? null;
+                const afterMedia = next.steps[index]?.media ?? null;
+                const mediaChanged = Boolean(before && after) && beforeMedia?.id !== afterMedia?.id;
+                const change: Change = !before ? "added" : !after ? "removed" : before === after && !mediaChanged ? "same" : "changed";
                 return (
                   <li key={index} className="grid gap-2 text-sm sm:grid-cols-[2rem_1fr_1fr]">
                     <span className="font-semibold">{index + 1}</span>
-                    <span className="whitespace-pre-wrap text-[#3d3f3a]">{before || "—"}</span>
-                    <span className={`whitespace-pre-wrap rounded px-1 ${changeClass[change === "removed" ? "same" : change]}`}>
-                      {after || "—"}
-                    </span>
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <span className="whitespace-pre-wrap text-[#3d3f3a]">{before || "—"}</span>
+                      {beforeMedia && <StepMediaView media={beforeMedia} stepNo={index + 1} />}
+                    </div>
+                    <div className={`flex min-w-0 flex-col gap-2 rounded px-1 ${changeClass[change === "removed" ? "same" : change]}`}>
+                      <span className="whitespace-pre-wrap">{after || "—"}</span>
+                      {afterMedia && <StepMediaView media={afterMedia} stepNo={index + 1} />}
+                      {mediaChanged && <span className="text-xs font-semibold">{t("stepMediaChanged")}</span>}
+                    </div>
                   </li>
                 );
               })}

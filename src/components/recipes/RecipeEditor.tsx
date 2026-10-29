@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { publishRecipeVersion } from "@/app/[locale]/(app)/recipes/actions";
 import { Link, useRouter } from "@/i18n/navigation";
 import { prepareImage } from "@/lib/media/prepareImage";
+import { extensionFor, prepareStepMedia, STEP_MEDIA_ACCEPT } from "@/lib/media/prepareStepMedia";
 import { createClient } from "@/lib/supabase/client";
 import { getRecipeCost, MEDIA_BUCKET } from "@/lib/recipes/data";
 import { letterFor, relabelSteps } from "@/lib/recipes/letters";
@@ -17,6 +18,7 @@ import {
   type FullVersion,
   type MeasureUnit,
   type Photo,
+  type StepMedia,
   type Taste,
   type ValidationError,
 } from "@/lib/recipes/types";
@@ -24,6 +26,7 @@ import type { Json } from "@/types/database";
 import { CostSummary } from "./CostSummary";
 import { explainApprovalError } from "./ReviewActions";
 import { SopView } from "./SopView";
+import { StepMediaView } from "./StepMediaView";
 import {
   StatusBadge,
   alertClass,
@@ -45,7 +48,7 @@ type IngredientLine = {
   notes: string;
 };
 type PackagingLine = { key: string; itemId: string; pieces: string };
-type StepLine = { key: string; instruction: string; mediaAssetId: string | null };
+type StepLine = { key: string; instruction: string; media: StepMedia | null };
 
 const MAX_PHOTOS = 5;
 const PHOTO_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
@@ -116,8 +119,8 @@ export function RecipeEditor(props: Props) {
   );
   const [steps, setSteps] = useState<StepLine[]>(
     version.steps.length
-      ? version.steps.map((s) => ({ key: s.id, instruction: s.instruction, mediaAssetId: s.media_asset_id }))
-      : [{ key: newKey(), instruction: "", mediaAssetId: null }],
+      ? version.steps.map((s) => ({ key: s.id, instruction: s.instruction, media: s.media }))
+      : [{ key: newKey(), instruction: "", media: null }],
   );
   const [removedStep, setRemovedStep] = useState<{ step: StepLine; index: number } | null>(null);
   const [photos, setPhotos] = useState<Photo[]>(version.photos);
@@ -226,7 +229,7 @@ export function RecipeEditor(props: Props) {
       packaging: packaging
         .filter((p) => p.itemId && Number(p.pieces) > 0)
         .map((p) => ({ packaging_item_id: p.itemId, pieces: Number(p.pieces) })),
-      steps: steps.map((s, index) => ({ instruction: instructions[index], media_asset_id: s.mediaAssetId })),
+      steps: steps.map((s, index) => ({ instruction: instructions[index], media_asset_id: s.media?.id ?? null })),
       photos: photos.map((p) => p.id),
     };
   }
@@ -327,6 +330,56 @@ export function RecipeEditor(props: Props) {
     document.getElementById("submit-errors")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  // Puts one file in storage and records it; returns its id and a signed URL, or null.
+  async function uploadMedia(file: File) {
+    const id = crypto.randomUUID();
+    const path = `${outletId}/${id}.${extensionFor(file.type)}`;
+    const upload = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, { contentType: file.type });
+    if (upload.error) {
+      setMessage(`${t("uploadFailed")} ${upload.error.message}`);
+      return null;
+    }
+    // No .select(): the new row is not visible to the select policy within the insert.
+    const insert = await supabase.from("media_assets").insert({
+      id,
+      bucket: MEDIA_BUCKET,
+      object_path: path,
+      mime_type: file.type,
+      size_bytes: file.size,
+      owner_outlet_id: outletId,
+      upload_status: "READY",
+    });
+    if (insert.error) {
+      setMessage(`${t("uploadFailed")} ${insert.error.message}`);
+      return null;
+    }
+    const signed = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
+    return { id, url: signed.data?.signedUrl ?? null };
+  }
+
+  async function handleStepMedia(key: string, input: HTMLInputElement) {
+    const original = input.files?.[0];
+    input.value = "";
+    if (!original) return;
+    setMessage(null);
+    const prepared = await prepareStepMedia(original);
+    if (!prepared.ok) {
+      setMessage(
+        prepared.error === "size" ? t("stepMediaSize") : prepared.error === "convert" ? t("photoConvert") : t("stepMediaType"),
+      );
+      return;
+    }
+    setSaving("uploading");
+    const uploaded = await uploadMedia(prepared.file);
+    setSaving("idle");
+    if (!uploaded) return;
+    const media = { ...uploaded, isVideo: Boolean(prepared.isVideo) };
+    setSteps((current) => current.map((s) => (s.key === key ? { ...s, media } : s)));
+    setDirty(true);
+    editsRef.current += 1;
+    setEdits(editsRef.current);
+  }
+
   async function handlePhotos(files: FileList | null) {
     if (!files?.length) return;
     setMessage(null);
@@ -344,30 +397,8 @@ export function RecipeEditor(props: Props) {
         );
         continue;
       }
-      const file = prepared.file;
-      const id = crypto.randomUUID();
-      const path = `${outletId}/${id}.${file.type.split("/")[1]}`;
-      const upload = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, { contentType: file.type });
-      if (upload.error) {
-        setMessage(`${t("uploadFailed")} ${upload.error.message}`);
-        continue;
-      }
-      // No .select(): the new row is not visible to the select policy within the insert.
-      const insert = await supabase.from("media_assets").insert({
-        id,
-        bucket: MEDIA_BUCKET,
-        object_path: path,
-        mime_type: file.type,
-        size_bytes: file.size,
-        owner_outlet_id: outletId,
-        upload_status: "READY",
-      });
-      if (insert.error) {
-        setMessage(`${t("uploadFailed")} ${insert.error.message}`);
-        continue;
-      }
-      const signed = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
-      added.push({ id, url: signed.data?.signedUrl ?? null });
+      const uploaded = await uploadMedia(prepared.file);
+      if (uploaded) added.push(uploaded);
     }
     if (added.length) updatePhotos([...photos, ...added]);
     setSaving("idle");
@@ -396,7 +427,7 @@ export function RecipeEditor(props: Props) {
         quantity: numberOrNull(i.quantity),
         unit: (i.unit || null) as MeasureUnit | null,
       })),
-    steps: savedInstructions().map((instruction, index) => ({ key: steps[index].key, instruction })),
+    steps: savedInstructions().map((instruction, index) => ({ key: steps[index].key, instruction, media: steps[index].media })),
     photos,
   };
 
@@ -786,6 +817,31 @@ export function RecipeEditor(props: Props) {
                     onChange={(e) => updateSteps(steps.map((s) => (s.key === step.key ? { ...s, instruction: e.target.value } : s)))}
                     className={textareaClass}
                   />
+                  <div className="flex flex-col gap-2">
+                    {step.media && <StepMediaView media={step.media} stepNo={index + 1} />}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className={`${smallButton} cursor-pointer ${busy ? "pointer-events-none opacity-50" : ""}`}>
+                        {step.media ? t("stepMediaReplace") : t("stepMediaAdd")}
+                        <input
+                          type="file"
+                          accept={STEP_MEDIA_ACCEPT}
+                          className="sr-only"
+                          disabled={busy}
+                          onChange={(e) => handleStepMedia(step.key, e.currentTarget)}
+                        />
+                      </label>
+                      {step.media && (
+                        <button
+                          type="button"
+                          className={smallButton}
+                          onClick={() => updateSteps(steps.map((s) => (s.key === step.key ? { ...s, media: null } : s)))}
+                        >
+                          {t("stepMediaRemove")}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-[#3d3f3a]">{t("stepMediaRules")}</p>
+                  </div>
                   {ingredients.some((i) => i.ref) && (
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[13px] text-[#3d3f3a]">{t("insertIngredient")}</span>
@@ -828,7 +884,7 @@ export function RecipeEditor(props: Props) {
             <button
               type="button"
               className={secondaryButton}
-              onClick={() => updateSteps([...steps, { key: newKey(), instruction: "", mediaAssetId: null }])}
+              onClick={() => updateSteps([...steps, { key: newKey(), instruction: "", media: null }])}
             >
               {t("addStep")}
             </button>
