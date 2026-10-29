@@ -4,7 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { archiveRecipe, restoreRecipe, type RecipeActionResult } from "@/app/[locale]/(app)/recipes/actions";
 import { useRouter } from "@/i18n/navigation";
-import { alertClass, primaryButton, secondaryButton, textareaClass } from "./ui";
+import { createClient } from "@/lib/supabase/client";
+import { alertClass, primaryButton, secondaryButton, smallButton, textareaClass } from "./ui";
 
 function useRecipeAction() {
   const t = useTranslations("Recipes.actionErrors");
@@ -28,8 +29,17 @@ function useRecipeAction() {
  * "Delete" of a recipe that was submitted at least once: it is archived, keeping its
  * history. An Admin (or the outlet's Manager, while nothing is approved) archives at
  * once; a Manager asks the Admin, with a reason, to archive an approved recipe.
+ * `compact` is the recipe list card: a small button, and the list refreshes in place.
  */
-export function ArchiveRecipeButton({ recipeId, mode }: { recipeId: string; mode: "archive" | "request" }) {
+export function ArchiveRecipeButton({
+  recipeId,
+  mode,
+  compact = false,
+}: {
+  recipeId: string;
+  mode: "archive" | "request";
+  compact?: boolean;
+}) {
   const t = useTranslations("Recipes.archive");
   const router = useRouter();
   const { error, pending, run } = useRecipeAction();
@@ -41,14 +51,18 @@ export function ArchiveRecipeButton({ recipeId, mode }: { recipeId: string; mode
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className={`${secondaryButton} self-start`}>
+      <button type="button" onClick={() => setOpen(true)} className={compact ? smallButton : `${secondaryButton} self-start`}>
         {mode === "request" ? t("request") : t("delete")}
       </button>
     );
   }
 
   return (
-    <div role="dialog" aria-label={t("delete")} className="flex flex-col gap-3 rounded-[12px] border-[1.5px] border-black p-4">
+    <div
+      role="dialog"
+      aria-label={t("delete")}
+      className={`flex flex-col gap-3 rounded-[12px] border-[1.5px] border-black p-4 ${compact ? "basis-full" : ""}`}
+    >
       <p className="text-sm font-semibold">{mode === "archive" ? t("archiveNote") : t("requestNote")}</p>
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-semibold">{mode === "request" ? t("reason") : t("reasonOptional")}</span>
@@ -65,6 +79,8 @@ export function ArchiveRecipeButton({ recipeId, mode }: { recipeId: string; mode
               (result) => {
                 if (result.ok && result.outcome === "REQUESTED") {
                   setNotice(t("requested"));
+                  router.refresh();
+                } else if (compact) {
                   router.refresh();
                 } else {
                   router.push("/recipes");
@@ -85,6 +101,39 @@ export function ArchiveRecipeButton({ recipeId, mode }: { recipeId: string; mode
         </p>
       )}
     </div>
+  );
+}
+
+/** List card "Delete" of a recipe that was never submitted: really deleted, like "Delete draft". */
+export function DeleteDraftRecipeButton({ recipeId }: { recipeId: string }) {
+  const t = useTranslations("Recipes");
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <>
+      <button
+        type="button"
+        className={smallButton}
+        disabled={pending}
+        onClick={() => {
+          if (!window.confirm(t("deleteDraftConfirm"))) return;
+          setError(null);
+          startTransition(async () => {
+            const { error: deleteError } = await createClient().from("recipes").delete().eq("id", recipeId);
+            if (deleteError) setError(`${t("actionFailed")} ${deleteError.message}`);
+            else router.refresh();
+          });
+        }}
+      >
+        {t("archive.delete")}
+      </button>
+      {error && (
+        <p role="alert" className={`${alertClass} basis-full`}>
+          {error}
+        </p>
+      )}
+    </>
   );
 }
 

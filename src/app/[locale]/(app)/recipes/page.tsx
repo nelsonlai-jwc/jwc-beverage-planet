@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getOutlets, getViewer, signPhotos } from "@/lib/recipes/data";
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
+import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
 import { PurposeBadge, StatusBadge, card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 
 type Tab = "mine" | "pending" | "catalogue";
@@ -52,7 +53,8 @@ export default async function RecipesPage({
     const own = (versions ?? []).filter((v) => v.recipe_id === r.id);
     const approved = own.find((v) => v.id === r.current_approved_version_id) ?? null;
     const open = own.find((v) => OPEN.includes(v.status)) ?? null;
-    return { ...r, approved, open, name: (approved ?? open ?? own[0])?.product_name ?? t("untitled") };
+    const neverSubmitted = !approved && own.every((v) => v.status === "DRAFT");
+    return { ...r, approved, open, neverSubmitted, name: (approved ?? open ?? own[0])?.product_name ?? t("untitled") };
   });
   const matches = (name: string) => !search || name.toLowerCase().includes(search);
 
@@ -271,6 +273,18 @@ export default async function RecipesPage({
           (!statusFilter || (statusFilter === "APPROVED" ? !r.open && r.approved : r.open?.status === statusFilter))),
   );
 
+  // Recipes whose deletion already waits for Admin show no delete button.
+  const { data: pendingArchives } = mine.length
+    ? await supabase
+        .from("change_requests")
+        .select("entity_id")
+        .eq("entity_type", "RECIPE")
+        .eq("action", "ARCHIVE")
+        .eq("status", "PENDING")
+        .in("entity_id", mine.map((r) => r.id))
+    : { data: [] };
+  const archivePending = new Set((pendingArchives ?? []).map((c) => c.entity_id));
+
   return (
     <div className="flex flex-col gap-6">
       {header}
@@ -308,22 +322,41 @@ export default async function RecipesPage({
       ) : (
         <ul className="flex flex-col gap-3">
           {mine.map((r) => (
-            <li key={r.id}>
-              <Link href={`/recipes/${r.id}`} className={`${card} gap-2 hover:ring-2 hover:ring-black`}>
-                <span className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-base font-semibold">{r.name}</span>
-                  <span className="flex flex-wrap gap-1.5">
-                    {r.status === "ARCHIVED" && <StatusBadge status="ARCHIVED" />}
-                    {r.approved && r.status === "ACTIVE" && <StatusBadge status="APPROVED" />}
-                    {r.open && <StatusBadge status={r.open.status} />}
-                  </span>
+            <li key={r.id} className={`${card} relative gap-2 hover:ring-2 hover:ring-black`}>
+              <span className="flex flex-wrap items-center justify-between gap-2">
+                {/* The link covers the whole card; the delete control sits above it. */}
+                <Link href={`/recipes/${r.id}`} className="text-base font-semibold after:absolute after:inset-0 after:rounded-[20px]">
+                  {r.name}
+                </Link>
+                <span className="flex flex-wrap gap-1.5">
+                  {r.status === "ARCHIVED" && <StatusBadge status="ARCHIVED" />}
+                  {r.approved && r.status === "ACTIVE" && <StatusBadge status="APPROVED" />}
+                  {r.open && <StatusBadge status={r.open.status} />}
                 </span>
+              </span>
+              <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-[#3d3f3a]">
                   {outletName(r.outlet_id)} · {r.is_prep ? t("prep") : t("drink")}
                   {r.approved && ` · ${t("approvedVersion", { no: r.approved.version_no })}`}
                   {r.open && ` · ${t("openVersion", { no: r.open.version_no })}`}
                 </span>
-              </Link>
+                {r.status === "ACTIVE" && archivePending.has(r.id) && (
+                  <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>
+                )}
+                {r.status === "ACTIVE" && !archivePending.has(r.id) && (
+                  <span className="relative z-10 flex flex-wrap items-center gap-2 has-[[role=dialog]]:basis-full">
+                    {r.neverSubmitted ? (
+                      <DeleteDraftRecipeButton recipeId={r.id} />
+                    ) : (
+                      <ArchiveRecipeButton
+                        recipeId={r.id}
+                        mode={viewer.role === "ADMIN" || !r.approved ? "archive" : "request"}
+                        compact
+                      />
+                    )}
+                  </span>
+                )}
+              </span>
             </li>
           ))}
         </ul>
