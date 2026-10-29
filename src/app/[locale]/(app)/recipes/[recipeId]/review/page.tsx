@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getRecipeCost, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { formatDateTime } from "@/lib/recipes/format";
+import { outletLabel } from "@/lib/recipes/outlets";
 import type { FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { CostSummary, formatMoney } from "@/components/recipes/CostSummary";
@@ -22,7 +23,11 @@ export default async function ReviewRecipePage({
   const t = await getTranslations("Recipes");
   const supabase = await createClient();
   const viewer = await getViewer(supabase);
-  const { data: recipe } = await supabase.from("recipes").select("*").eq("id", recipeId).maybeSingle();
+  const { data: recipe } = await supabase
+    .from("recipes")
+    .select("*, recipe_outlets(outlet_id)")
+    .eq("id", recipeId)
+    .maybeSingle();
   if (!viewer || viewer.role !== "ADMIN" || !recipe) notFound();
 
   const { data: pendingRow } = await supabase
@@ -74,7 +79,7 @@ export default async function ReviewRecipePage({
     affectedDrinks = [...names.values()];
   }
 
-  const outletName = outlets.find((o) => o.id === recipe.outlet_id)?.name ?? "—";
+  const outletName = outletLabel(recipe, outlets, t("allOutletsOption"));
   const fieldRows = diffFields(t, current, next);
   const ingredientRows = diffIngredients(current, next);
   const stepCount = Math.max(current?.steps.length ?? 0, next.steps.length);

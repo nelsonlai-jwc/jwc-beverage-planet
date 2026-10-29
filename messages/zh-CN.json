@@ -594,7 +594,8 @@
       "viaPrep": "通过 {name}",
       "live": "生效中",
       "draft": "草稿",
-      "blocksArchive": "生效中的配方要先换掉它，才能删除。"
+      "blocksArchive": "生效中的配方要先换掉它，才能删除。",
+      "allOutlets": "全部分店"
     },
     "requests": {
       "editPending": "修改等待 Admin 审批",
@@ -679,7 +680,7 @@
     "staffEmpty": "本店尚无已发布的 SOP。",
     "noAccess": "此账号无法查看配方。",
     "create": "新建配方",
-    "createIntro": "为所管分店建立新草稿。分店建立后不能更改；跨店请用复制。",
+    "createIntro": "为你所管的一间或多间分店建立新草稿。之后只有 Admin 能修改分店。",
     "createDraft": "建立草稿",
     "copyApproved": "复制正式配方",
     "tabsLabel": "配方视图",
@@ -697,7 +698,7 @@
     "mineEmpty": "没有符合的配方。",
     "pendingEmpty": "目前没有待审批的配方。",
     "catalogueEmpty": "尚无已批准的配方。",
-    "catalogueNote": "各分店已批准的配方。复制会为本店建立独立草稿，仍需审批，也不会直接上架菜单。",
+    "catalogueNote": "你所管分店已批准的配方。复制会为你管理的另一间分店建立独立草稿，仍需审批，也不会直接上架菜单。",
     "untitled": "未命名",
     "drink": "饮料",
     "prep": "预制原料",
@@ -804,10 +805,11 @@
       "garnish": "装饰",
       "storage_method": "保存方式",
       "shelf_life": "有效期",
-      "tasting_notes": "试饮备注"
+      "tasting_notes": "试饮备注",
+      "outlets": "分店（可多选）"
     },
     "chooseOutlet": "选择分店",
-    "outletFixed": "建立后不能更改。",
+    "outletFixed": "之后只有 Admin 能修改分店。",
     "chooseIngredient": "选择原料",
     "sharedMaterials": "共用采购原料",
     "outletPreps": "本店预制原料",
@@ -931,7 +933,11 @@
       "REASON_REQUIRED": "请填写原因。",
       "REQUEST_ALREADY_PENDING": "这个配方已有申请在等 Admin 审批。",
       "RECIPE_ARCHIVED": "这个配方已归档。",
-      "UNKNOWN": "出错了。"
+      "UNKNOWN": "出错了。",
+      "OUTLET_REQUIRED": "请至少选择一间分店。",
+      "OUTLET_ON_MENU": "要移除的分店还有菜单在用这个配方，请先从那份菜单移除。",
+      "OUTLET_NEEDED": "有用到这个预制原料的配方属于要移除的分店，请先修改那个配方。",
+      "PREP_NOT_COVERED": "这个配方用到的预制原料没有涵盖所选的全部分店，请先修改该预制原料的分店。"
     },
     "changeLog": {
       "open": "修改记录",
@@ -944,7 +950,8 @@
       },
       "direct": {
         "ARCHIVE": "删除（归档）",
-        "RESTORE": "已恢复"
+        "RESTORE": "已恢复",
+        "EDIT": "分店已修改"
       },
       "requested": {
         "ARCHIVE": "申请删除",
@@ -957,7 +964,8 @@
       "reviewed": {
         "APPROVED": "{action}已批准",
         "RETURNED": "{action}已退回"
-      }
+      },
+      "outlets": "分店"
     },
     "archive": {
       "delete": "删除",
@@ -990,6 +998,14 @@
       "8": "8",
       "9": "9",
       "10": "10"
+    },
+    "allOutletsOption": "全部分店",
+    "allOutletsHint": "所有分店，包括之后新增的分店。",
+    "readOnlyNote": "你可以查看这个配方。只有管理它所有分店的 Manager 或 Admin 才能修改。",
+    "outletsEdit": {
+      "open": "修改分店",
+      "save": "保存分店",
+      "note": "保存后立即生效，不需要审批。被移除分店的员工将看不到这个配方。"
     }
   },
   "Reports": {

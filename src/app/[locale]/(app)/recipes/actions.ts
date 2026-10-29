@@ -17,6 +17,10 @@ const KNOWN_ERRORS = [
   "REASON_REQUIRED",
   "REQUEST_ALREADY_PENDING",
   "RECIPE_ARCHIVED",
+  "OUTLET_REQUIRED",
+  "OUTLET_ON_MENU",
+  "OUTLET_NEEDED",
+  "PREP_NOT_COVERED",
 ];
 
 export type RecipeActionResult =
@@ -47,6 +51,22 @@ export async function archiveRecipe(recipeId: string, reason: string): Promise<R
   refresh();
   if (error) return fail(error);
   return { ok: true, outcome: data === "APPLIED" ? "APPLIED" : "REQUESTED" };
+}
+
+/** Admin only: the outlets a recipe is made for, or all outlets. Applies at once. */
+export async function setRecipeOutlets(
+  recipeId: string,
+  outletIds: string[],
+  allOutlets: boolean,
+): Promise<RecipeActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_recipe_outlets", {
+    p_recipe_id: recipeId,
+    p_outlet_ids: allOutlets ? [] : outletIds,
+    p_all_outlets: allOutlets,
+  });
+  refresh();
+  return error ? fail(error) : { ok: true };
 }
 
 export async function restoreRecipe(recipeId: string): Promise<RecipeActionResult> {

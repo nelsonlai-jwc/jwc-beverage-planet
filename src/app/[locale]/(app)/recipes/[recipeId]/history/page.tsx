@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getRecipeNames, getViewer } from "@/lib/recipes/data";
+import { RECIPE_OUTLETS, canManageRecipe } from "@/lib/recipes/outlets";
 import { formatDateTime } from "@/lib/recipes/format";
 import { createClient } from "@/lib/supabase/server";
 import { card } from "@/components/recipes/ui";
@@ -17,8 +18,12 @@ export default async function RecipeHistoryPage({
   const t = await getTranslations("Recipes");
   const supabase = await createClient();
   const viewer = await getViewer(supabase);
-  const { data: recipe } = await supabase.from("recipes").select("id, outlet_id").eq("id", recipeId).maybeSingle();
-  if (!viewer || !recipe || !viewer.managedOutletIds.includes(recipe.outlet_id)) notFound();
+  const { data: recipe } = await supabase
+    .from("recipes")
+    .select(`id, ${RECIPE_OUTLETS}`)
+    .eq("id", recipeId)
+    .maybeSingle();
+  if (!viewer || !recipe || !canManageRecipe(viewer, recipe)) notFound();
 
   const [{ data: rows }, names] = await Promise.all([
     supabase.rpc("recipe_change_log", { p_recipe_id: recipeId }),
@@ -57,7 +62,12 @@ export default async function RecipeHistoryPage({
               </div>
               {row.reason && (
                 <p className="text-sm">
-                  {row.source === "VERSION" ? t("changeLog.summary") : t("archive.reason")}: {row.reason}
+                  {row.source === "VERSION"
+                    ? t("changeLog.summary")
+                    : row.action.startsWith("EDIT")
+                      ? t("changeLog.outlets")
+                      : t("archive.reason")}
+                  : {row.reason.replaceAll("ALL_OUTLETS", t("allOutletsOption"))}
                 </p>
               )}
             </li>

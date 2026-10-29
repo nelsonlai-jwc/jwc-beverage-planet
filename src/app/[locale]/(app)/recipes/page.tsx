@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getViewer, signPhotos } from "@/lib/recipes/data";
+import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
@@ -29,7 +30,7 @@ export default async function RecipesPage({
   }
 
   const outlets = await getOutlets(supabase);
-  const outletName = (id: string) => outlets.find((o) => o.id === id)?.name ?? "—";
+  const outletName = (r: RecipeOutlets) => outletLabel(r, outlets, t("allOutletsOption"));
   const isStaff = viewer.role === "BARISTA";
   const tabs: Tab[] = isStaff ? [] : viewer.role === "ADMIN" ? ["mine", "pending", "catalogue"] : ["mine", "catalogue"];
   const tab: Tab = tabs.includes(query.tab as Tab) ? (query.tab as Tab) : "mine";
@@ -38,7 +39,7 @@ export default async function RecipesPage({
   // Every recipe this viewer can read, with its versions (RLS decides which).
   const { data: recipes } = await supabase
     .from("recipes")
-    .select("id, outlet_id, is_prep, status, current_approved_version_id, updated_at")
+    .select(`id, outlet_id, is_prep, status, current_approved_version_id, updated_at, ${RECIPE_OUTLETS}`)
     .order("updated_at", { ascending: false });
   const recipeIds = (recipes ?? []).map((r) => r.id);
   const { data: versions } = recipeIds.length
@@ -172,7 +173,7 @@ export default async function RecipesPage({
                       <span className="flex flex-col gap-1">
                         <span className="text-base font-semibold">{r?.name ?? t("untitled")}</span>
                         <span className="text-sm text-[#3d3f3a]">
-                          {r ? outletName(r.outlet_id) : "—"} · {request.reason}
+                          {r ? outletName(r) : "—"} · {request.reason}
                         </span>
                       </span>
                       <span className="text-sm font-semibold underline">{t("review")}</span>
@@ -193,7 +194,7 @@ export default async function RecipesPage({
                   <span className="flex flex-col gap-1">
                     <span className="text-base font-semibold">{r.name}</span>
                     <span className="text-sm text-[#3d3f3a]">
-                      {outletName(r.outlet_id)} · V{r.open!.version_no} · {r.is_prep ? t("prep") : t("drink")}
+                      {outletName(r)} · V{r.open!.version_no} · {r.is_prep ? t("prep") : t("drink")}
                     </span>
                   </span>
                   <span className="text-sm font-semibold underline">{t("review")}</span>
@@ -225,7 +226,7 @@ export default async function RecipesPage({
                 <div className="flex flex-col gap-1">
                   <span className="text-base font-semibold">{r.name}</span>
                   <span className="text-sm text-[#3d3f3a]">
-                    {outletName(r.outlet_id)} · V{r.approved!.version_no}
+                    {outletName(r)} · V{r.approved!.version_no}
                   </span>
                   <span className="text-sm text-[#3d3f3a]">
                     {[
@@ -256,17 +257,16 @@ export default async function RecipesPage({
     );
   }
 
-  // Own outlets' recipes.
-  const managed = rows.filter((r) => viewer.managedOutletIds.includes(r.outlet_id));
+  // Recipes of the viewer's outlets (RLS leaves out the others).
   const outletFilter = viewer.managedOutletIds.includes(query.outlet ?? "") ? query.outlet : undefined;
   const statusFilter = ["DRAFT", "PENDING", "RETURNED", "APPROVED", "ARCHIVED"].includes(query.status ?? "")
     ? query.status
     : undefined;
   // Archived recipes show only when that filter is chosen.
-  const mine = managed.filter(
+  const mine = rows.filter(
     (r) =>
       matches(r.name) &&
-      (!outletFilter || r.outlet_id === outletFilter) &&
+      (!outletFilter || coversOutlet(r, outletFilter)) &&
       (statusFilter === "ARCHIVED"
         ? r.status === "ARCHIVED"
         : r.status === "ACTIVE" &&
@@ -336,14 +336,14 @@ export default async function RecipesPage({
               </span>
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-[#3d3f3a]">
-                  {outletName(r.outlet_id)} · {r.is_prep ? t("prep") : t("drink")}
+                  {outletName(r)} · {r.is_prep ? t("prep") : t("drink")}
                   {r.approved && ` · ${t("approvedVersion", { no: r.approved.version_no })}`}
                   {r.open && ` · ${t("openVersion", { no: r.open.version_no })}`}
                 </span>
                 {r.status === "ACTIVE" && archivePending.has(r.id) && (
                   <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>
                 )}
-                {r.status === "ACTIVE" && !archivePending.has(r.id) && (
+                {r.status === "ACTIVE" && !archivePending.has(r.id) && canManageRecipe(viewer, r) && (
                   <span className="relative z-10 flex flex-wrap items-center gap-2 has-[[role=dialog]]:basis-full">
                     {r.neverSubmitted ? (
                       <DeleteDraftRecipeButton recipeId={r.id} />

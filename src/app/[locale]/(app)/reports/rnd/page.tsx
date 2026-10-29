@@ -5,6 +5,7 @@ import { ReportHeader } from "@/components/reports/ReportHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cardClass, mutedText } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/auth/currentUser";
+import { RECIPE_OUTLETS, coversOutlet, outletLabel } from "@/lib/recipes/outlets";
 import { isIsoDate } from "@/lib/calibration/dates";
 import { toCsv } from "@/lib/reports/csv";
 import { loadApprovalSnapshots } from "@/lib/reports/data";
@@ -60,12 +61,11 @@ export default async function RndReportPage({
   const personName = new Map((people ?? []).map((p) => [p.id, p.full_name]));
   const person = personName.has(query.person ?? "") ? query.person : undefined;
 
-  // Only the caller's own outlets: the cross-outlet catalogue is not R&D data (ch. 5).
-  const { data: recipes } = await supabase
-    .from("recipes")
-    .select("id, outlet_id")
-    .in("outlet_id", outlet ? [outlet.id] : user.outlets.map((o) => o.id));
-  const recipeOutlet = new Map((recipes ?? []).map((r) => [r.id, r.outlet_id]));
+  // Only recipes made for the caller's own outlets (ch. 5).
+  const outletIds = outlet ? [outlet.id] : user.outlets.map((o) => o.id);
+  const { data: allRecipes } = await supabase.from("recipes").select(`id, ${RECIPE_OUTLETS}`);
+  const recipes = (allRecipes ?? []).filter((r) => outletIds.some((id) => coversOutlet(r, id)));
+  const recipeOutlet = new Map(recipes.map((r) => [r.id, outletLabel(r, user.outlets, tr("allOutletsOption"))]));
 
   let versionQuery = supabase
     .from("recipe_versions")
@@ -111,7 +111,6 @@ export default async function RndReportPage({
     return earlier ? { versionNo: earlier.version_no, cost: snapshots.get(earlier.id)!.totalCost! } : null;
   };
 
-  const outletName = new Map(user.outlets.map((o) => [o.id, o.name]));
   const date = (value: string | null) =>
     value ? format.dateTime(new Date(value), { dateStyle: "medium", timeZone: "Asia/Kuala_Lumpur" }) : "—";
   const money = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -124,7 +123,7 @@ export default async function RndReportPage({
       .filter((s): s is { key: (typeof tastes)[number]; value: number } => s.value !== null);
     return {
       ...v,
-      outlet: outletName.get(recipeOutlet.get(v.recipe_id) ?? "") ?? "",
+      outlet: recipeOutlet.get(v.recipe_id) ?? "",
       author: personName.get(v.created_by) ?? "—",
       cost,
       previous,
