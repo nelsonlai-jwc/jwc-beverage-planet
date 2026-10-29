@@ -903,7 +903,7 @@ export function RecipeEditor(props: Props) {
                       className={inputClass}
                     >
                       <option value="">{t("notAssessed")}</option>
-                      {[0, 1, 2, 3, 4, 5].map((n) => (
+                      {Array.from({ length: 11 }, (_, n) => n).map((n) => (
                         <option key={n} value={n}>
                           {t(`strength.${n}`) === String(n) ? n : `${n} · ${t(`strength.${n}`)}`}
                         </option>
