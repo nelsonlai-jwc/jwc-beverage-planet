@@ -47,13 +47,8 @@
     "title": "Setting",
     "systemValues": "System values",
     "readOnlyNote": "Only an Admin can change these values.",
-    "adminNote": "Material types and outlets can be added, renamed, reordered and deleted. Style, temp and strength keep their values; only their names and order change.",
+    "adminNote": "Material types and outlets can be added, renamed, reordered and deleted. Style and temp keep their values; only their names and order change.",
     "groups": {
-      "strength": {
-        "label": "Strength",
-        "rule": "Fixed values 0 to 10; meanings do not change.",
-        "adminRule": "Fixed at 0 to 10. You can name each level and change the order."
-      },
       "beverageStyle": {
         "label": "Beverage Style",
         "rule": "Values in use can only be deactivated.",
