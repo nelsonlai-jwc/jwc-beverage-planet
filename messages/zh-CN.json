@@ -47,13 +47,8 @@
     "title": "设置",
     "systemValues": "系统参数",
     "readOnlyNote": "只有 Admin 可以修改这些参数。",
-    "adminNote": "原料类型和分店可以新增、改名、调整顺序和删除。Style、温度和浓度的值固定，只能改名称和顺序。",
+    "adminNote": "原料类型和分店可以新增、改名、调整顺序和删除。Style 和温度的值固定，只能改名称和顺序。",
     "groups": {
-      "strength": {
-        "label": "浓度",
-        "rule": "固定为 0 至 10，数值意义不变。",
-        "adminRule": "固定为 0 至 10。可以为每一级取名，并调整顺序。"
-      },
       "beverageStyle": {
         "label": "饮料类别",
         "rule": "已被引用的选项只能停用。",

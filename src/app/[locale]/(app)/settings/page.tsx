@@ -7,7 +7,7 @@ import { getOptionLabels, type OptionGroup } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 
 // Groups the Admin edits, and how (decided with Nelson 2026-10-28). The rest are fixed.
-const OPTION_GROUP: Record<string, OptionGroup> = { beverageStyle: "STYLE", temp: "TEMP", strength: "STRENGTH" };
+const OPTION_GROUP: Record<string, OptionGroup> = { beverageStyle: "STYLE", temp: "TEMP" };
 
 export default async function SettingsPage({
   params,
