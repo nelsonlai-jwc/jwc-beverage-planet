@@ -2,7 +2,7 @@
 // Material types, outlets, style, temp and strength now come from the database;
 // unit, currency and language stay fixed here.
 export const settingGroups = [
-  { key: "strength", values: ["0", "1", "2", "3", "4", "5"] },
+  { key: "strength", values: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] },
   {
     key: "beverageStyle",
     values: ["Coffee", "Tea", "Cocktail", "Mocktail", "Prep Material"],
