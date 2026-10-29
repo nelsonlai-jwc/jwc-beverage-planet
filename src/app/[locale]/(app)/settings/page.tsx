@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
-import { ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
+import { Chevron, ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { settingGroups } from "@/lib/settings/defaults";
 import { getOptionLabels, type OptionGroup } from "@/lib/settings/options";
@@ -51,19 +51,23 @@ export default async function SettingsPage({
           const editable =
             isAdmin && (group.key === "materialType" || group.key === "outlet" || group.key in OPTION_GROUP);
           return (
-            <section
+            // Collapsed by default: tap the title to open the card.
+            <details
               key={group.key}
               aria-labelledby={`setting-${group.key}`}
-              className="flex flex-col gap-3 rounded-[20px] bg-white p-5 sm:p-6"
+              className="group flex flex-col rounded-[20px] bg-white p-5 sm:p-6 [&[open]>summary]:mb-3"
             >
-              <div className="flex flex-col gap-1">
-                <h2 id={`setting-${group.key}`} className="text-base font-semibold">
-                  {t(`groups.${group.key}.label`)}
-                </h2>
-                <p className="text-[13px] text-[#3d3f3a]">
-                  {isAdmin ? t(`groups.${group.key}.adminRule`) : t(`groups.${group.key}.rule`)}
-                </p>
-              </div>
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <div className="flex flex-col gap-1">
+                  <h2 id={`setting-${group.key}`} className="text-base font-semibold">
+                    {t(`groups.${group.key}.label`)}
+                  </h2>
+                  <p className="text-[13px] text-[#3d3f3a]">
+                    {isAdmin ? t(`groups.${group.key}.adminRule`) : t(`groups.${group.key}.rule`)}
+                  </p>
+                </div>
+                <Chevron className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
+              </summary>
               {editable && group.key === "materialType" ? (
                 <ListValuesEditor
                   group="MATERIAL_TYPE"
@@ -85,7 +89,7 @@ export default async function SettingsPage({
                   ))}
                 </ul>
               )}
-            </section>
+            </details>
           );
         })}
       </div>
