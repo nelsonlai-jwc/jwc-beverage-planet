@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { toSopData } from "@/lib/recipes/format";
+import { RECIPE_OUTLETS, coversOutlet, outletLabel } from "@/lib/recipes/outlets";
 import { createClient } from "@/lib/supabase/server";
 import { CopyForm } from "@/components/recipes/CopyForm";
 import { SopView } from "@/components/recipes/SopView";
@@ -17,7 +18,11 @@ export default async function CopyRecipePage({
   const t = await getTranslations("Recipes");
   const supabase = await createClient();
   const viewer = await getViewer(supabase);
-  const { data: recipe } = await supabase.from("recipes").select("*").eq("id", recipeId).maybeSingle();
+  const { data: recipe } = await supabase
+    .from("recipes")
+    .select("*, recipe_outlets(outlet_id)")
+    .eq("id", recipeId)
+    .maybeSingle();
   if (!viewer || viewer.role === "BARISTA" || !recipe?.current_approved_version_id) notFound();
 
   const source = await loadFullVersion(supabase, recipe.current_approved_version_id);
@@ -40,16 +45,16 @@ export default async function CopyRecipePage({
   }
   const depNames = await getRecipeNames(supabase, deps.map((d) => d.id));
 
-  // Existing recipes in the outlets this viewer can copy into, for mapping and the same-name check.
-  const targets = outlets.filter((o) => viewer.managedOutletIds.includes(o.id) && o.id !== recipe.outlet_id);
-  const { data: targetRecipes } = targets.length
-    ? await supabase
-        .from("recipes")
-        .select("id, outlet_id, is_prep")
-        .in("outlet_id", targets.map((o) => o.id))
-        .eq("status", "ACTIVE")
+  // Existing recipes in the outlets this viewer can copy into, for mapping and the same-name check:
+  // one entry per target outlet the recipe is made for.
+  const targets = outlets.filter((o) => viewer.managedOutletIds.includes(o.id) && !coversOutlet(recipe, o.id));
+  const { data: activeRecipes } = targets.length
+    ? await supabase.from("recipes").select(`id, is_prep, ${RECIPE_OUTLETS}`).eq("status", "ACTIVE")
     : { data: [] };
-  const targetNames = await getRecipeNames(supabase, (targetRecipes ?? []).map((r) => r.id));
+  const targetRecipes = (activeRecipes ?? []).flatMap((r) =>
+    targets.filter((o) => coversOutlet(r, o.id)).map((o) => ({ id: r.id, outlet_id: o.id, is_prep: r.is_prep })),
+  );
+  const targetNames = await getRecipeNames(supabase, [...new Set(targetRecipes.map((r) => r.id))]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +65,7 @@ export default async function CopyRecipePage({
         <h1 className="font-serif text-[32px] font-normal">{t("copyTitle", { name: source.product_name ?? "" })}</h1>
         <p className="text-sm text-[#3d3f3a]">
           {t("copySource", {
-            outlet: outlets.find((o) => o.id === recipe.outlet_id)?.name ?? "—",
+            outlet: outletLabel(recipe, outlets, t("allOutletsOption")),
             no: source.version_no,
           })}
         </p>
@@ -71,7 +76,7 @@ export default async function CopyRecipePage({
           sourceName={source.product_name ?? ""}
           targets={targets}
           deps={deps.map((d) => ({ ...d, name: depNames.get(d.id) ?? "—" }))}
-          existing={(targetRecipes ?? []).map((r) => ({
+          existing={targetRecipes.map((r) => ({
             id: r.id,
             outletId: r.outlet_id,
             isPrep: r.is_prep,

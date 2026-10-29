@@ -594,7 +594,8 @@
       "viaPrep": "通过 {name}",
       "live": "生效中",
       "draft": "草稿",
-      "blocksArchive": "生效中的配方要先换掉它，才能删除。"
+      "blocksArchive": "生效中的配方要先换掉它，才能删除。",
+      "allOutlets": "全部分店"
     },
     "requests": {
       "editPending": "修改等待 Admin 审批",
@@ -679,7 +680,7 @@
     "staffEmpty": "本店尚无已发布的 SOP。",
     "noAccess": "此账号无法查看配方。",
     "create": "新建配方",
-    "createIntro": "为所管分店建立新草稿。分店建立后不能更改；跨店请用复制。",
+    "createIntro": "为你所管的一间或多间分店建立新草稿。分店建立后不能更改；跨店请用复制。",
     "createDraft": "建立草稿",
     "copyApproved": "复制正式配方",
     "tabsLabel": "配方视图",
@@ -697,7 +698,7 @@
     "mineEmpty": "没有符合的配方。",
     "pendingEmpty": "目前没有待审批的配方。",
     "catalogueEmpty": "尚无已批准的配方。",
-    "catalogueNote": "各分店已批准的配方。复制会为本店建立独立草稿，仍需审批，也不会直接上架菜单。",
+    "catalogueNote": "你所管分店已批准的配方。复制会为你管理的另一间分店建立独立草稿，仍需审批，也不会直接上架菜单。",
     "untitled": "未命名",
     "drink": "饮料",
     "prep": "预制原料",
@@ -804,7 +805,8 @@
       "garnish": "装饰",
       "storage_method": "保存方式",
       "shelf_life": "有效期",
-      "tasting_notes": "试饮备注"
+      "tasting_notes": "试饮备注",
+      "outlets": "分店（可多选）"
     },
     "chooseOutlet": "选择分店",
     "outletFixed": "建立后不能更改。",
@@ -982,7 +984,10 @@
       "8": "8",
       "9": "9",
       "10": "10"
-    }
+    },
+    "allOutletsOption": "全部分店",
+    "allOutletsHint": "所有分店，包括之后新增的分店。",
+    "readOnlyNote": "你可以查看这个配方。只有管理它所有分店的 Manager 或 Admin 才能修改。"
   },
   "Reports": {
     "title": "报表",

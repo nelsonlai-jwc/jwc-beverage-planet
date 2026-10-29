@@ -7,10 +7,12 @@ import { createClient } from "@/lib/supabase/client";
 import type { Outlet } from "@/lib/recipes/types";
 import { alertClass, card, inputClass, primaryButton } from "./ui";
 
-export function NewRecipeForm({ outlets }: { outlets: Outlet[] }) {
+// allowAll: an Admin can also make the recipe for every outlet.
+export function NewRecipeForm({ outlets, allowAll }: { outlets: Outlet[]; allowAll: boolean }) {
   const t = useTranslations("Recipes");
   const router = useRouter();
-  const [outletId, setOutletId] = useState(outlets.length === 1 ? outlets[0].id : "");
+  const [outletIds, setOutletIds] = useState<string[]>(outlets.length === 1 ? [outlets[0].id] : []);
+  const [allOutlets, setAllOutlets] = useState(false);
   const [isPrep, setIsPrep] = useState(false);
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
@@ -19,7 +21,7 @@ export function NewRecipeForm({ outlets }: { outlets: Outlet[] }) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-    if (!outletId) {
+    if (!allOutlets && !outletIds.length) {
       setError(t("errors.OUTLET_REQUIRED"));
       return;
     }
@@ -27,7 +29,8 @@ export function NewRecipeForm({ outlets }: { outlets: Outlet[] }) {
     setError(null);
     const supabase = createClient();
     const { data: versionId, error: rpcError } = await supabase.rpc("create_recipe", {
-      p_outlet_id: outletId,
+      p_outlet_ids: allOutlets ? [] : outletIds,
+      p_all_outlets: allOutlets,
       p_is_prep: isPrep,
       p_product_name: name.trim(),
     });
@@ -44,18 +47,43 @@ export function NewRecipeForm({ outlets }: { outlets: Outlet[] }) {
 
   return (
     <form onSubmit={handleSubmit} className={card}>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-semibold">{t("fields.outlet")}</span>
-        <select value={outletId} onChange={(e) => setOutletId(e.target.value)} className={inputClass}>
-          {outlets.length !== 1 && <option value="">{t("chooseOutlet")}</option>}
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="mb-1.5 text-sm font-semibold">{t("fields.outlets")}</legend>
+        <div className="grid gap-x-4 sm:grid-cols-2">
+          {allowAll && (
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold sm:col-span-2">
+              <input
+                type="checkbox"
+                className="size-5 accent-black"
+                checked={allOutlets}
+                onChange={(e) => setAllOutlets(e.target.checked)}
+              />
+              {t("allOutletsOption")}
+            </label>
+          )}
           {outlets.map((o) => (
-            <option key={o.id} value={o.id}>
+            <label
+              key={o.id}
+              className={`flex min-h-11 items-center gap-3 text-sm ${allOutlets ? "opacity-50" : "cursor-pointer"}`}
+            >
+              <input
+                type="checkbox"
+                className="size-5 accent-black"
+                disabled={allOutlets}
+                checked={allOutlets || outletIds.includes(o.id)}
+                onChange={(e) =>
+                  setOutletIds(e.target.checked ? [...outletIds, o.id] : outletIds.filter((id) => id !== o.id))
+                }
+              />
               {o.name}
-            </option>
+            </label>
           ))}
-        </select>
-        <span className="text-[13px] text-[#3d3f3a]">{t("outletFixed")}</span>
-      </label>
+        </div>
+        <span className="text-[13px] text-[#3d3f3a]">
+          {allOutlets ? `${t("allOutletsHint")} ` : ""}
+          {t("outletFixed")}
+        </span>
+      </fieldset>
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1.5 text-sm font-semibold">{t("fields.type")}</legend>
         <div className="flex flex-wrap gap-2">

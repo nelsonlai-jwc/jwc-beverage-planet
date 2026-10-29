@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOutlets, getRecipeCost, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
+import { RECIPE_OUTLETS, canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
 import { STYLES, TEMPS } from "@/lib/recipes/types";
 import { getOptionLabels, orderOf } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
@@ -15,8 +16,12 @@ export default async function EditRecipePage({
   setRequestLocale(locale);
   const supabase = await createClient();
   const viewer = await getViewer(supabase);
-  const { data: recipe } = await supabase.from("recipes").select("*").eq("id", recipeId).maybeSingle();
-  if (!viewer || !recipe || !viewer.managedOutletIds.includes(recipe.outlet_id)) notFound();
+  const { data: recipe } = await supabase
+    .from("recipes")
+    .select("*, recipe_outlets(outlet_id)")
+    .eq("id", recipeId)
+    .maybeSingle();
+  if (!viewer || !recipe || !canManageRecipe(viewer, recipe)) notFound();
   if (recipe.status === "ARCHIVED") redirect(`/${locale}/recipes/${recipeId}`);
 
   const { data: open } = await supabase
@@ -33,8 +38,7 @@ export default async function EditRecipePage({
     supabase.from("materials").select("id, name, brand, status").neq("status", "ARCHIVED").order("name"),
     supabase
       .from("recipes")
-      .select("id")
-      .eq("outlet_id", recipe.outlet_id)
+      .select(`id, ${RECIPE_OUTLETS}`)
       .eq("is_prep", true)
       .eq("status", "ACTIVE")
       .neq("id", recipeId),
@@ -50,13 +54,20 @@ export default async function EditRecipePage({
   ]);
   if (!version) notFound();
   const labels = await getOptionLabels();
-  const prepNames = await getRecipeNames(supabase, (preps.data ?? []).map((p) => p.id));
+  const t = await getTranslations("Recipes");
+  // Prep made for every outlet of this recipe (same rule as private.recipe_covers_recipe).
+  const usablePreps = (preps.data ?? []).filter(
+    (p) =>
+      p.all_outlets ||
+      (!recipe.all_outlets && recipe.recipe_outlets.every((o) => p.recipe_outlets.some((po) => po.outlet_id === o.outlet_id))),
+  );
+  const prepNames = await getRecipeNames(supabase, usablePreps.map((p) => p.id));
 
   return (
     <RecipeEditor
       recipeId={recipeId}
       outletId={recipe.outlet_id}
-      outletName={outlets.find((o) => o.id === recipe.outlet_id)?.name ?? "—"}
+      outletName={outletLabel(recipe, outlets, t("allOutletsOption"))}
       isPrep={recipe.is_prep}
       version={version}
       returnReason={version.status === "RETURNED" ? (events.data?.[0]?.reason ?? null) : null}
@@ -65,7 +76,7 @@ export default async function EditRecipePage({
         name: m.brand ? `${m.name} (${m.brand})` : m.name,
         approved: m.status === "APPROVED",
       }))}
-      preps={(preps.data ?? []).map((p) => ({ id: p.id, name: prepNames.get(p.id) ?? "—" }))}
+      preps={usablePreps.map((p) => ({ id: p.id, name: prepNames.get(p.id) ?? "—" }))}
       packagingItems={(packaging.data ?? []).map((p) => ({
         id: p.id,
         name: p.brand ? `${p.name} (${p.brand})` : p.name,

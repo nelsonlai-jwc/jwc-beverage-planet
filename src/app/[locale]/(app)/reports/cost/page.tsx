@@ -6,6 +6,7 @@ import { ReportHeader } from "@/components/reports/ReportHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cardClass, mutedText } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/auth/currentUser";
+import { RECIPE_OUTLETS, coversOutlet, outletLabel } from "@/lib/recipes/outlets";
 import { fromLiveLines, fromSnapshotLines } from "@/lib/reports/costTree";
 import { toCsv } from "@/lib/reports/csv";
 import { loadApprovalSnapshots, loadCurrentCosts, loadSellingPrices } from "@/lib/reports/data";
@@ -46,12 +47,12 @@ export default async function CostReportPage({
     .order("name");
   const menu = menus?.find((m) => m.id === query.menu);
 
-  const { data: recipes } = await supabase
+  const { data: activeRecipes } = await supabase
     .from("recipes")
-    .select("id, outlet_id, current_approved_version_id")
+    .select(`id, outlet_id, current_approved_version_id, ${RECIPE_OUTLETS}`)
     .eq("status", "ACTIVE")
-    .not("current_approved_version_id", "is", null)
-    .in("outlet_id", outletIds);
+    .not("current_approved_version_id", "is", null);
+  const recipes = (activeRecipes ?? []).filter((r) => outletIds.some((id) => coversOutlet(r, id)));
   const versionIds = (recipes ?? []).flatMap((r) =>
     r.current_approved_version_id ? [r.current_approved_version_id] : [],
   );
@@ -70,9 +71,10 @@ export default async function CostReportPage({
   ]);
 
   const outletName = new Map(user.outlets.map((o) => [o.id, o.name]));
+  const recipeOutlets = (recipe: (typeof recipes)[number]) => outletLabel(recipe, user.outlets, tr("allOutletsOption"));
   const menuRecipes = menu ? new Set(menu.menu_items.map((i) => i.recipe_id)) : null;
 
-  const rows = (recipes ?? [])
+  const rows = recipes
     .map((recipe) => {
       const version = versionByRecipe.get(recipe.id);
       if (!version) return null;
@@ -102,7 +104,7 @@ export default async function CostReportPage({
       return {
         id: recipe.id,
         name: version.product_name ?? "—",
-        outlet: outletName.get(recipe.outlet_id) ?? "",
+        outlet: recipeOutlets(recipe),
         versionNo: version.version_no,
         style: version.style,
         totalCost,

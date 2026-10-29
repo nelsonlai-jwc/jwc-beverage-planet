@@ -1868,6 +1868,36 @@ export type Database = {
           },
         ]
       }
+      recipe_outlets: {
+        Row: {
+          outlet_id: string
+          recipe_id: string
+        }
+        Insert: {
+          outlet_id: string
+          recipe_id: string
+        }
+        Update: {
+          outlet_id?: string
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_outlets_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_outlets_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_packaging: {
         Row: {
           id: string
@@ -2117,6 +2147,7 @@ export type Database = {
       }
       recipes: {
         Row: {
+          all_outlets: boolean
           created_at: string
           created_by: string
           current_approved_version_id: string | null
@@ -2128,6 +2159,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          all_outlets?: boolean
           created_at?: string
           created_by?: string
           current_approved_version_id?: string | null
@@ -2139,6 +2171,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          all_outlets?: boolean
           created_at?: string
           created_by?: string
           current_approved_version_id?: string | null
@@ -2318,8 +2351,9 @@ export type Database = {
       }
       create_recipe: {
         Args: {
+          p_all_outlets: boolean
           p_is_prep: boolean
-          p_outlet_id: string
+          p_outlet_ids: string[]
           p_product_name: string
         }
         Returns: string
@@ -2357,7 +2391,7 @@ export type Database = {
         Args: { p_material_id: string | null; p_packaging_item_id: string | null }
         Returns: {
           is_prep: boolean
-          outlet_name: string
+          outlet_name: string | null
           product_name: string | null
           recipe_id: string
           usage: string

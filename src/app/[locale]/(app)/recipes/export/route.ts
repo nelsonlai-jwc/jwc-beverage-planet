@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { toCsv } from "@/lib/materials/csv";
 import { getViewer } from "@/lib/recipes/data";
 import { letterFor } from "@/lib/recipes/letters";
+import { RECIPE_OUTLETS, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
 import { asCost } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,7 +26,7 @@ const label = (item?: { name: string; brand: string | null } | null) =>
   item ? (item.brand ? `${item.name} (${item.brand})` : item.name) : "—";
 
 /**
- * One row per recipe of the outlets the viewer manages (all outlets for an Admin),
+ * One row per recipe the viewer can see (their outlets' recipes; all for an Admin),
  * archived ones left out. Shows the approved version, or the open draft when nothing
  * is approved yet; cost only for approved versions.
  */
@@ -39,10 +40,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const [{ data: recipes }, { data: outlets }, { data: costs }] = await Promise.all([
     supabase
       .from("recipes")
-      .select("id, outlet_id, is_prep, current_approved_version_id")
-      .eq("status", "ACTIVE")
-      .in("outlet_id", viewer.managedOutletIds),
-    supabase.from("outlets").select("id, name"),
+      .select(`id, outlet_id, is_prep, current_approved_version_id, ${RECIPE_OUTLETS}`)
+      .eq("status", "ACTIVE"),
+    supabase.from("outlets").select("id, name").order("sort_order"),
     supabase.rpc("report_current_costs", {}),
   ]);
   const recipeIds = (recipes ?? []).map((r) => r.id);
@@ -73,7 +73,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   ]);
   const materialById = new Map((materials ?? []).map((m) => [m.id, m]));
   const packagingById = new Map((packaging ?? []).map((p) => [p.id, p]));
-  const outletById = new Map((outlets ?? []).map((o) => [o.id, o.name]));
+  const outletName = (recipe: RecipeOutlets) => outletLabel(recipe, outlets ?? [], t("allOutletsOption"));
   const costByVersion = new Map((costs ?? []).map((c) => [c.version_id, asCost(c.cost)]));
 
   const chosen = (recipes ?? []).flatMap((r) => {
@@ -86,7 +86,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const rows = chosen
     .sort(
       (a, b) =>
-        (outletById.get(a.recipe.outlet_id) ?? "").localeCompare(outletById.get(b.recipe.outlet_id) ?? "") ||
+        outletName(a.recipe).localeCompare(outletName(b.recipe)) ||
         (a.version.product_name ?? "").localeCompare(b.version.product_name ?? ""),
     )
     .map(({ recipe, version }) => {
@@ -107,7 +107,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
         .filter((s) => s.instruction.trim())
         .map((s, index) => `${index + 1}. ${s.instruction.trim()}`);
       return [
-        outletById.get(recipe.outlet_id) ?? "",
+        outletName(recipe),
         version.product_name,
         recipe.is_prep ? t("prep") : t("drink"),
         version.style ? t(`style.${version.style}`) : "",

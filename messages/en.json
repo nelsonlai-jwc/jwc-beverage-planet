@@ -594,7 +594,8 @@
       "viaPrep": "through {name}",
       "live": "Live",
       "draft": "Draft",
-      "blocksArchive": "Live recipes must stop using it before it can be deleted."
+      "blocksArchive": "Live recipes must stop using it before it can be deleted.",
+      "allOutlets": "All outlets"
     },
     "requests": {
       "editPending": "Edit waiting for Admin approval",
@@ -679,7 +680,7 @@
     "staffEmpty": "No published SOP for your outlet yet.",
     "noAccess": "Your account cannot view recipes.",
     "create": "Create recipe",
-    "createIntro": "Start a new draft for one of your outlets. The outlet can't be changed later; copy the recipe instead.",
+    "createIntro": "Start a new draft for one or more of your outlets. The outlets can't be changed later; copy the recipe instead.",
     "createDraft": "Create draft",
     "copyApproved": "Copy approved recipe",
     "tabsLabel": "Recipe views",
@@ -697,7 +698,7 @@
     "mineEmpty": "No recipes match.",
     "pendingEmpty": "Nothing waiting for approval.",
     "catalogueEmpty": "No approved recipes yet.",
-    "catalogueNote": "Approved recipes from every outlet. Copying creates an independent draft for your outlet; it still needs approval and does not put the drink on a menu.",
+    "catalogueNote": "Approved recipes of your outlets. Copying creates an independent draft for another outlet you manage; it still needs approval and does not put the drink on a menu.",
     "untitled": "Untitled",
     "drink": "Drink",
     "prep": "Prep Material",
@@ -804,7 +805,8 @@
       "garnish": "Garnish",
       "storage_method": "Storage",
       "shelf_life": "Shelf life",
-      "tasting_notes": "Tasting notes"
+      "tasting_notes": "Tasting notes",
+      "outlets": "Outlets"
     },
     "chooseOutlet": "Choose an outlet",
     "outletFixed": "Fixed after creation.",
@@ -982,7 +984,10 @@
       "8": "8",
       "9": "9",
       "10": "10"
-    }
+    },
+    "allOutletsOption": "All outlets",
+    "allOutletsHint": "Every outlet, including ones added later.",
+    "readOnlyNote": "You can view this recipe. Only a Manager of all its outlets, or an Admin, can change it."
   },
   "Reports": {
     "title": "Reports",

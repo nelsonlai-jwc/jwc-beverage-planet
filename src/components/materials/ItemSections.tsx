@@ -33,7 +33,7 @@ export async function UsageSection({ entity, id }: { entity: Entity; id: string 
                   {row.product_name ?? t("untitled")}
                 </Link>
                 <span className="text-[13px] text-[#3d3f3a]">
-                  {row.outlet_name}
+                  {row.outlet_name ?? t("allOutlets")}
                   {row.via_prep_name && ` · ${t("viaPrep", { name: row.via_prep_name })}`}
                 </span>
               </div>
