@@ -9,10 +9,10 @@ import { createClient } from "@/lib/supabase/client";
 import { getRecipeCost, MEDIA_BUCKET } from "@/lib/recipes/data";
 import { letterFor, relabelSteps } from "@/lib/recipes/letters";
 import {
-  STYLES,
   TASTES,
-  TEMPS,
   UNITS,
+  type BeverageStyle,
+  type BeverageTemp,
   type CostResult,
   type FullVersion,
   type MeasureUnit,
@@ -66,6 +66,9 @@ type Props = {
   initialCost: CostResult | null;
   // Admin editing an approved recipe: saving makes the new version live at once.
   adminDirect: boolean;
+  // Style and temperature choices in the order set on the Settings page.
+  styles: BeverageStyle[];
+  temps: BeverageTemp[];
 };
 
 const newKey = () => crypto.randomUUID();
@@ -508,7 +511,7 @@ export function RecipeEditor(props: Props) {
                     className={`${inputClass} ${fieldError("style")}`}
                   >
                     <option value="">—</option>
-                    {STYLES.map((s) => (
+                    {props.styles.map((s) => (
                       <option key={s} value={s}>
                         {t(`style.${s}`)}
                       </option>
@@ -527,7 +530,7 @@ export function RecipeEditor(props: Props) {
                   className={`${inputClass} ${fieldError("temperature")}`}
                 >
                   <option value="">—</option>
-                  {TEMPS.map((s) => (
+                  {props.temps.map((s) => (
                     <option key={s} value={s}>
                       {t(`temp.${s}`)}
                     </option>
@@ -902,7 +905,7 @@ export function RecipeEditor(props: Props) {
                       <option value="">{t("notAssessed")}</option>
                       {[0, 1, 2, 3, 4, 5].map((n) => (
                         <option key={n} value={n}>
-                          {n}
+                          {t(`strength.${n}`) === String(n) ? n : `${n} · ${t(`strength.${n}`)}`}
                         </option>
                       ))}
                     </select>

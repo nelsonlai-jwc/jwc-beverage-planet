@@ -30,7 +30,7 @@ export async function getViewer(supabase: Client): Promise<Viewer | null> {
 }
 
 export async function getOutlets(supabase: Client): Promise<Outlet[]> {
-  const { data } = await supabase.from("outlets").select("id, name").order("name");
+  const { data } = await supabase.from("outlets").select("id, name").order("sort_order");
   return data ?? [];
 }
 

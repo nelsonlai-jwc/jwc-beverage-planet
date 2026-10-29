@@ -46,39 +46,48 @@
   "Settings": {
     "title": "Setting",
     "systemValues": "System values",
-    "readOnlyNote": "Initial values from the design plan. Read-only until data management is connected.",
+    "readOnlyNote": "Only an Admin can change these values.",
+    "adminNote": "Material types and outlets can be added, renamed, reordered and deleted. Style, temp and strength keep their values; only their names and order change.",
     "groups": {
       "strength": {
         "label": "Strength",
-        "rule": "Fixed values 0 to 5; meanings do not change."
+        "rule": "Fixed values 0 to 5; meanings do not change.",
+        "adminRule": "Fixed at 0 to 5. You can name each level and change the order."
       },
       "beverageStyle": {
         "label": "Beverage Style",
-        "rule": "Values in use can only be deactivated."
+        "rule": "Values in use can only be deactivated.",
+        "adminRule": "The styles are fixed. You can rename them in both languages and change the order."
       },
       "unit": {
         "label": "Unit",
-        "rule": "g and ml only; not free text."
+        "rule": "g and ml only; not free text.",
+        "adminRule": "Fixed: g and ml."
       },
       "temp": {
         "label": "Temp",
-        "rule": "Fixed system values."
+        "rule": "Fixed system values.",
+        "adminRule": "The options are fixed. You can rename them in both languages and change the order."
       },
       "materialType": {
         "label": "Material Type",
-        "rule": "Values in use can only be deactivated."
+        "rule": "Values in use can only be deactivated.",
+        "adminRule": "Add, rename, reorder or delete. A type already used by a material is disabled instead of deleted."
       },
       "outlet": {
         "label": "Outlet",
-        "rule": "The eight initial outlets."
+        "rule": "The eight initial outlets.",
+        "adminRule": "Add, rename, reorder or delete. An outlet already in use is disabled instead of deleted."
       },
       "currency": {
         "label": "Currency",
-        "rule": "Only MYR at launch. More currencies may be added later; there is no currency conversion."
+        "rule": "Only MYR at launch. More currencies may be added later; there is no currency conversion.",
+        "adminRule": "Fixed: MYR."
       },
       "language": {
         "label": "Language",
-        "rule": "English and Simplified Chinese enabled. Malay later."
+        "rule": "English and Simplified Chinese enabled. Malay later.",
+        "adminRule": "Fixed: English and Simplified Chinese."
       }
     },
     "values": {
@@ -108,6 +117,36 @@
       "wrongCurrent": "The current password is incorrect.",
       "networkError": "Network error. Please try again.",
       "failed": "Could not change the password. Please try again."
+    },
+    "edit": {
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "name": "Name",
+      "code": "Code",
+      "save": "Save",
+      "delete": "Delete",
+      "enable": "Enable",
+      "add": "Add",
+      "disabled": "Disabled",
+      "deleteConfirm": "Delete \"{name}\"? If it is already used it will be disabled instead.",
+      "deleted": "Deleted.",
+      "disabledInUse": "\"{name}\" is in use, so it was disabled instead. It no longer appears in new choices.",
+      "enabled": "Enabled.",
+      "saved": "Saved.",
+      "added": "Added.",
+      "typePlaceholder": "New material type",
+      "outletPlaceholder": "New outlet name",
+      "codePlaceholder": "CODE e.g. PG-ABC",
+      "codeHint": "The outlet code is fixed after creation: capital letters, numbers and dashes.",
+      "storedValue": "Value: {value}",
+      "errors": {
+        "NAME_REQUIRED": "Please enter a name.",
+        "CODE_INVALID": "Code: 2–32 capital letters, numbers or dashes.",
+        "DUPLICATE": "That name or code already exists.",
+        "INVALID": "That name is too long.",
+        "NOT_ALLOWED": "Only an Admin can change this.",
+        "UNKNOWN": "Something went wrong. Please try again."
+      }
     }
   },
   "Invite": {
@@ -935,6 +974,14 @@
       "waiting": "Until Admin decides, the recipe stays in use.",
       "returnedTitle": "Your deletion request was returned",
       "requestsTitle": "Deletion requests"
+    },
+    "strength": {
+      "0": "0",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5"
     }
   },
   "Reports": {
