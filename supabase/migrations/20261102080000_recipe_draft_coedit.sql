@@ -66,7 +66,7 @@ begin
     raise exception 'Only a draft or returned version can be submitted' using errcode = '23514';
   end if;
   if v.revision <> p_revision then
-    raise exception 'Someone else saved this draft; reload to see their changes' using errcode = '40001';
+    raise exception 'Someone else saved this draft; reload to see their changes' using errcode = 'PT409';
   end if;
 
   v_errors := private.validate_recipe_version(p_version_id);
@@ -147,3 +147,78 @@ create policy approval_events_select on public.approval_events for select to aut
   using (private.is_admin()
          or (private.is_manager() and (outlet_id is null or private.can_manage_outlet(outlet_id)))
          or (entity_type = 'RECIPE_VERSION' and private.can_edit_recipe_of_version(entity_id)));
+
+-- A refused save or submit (someone else saved first) answers HTTP 409 (PT409). With
+-- 40001 (serialization_failure) PostgREST retried the call forever and the editor
+-- stayed on "Saving…".
+-- Saves the whole draft in one transaction. p_revision is the revision the
+-- editor loaded; a mismatch means someone else saved first (ch. 9.1).
+create or replace function public.save_recipe_draft(
+  p_version_id uuid,
+  p_revision integer,
+  p_draft jsonb
+) returns integer
+language plpgsql security invoker set search_path = '' as $$
+declare
+  v_revision integer;
+begin
+  update public.recipe_versions set
+    product_name = nullif(btrim(p_draft ->> 'product_name'), ''),
+    purpose = coalesce((p_draft ->> 'purpose')::public.recipe_purpose, purpose),
+    style = (p_draft ->> 'style')::public.beverage_style,
+    temperature = (p_draft ->> 'temperature')::public.beverage_temp,
+    yield_quantity = (p_draft ->> 'yield_quantity')::numeric,
+    yield_unit = (p_draft ->> 'yield_unit')::public.measure_unit,
+    appearance_notes = p_draft ->> 'appearance_notes',
+    taste_sour = (p_draft ->> 'taste_sour')::smallint,
+    taste_sweet = (p_draft ->> 'taste_sweet')::smallint,
+    taste_bitter = (p_draft ->> 'taste_bitter')::smallint,
+    taste_salty = (p_draft ->> 'taste_salty')::smallint,
+    taste_umami = (p_draft ->> 'taste_umami')::smallint,
+    taste_spicy = (p_draft ->> 'taste_spicy')::smallint,
+    taste_smoky = (p_draft ->> 'taste_smoky')::smallint,
+    taste_zesty = (p_draft ->> 'taste_zesty')::smallint,
+    taste_funky = (p_draft ->> 'taste_funky')::smallint,
+    taste_earthy = (p_draft ->> 'taste_earthy')::smallint,
+    taste_oily = (p_draft ->> 'taste_oily')::smallint,
+    cup_type = p_draft ->> 'cup_type',
+    serving_size = p_draft ->> 'serving_size',
+    garnish = p_draft ->> 'garnish',
+    storage_method = p_draft ->> 'storage_method',
+    shelf_life = p_draft ->> 'shelf_life',
+    tasting_notes = p_draft ->> 'tasting_notes',
+    change_summary = p_draft ->> 'change_summary'
+  where id = p_version_id and revision = p_revision
+  returning revision into v_revision;
+
+  if v_revision is null then
+    if exists (select 1 from public.recipe_versions where id = p_version_id and private.can_edit_recipe_version(id)) then
+      raise exception 'Someone else saved this draft; reload to see their changes' using errcode = 'PT409';
+    end if;
+    raise exception 'This version is not an editable draft' using errcode = '42501';
+  end if;
+
+  delete from public.recipe_ingredients where recipe_version_id = p_version_id;
+  insert into public.recipe_ingredients (recipe_version_id, sort_order, material_id, prep_recipe_id, quantity, unit, notes)
+  select p_version_id, i.ord, (i.x ->> 'material_id')::uuid, (i.x ->> 'prep_recipe_id')::uuid,
+         (i.x ->> 'quantity')::numeric, (i.x ->> 'unit')::public.measure_unit, i.x ->> 'notes'
+    from jsonb_array_elements(coalesce(p_draft -> 'ingredients', '[]')) with ordinality as i (x, ord);
+
+  delete from public.recipe_packaging where recipe_version_id = p_version_id;
+  insert into public.recipe_packaging (recipe_version_id, sort_order, packaging_item_id, pieces)
+  select p_version_id, i.ord, (i.x ->> 'packaging_item_id')::uuid, (i.x ->> 'pieces')::numeric
+    from jsonb_array_elements(coalesce(p_draft -> 'packaging', '[]')) with ordinality as i (x, ord);
+
+  delete from public.recipe_steps where recipe_version_id = p_version_id;
+  insert into public.recipe_steps (recipe_version_id, step_no, instruction, media_asset_id)
+  select p_version_id, i.ord, coalesce(i.x ->> 'instruction', ''), (i.x ->> 'media_asset_id')::uuid
+    from jsonb_array_elements(coalesce(p_draft -> 'steps', '[]')) with ordinality as i (x, ord);
+
+  delete from public.recipe_media where recipe_version_id = p_version_id;
+  insert into public.recipe_media (recipe_version_id, sort_order, media_asset_id)
+  select p_version_id, i.ord, (i.x #>> '{}')::uuid
+    from jsonb_array_elements(coalesce(p_draft -> 'photos', '[]')) with ordinality as i (x, ord);
+
+  return v_revision;
+end;
+$$;

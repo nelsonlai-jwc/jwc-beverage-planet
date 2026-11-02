@@ -62,7 +62,7 @@ begin
   begin
     perform public.save_recipe_draft(current_setting('test.version')::uuid, 1, '{"product_name": "Stale"}');
     raise exception 'stale save should fail';
-  exception when serialization_failure then
+  exception when sqlstate 'PT409' then
     null;
   end;
 
