@@ -5,7 +5,7 @@ import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type Recipe
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
-import { PurposeBadge, StatusBadge, card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
+import { PurposeBadge, StatusBadge, card, inputClass, primaryButton, secondaryButton, smallButton } from "@/components/recipes/ui";
 
 type Tab = "mine" | "pending" | "catalogue";
 const OPEN: ApprovalStatus[] = ["DRAFT", "PENDING", "RETURNED"];
@@ -340,20 +340,29 @@ export default async function RecipesPage({
                   {r.approved && ` · ${t("approvedVersion", { no: r.approved.version_no })}`}
                   {r.open && ` · ${t("openVersion", { no: r.open.version_no })}`}
                 </span>
-                {r.status === "ACTIVE" && archivePending.has(r.id) && (
-                  <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>
-                )}
-                {r.status === "ACTIVE" && !archivePending.has(r.id) && canManageRecipe(viewer, r) && (
+                {r.status === "ACTIVE" && (
                   <span className="relative z-10 flex flex-wrap items-center gap-2 has-[[role=dialog]]:basis-full">
-                    {r.neverSubmitted ? (
-                      <DeleteDraftRecipeButton recipeId={r.id} />
-                    ) : (
-                      <ArchiveRecipeButton
-                        recipeId={r.id}
-                        mode={viewer.role === "ADMIN" || !r.approved ? "archive" : "request"}
-                        compact
-                      />
+                    {archivePending.has(r.id) && (
+                      <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>
                     )}
+                    {/* Copies the version this card shows: the one in progress, else the approved one. */}
+                    <Link
+                      href={r.open ? `/recipes/${r.id}/copy?version=${r.open.id}` : `/recipes/${r.id}/copy`}
+                      className={smallButton}
+                    >
+                      {t("copy")}
+                    </Link>
+                    {!archivePending.has(r.id) &&
+                      canManageRecipe(viewer, r) &&
+                      (r.neverSubmitted ? (
+                        <DeleteDraftRecipeButton recipeId={r.id} />
+                      ) : (
+                        <ArchiveRecipeButton
+                          recipeId={r.id}
+                          mode={viewer.role === "ADMIN" || !r.approved ? "archive" : "request"}
+                          compact
+                        />
+                      ))}
                   </span>
                 )}
               </span>

@@ -10,10 +10,13 @@ import { SopView } from "@/components/recipes/SopView";
 
 export default async function CopyRecipePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; recipeId: string }>;
+  searchParams: Promise<{ version?: string }>;
 }) {
   const { locale, recipeId } = await params;
+  const { version: versionParam } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("Recipes");
   const supabase = await createClient();
@@ -23,31 +26,58 @@ export default async function CopyRecipePage({
     .select("*, recipe_outlets(outlet_id)")
     .eq("id", recipeId)
     .maybeSingle();
-  if (!viewer || viewer.role === "BARISTA" || !recipe?.current_approved_version_id) notFound();
+  if (!viewer || viewer.role === "BARISTA" || !recipe || recipe.status !== "ACTIVE") notFound();
 
-  const source = await loadFullVersion(supabase, recipe.current_approved_version_id);
-  if (!source) notFound();
+  // ?version= names the in-progress version (Draft, Pending, Returned) to copy; otherwise the approved one.
+  const sourceVersionId = versionParam ?? recipe.current_approved_version_id;
+  if (!sourceVersionId) notFound();
+  const source = await loadFullVersion(supabase, sourceVersionId);
+  if (!source || source.recipe_id !== recipeId) notFound();
+  const isApproved = source.id === recipe.current_approved_version_id;
+  if (!isApproved && !["DRAFT", "PENDING", "RETURNED"].includes(source.status)) notFound();
   const outlets = await getOutlets(supabase);
 
-  // Every Prep dependency, following each Prep's approved version (O07).
-  const deps: { id: string; depth: number }[] = [];
-  let frontier = source.ingredients.flatMap((i) => (i.prep_recipe_id ? [i.prep_recipe_id] : []));
+  // Every Prep dependency, following each Prep's approved version (O07), with the Preps that use it
+  // ("" = the recipe itself) and the outlets it covers: a Prep already covering the target outlet is used as it is.
+  type Dep = { id: string; depth: number; parentIds: string[]; approved: boolean; outletIds: string[]; allOutlets: boolean };
+  const deps: Dep[] = [];
+  let frontier = source.ingredients.flatMap((i) => (i.prep_recipe_id ? [{ id: i.prep_recipe_id, parent: "" }] : []));
   for (let depth = 1; frontier.length && depth <= 10; depth++) {
-    const fresh = [...new Set(frontier)].filter((id) => !deps.some((d) => d.id === id));
-    deps.push(...fresh.map((id) => ({ id, depth })));
+    for (const f of frontier) {
+      const known = deps.find((d) => d.id === f.id);
+      if (known && !known.parentIds.includes(f.parent)) known.parentIds.push(f.parent);
+    }
+    const fresh = [...new Set(frontier.map((f) => f.id))].filter((id) => !deps.some((d) => d.id === id));
     if (!fresh.length) break;
-    const { data: preps } = await supabase.from("recipes").select("current_approved_version_id").in("id", fresh);
+    const { data: preps } = await supabase
+      .from("recipes")
+      .select(`id, current_approved_version_id, ${RECIPE_OUTLETS}`)
+      .in("id", fresh);
+    for (const id of fresh) {
+      const p = (preps ?? []).find((x) => x.id === id);
+      deps.push({
+        id,
+        depth,
+        parentIds: [...new Set(frontier.filter((f) => f.id === id).map((f) => f.parent))],
+        approved: Boolean(p?.current_approved_version_id),
+        outletIds: (p?.recipe_outlets ?? []).map((o) => o.outlet_id),
+        allOutlets: Boolean(p?.all_outlets),
+      });
+    }
     const versionIds = (preps ?? []).flatMap((p) => (p.current_approved_version_id ? [p.current_approved_version_id] : []));
     const { data: rows } = versionIds.length
-      ? await supabase.from("recipe_ingredients").select("prep_recipe_id").in("recipe_version_id", versionIds)
+      ? await supabase.from("recipe_ingredients").select("recipe_version_id, prep_recipe_id").in("recipe_version_id", versionIds)
       : { data: [] };
-    frontier = (rows ?? []).flatMap((r) => (r.prep_recipe_id ? [r.prep_recipe_id] : []));
+    frontier = (rows ?? []).flatMap((r) => {
+      const parent = (preps ?? []).find((p) => p.current_approved_version_id === r.recipe_version_id)?.id ?? "";
+      return r.prep_recipe_id ? [{ id: r.prep_recipe_id, parent }] : [];
+    });
   }
   const depNames = await getRecipeNames(supabase, deps.map((d) => d.id));
 
   // Existing recipes in the outlets this viewer can copy into, for mapping and the same-name check:
-  // one entry per target outlet the recipe is made for.
-  const targets = outlets.filter((o) => viewer.managedOutletIds.includes(o.id) && !coversOutlet(recipe, o.id));
+  // one entry per target outlet the recipe is made for. The recipe's own outlets are targets too.
+  const targets = outlets.filter((o) => viewer.managedOutletIds.includes(o.id));
   const { data: activeRecipes } = targets.length
     ? await supabase.from("recipes").select(`id, is_prep, ${RECIPE_OUTLETS}`).eq("status", "ACTIVE")
     : { data: [] };
@@ -64,15 +94,22 @@ export default async function CopyRecipePage({
         </Link>
         <h1 className="font-serif text-[32px] font-normal">{t("copyTitle", { name: source.product_name ?? "" })}</h1>
         <p className="text-sm text-[#3d3f3a]">
-          {t("copySource", {
-            outlet: outletLabel(recipe, outlets, t("allOutletsOption")),
-            no: source.version_no,
-          })}
+          {isApproved
+            ? t("copySource", {
+                outlet: outletLabel(recipe, outlets, t("allOutletsOption")),
+                no: source.version_no,
+              })
+            : t("copySourceOpen", {
+                outlet: outletLabel(recipe, outlets, t("allOutletsOption")),
+                status: t(`status.${source.status as "DRAFT" | "PENDING" | "RETURNED"}`),
+                no: source.version_no,
+              })}
         </p>
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
         <CopyForm
           sourceRecipeId={recipeId}
+          sourceVersionId={isApproved ? null : source.id}
           sourceName={source.product_name ?? ""}
           targets={targets}
           deps={deps.map((d) => ({ ...d, name: depNames.get(d.id) ?? "—" }))}
