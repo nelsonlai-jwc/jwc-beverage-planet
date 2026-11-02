@@ -1002,6 +1002,7 @@
     "allOutletsOption": "All outlets",
     "allOutletsHint": "Every outlet, including ones added later.",
     "readOnlyNote": "You can view this recipe. Only a Manager of all its outlets, or an Admin, can change it.",
+    "coEditNote": "You can work on this recipe's draft together with the other Managers of its outlets. Only a Manager of all its outlets, or an Admin, can start a new version or delete it.",
     "outletsEdit": {
       "open": "Change outlets",
       "save": "Save outlets",

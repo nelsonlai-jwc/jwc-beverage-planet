@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getRecipeCost, getViewer, loadFullVersion } from "@/lib/recipes/data";
-import { canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
+import { canEditRecipeDraft, canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
 import { formatDateTime, toSopData } from "@/lib/recipes/format";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewActions as ChangeReview } from "@/components/materials/ReviewActions";
@@ -34,6 +34,8 @@ export default async function RecipeDetailPage({
   const outlets = await getOutlets(supabase);
   const outletName = outletLabel(recipe, outlets, t("allOutletsOption"));
   const canManage = canManageRecipe(viewer, recipe);
+  // A Manager of only some of its outlets co-edits the open draft.
+  const canEditDraft = canEditRecipeDraft(viewer, recipe);
 
   const { data: versions } = await supabase
     .from("recipe_versions")
@@ -46,14 +48,16 @@ export default async function RecipeDetailPage({
     : null;
   const approvedMeta = (versions ?? []).find((v) => v.id === recipe.current_approved_version_id);
 
-  const [events, provenance, menus, cost, requests] = canManage
+  const events = canEditDraft
+    ? await supabase
+        .from("approval_events")
+        .select("id, entity_id, action, reason, created_at")
+        .eq("entity_type", "RECIPE_VERSION")
+        .in("entity_id", (versions ?? []).map((v) => v.id))
+        .order("created_at", { ascending: false })
+    : null;
+  const [provenance, menus, cost, requests] = canManage
     ? await Promise.all([
-        supabase
-          .from("approval_events")
-          .select("id, entity_id, action, reason, created_at")
-          .eq("entity_type", "RECIPE_VERSION")
-          .in("entity_id", (versions ?? []).map((v) => v.id))
-          .order("created_at", { ascending: false }),
         supabase.from("recipe_copy_provenance").select("source_recipe_id, source_outlet_id, copied_at").eq("target_recipe_id", recipeId).maybeSingle(),
         supabase.from("menu_items").select("menu_id, menus!inner(name, status)").eq("recipe_id", recipeId),
         approved ? getRecipeCost(supabase, approved.id) : Promise.resolve(null),
@@ -66,7 +70,7 @@ export default async function RecipeDetailPage({
           .order("created_at", { ascending: false })
           .limit(1),
       ])
-    : [null, null, null, null, null];
+    : [null, null, null, null];
 
   const archived = recipe.status === "ARCHIVED";
   const request = requests?.data?.[0];
@@ -132,7 +136,7 @@ export default async function RecipeDetailPage({
               initialAllOutlets={recipe.all_outlets}
             />
           )}
-          {canManage && (
+          {(canManage || (canEditDraft && open)) && (
             <section className={card}>
               <h2 className="text-base font-semibold">{t("versionPanel")}</h2>
               {open ? (
@@ -161,14 +165,17 @@ export default async function RecipeDetailPage({
                   }
                   hasApproved={Boolean(approved)}
                   canReview={viewer.role === "ADMIN"}
+                  canManage={canManage}
                 />
               )}
-              {!archived && !neverSubmitted && !pendingArchive && (
+              {canManage && !archived && !neverSubmitted && !pendingArchive && (
                 <ArchiveRecipeButton recipeId={recipe.id} mode={archiveMode} />
               )}
-              <Link href={`/recipes/${recipe.id}/history`} className="text-sm underline">
-                {t("changeLog.open")}
-              </Link>
+              {canManage && (
+                <Link href={`/recipes/${recipe.id}/history`} className="text-sm underline">
+                  {t("changeLog.open")}
+                </Link>
+              )}
             </section>
           )}
 
@@ -196,7 +203,7 @@ export default async function RecipeDetailPage({
 
           {!canManage && viewer.role !== "BARISTA" && (
             <section className={card}>
-              <p className="text-sm">{t("readOnlyNote")}</p>
+              <p className="text-sm">{canEditDraft ? t("coEditNote") : t("readOnlyNote")}</p>
               {approved && (
                 <>
                   <p className="text-sm">{t("catalogueNote")}</p>

@@ -67,20 +67,13 @@ begin
 end;
 $$;
 
--- M1 (one of the two outlets) reads it but cannot edit or submit -----------------------
+-- M1 (one of the two outlets) reads it; co-editing its draft is in recipe_draft_coedit,
+-- but M1 does not manage the recipe as a whole -------------------------------------------
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000c', true);
 do $$
 begin
   assert exists (select 1 from public.recipes where id = current_setting('test.shared')::uuid), 'M1 sees it';
-  assert not private.can_edit_recipe_version(current_setting('test.shared_version')::uuid), 'M1 cannot edit';
-  update public.recipe_versions set product_name = 'Hacked' where id = current_setting('test.shared_version')::uuid;
-  assert not found, 'M1 update ignored';
-  begin
-    perform public.submit_recipe_version(current_setting('test.shared_version')::uuid, 1);
-    raise exception 'M1 cannot submit';
-  exception when insufficient_privilege then
-    null;
-  end;
+  assert not private.can_manage_recipe(current_setting('test.shared')::uuid), 'M1 does not manage it';
 end;
 $$;
 
