@@ -391,6 +391,17 @@
     "unitCost": "Unit cost",
     "statusLabel": "Status",
     "allStatuses": "All statuses (except archived)",
+    "tableFilter": {
+      "min": "Min",
+      "max": "Max",
+      "contains": "Contains…",
+      "all": "All",
+      "allUnits": "All units",
+      "unit": "unit",
+      "from": "From",
+      "to": "To",
+      "sortBy": "Sort by"
+    },
     "piece": "piece",
     "approvalsIntro": "Check the details and cost, then approve or return with a reason. Nothing changes until you approve.",
     "approvalsEmpty": "Nothing is waiting for approval.",
