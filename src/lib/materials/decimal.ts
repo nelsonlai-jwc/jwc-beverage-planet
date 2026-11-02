@@ -43,12 +43,29 @@ export function divide(price: string, quantity: string, digits = 6): string | nu
   return `${text.slice(0, -digits)}.${text.slice(-digits)}`;
 }
 
-/** Unit cost for display: up to 6 decimals, at least 2, e.g. 0.00635. */
-export function formatUnitCost(value: string | number): string {
+/** Unit cost at full precision for exports: up to 6 decimals, at least 2, e.g. 0.00635. */
+export function formatUnitCostFull(value: string | number): string {
   const text = typeof value === "number" ? value.toFixed(6) : value;
   const [whole, fraction = ""] = text.split(".");
   const trimmed = fraction.replace(/0+$/, "").padEnd(2, "0");
   return `${whole}.${trimmed}`;
+}
+
+/** Unit cost for display: exactly 4 decimals, rounded half up, e.g. 0.0064. */
+export function formatUnitCost(value: string | number): string {
+  const text = typeof value === "number" ? value.toFixed(6) : value;
+  const parsed = parse(text);
+  if (!parsed) return text;
+  const digits = 4;
+  let scaled: bigint;
+  if (parsed.scale <= digits) {
+    scaled = parsed.value * BigInt(10) ** BigInt(digits - parsed.scale);
+  } else {
+    const factor = BigInt(10) ** BigInt(parsed.scale - digits);
+    scaled = (parsed.value * BigInt(2) + factor) / (factor * BigInt(2));
+  }
+  const padded = scaled.toString().padStart(digits + 1, "0");
+  return `${padded.slice(0, -digits)}.${padded.slice(-digits)}`;
 }
 
 /** Money for display, 2 decimals. */

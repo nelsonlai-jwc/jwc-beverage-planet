@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { formatUnitCost } from "@/lib/materials/decimal";
+import { formatUnitCostFull } from "@/lib/materials/decimal";
 import {
   MATERIAL_COLUMNS,
   MATERIAL_EXPORT_EXTRA,
@@ -89,7 +89,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
       m.abv,
       m.bx,
       m.is_coffee_bean ? "yes" : "no",
-      cost?.unit_cost != null ? `${formatUnitCost(cost.unit_cost)} / ${cost.unit}` : "",
+      cost?.unit_cost != null ? `${formatUnitCostFull(cost.unit_cost)} / ${cost.unit}` : "",
       t(`status.${m.status}`),
       date(m.updated_at),
     ];
