@@ -1007,6 +1007,7 @@
     "allOutletsOption": "全部分店",
     "allOutletsHint": "所有分店，包括之后新增的分店。",
     "readOnlyNote": "你可以查看这个配方。只有管理它所有分店的 Manager 或 Admin 才能修改。",
+    "coEditNote": "你可以和这个配方其他分店的 Manager 一起修改它的草稿。只有管理它所有分店的 Manager 或 Admin 才能建立新版本或删除。",
     "outletsEdit": {
       "open": "修改分店",
       "save": "保存分店",

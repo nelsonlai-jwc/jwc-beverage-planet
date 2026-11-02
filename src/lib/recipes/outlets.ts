@@ -20,6 +20,17 @@ export function canManageRecipe(viewer: Viewer, recipe: RecipeOutlets) {
   );
 }
 
+// Same rule as private.can_edit_recipe_draft: Admin, or a Manager of any outlet of the
+// recipe, edits and submits its draft (never an all-outlet recipe).
+export function canEditRecipeDraft(viewer: Viewer, recipe: RecipeOutlets) {
+  if (viewer.role === "ADMIN") return true;
+  return (
+    viewer.role === "MANAGER" &&
+    !recipe.all_outlets &&
+    recipe.recipe_outlets.some((o) => viewer.managedOutletIds.includes(o.outlet_id))
+  );
+}
+
 // "All outlets", or the outlet names in Settings order.
 export function outletLabel(recipe: RecipeOutlets, outlets: Outlet[], allLabel: string) {
   if (recipe.all_outlets) return allLabel;

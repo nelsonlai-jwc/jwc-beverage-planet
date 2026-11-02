@@ -244,7 +244,7 @@ export function RecipeEditor(props: Props) {
     });
     saveRunning.current = false;
     if (error) {
-      setMessage(error.code === "40001" ? t("conflict") : `${t("saveFailed")} ${error.message}`);
+      setMessage(error.code === "PT409" ? t("conflict") : `${t("saveFailed")} ${error.message}`);
       setSaveFailed(true);
       return null;
     }

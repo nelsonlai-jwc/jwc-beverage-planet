@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOutlets, getRecipeCost, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
-import { RECIPE_OUTLETS, canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
+import { RECIPE_OUTLETS, canEditRecipeDraft, outletLabel } from "@/lib/recipes/outlets";
 import { STYLES, TEMPS } from "@/lib/recipes/types";
 import { getOptionLabels, orderOf } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
@@ -21,7 +21,7 @@ export default async function EditRecipePage({
     .select("*, recipe_outlets(outlet_id)")
     .eq("id", recipeId)
     .maybeSingle();
-  if (!viewer || !recipe || !canManageRecipe(viewer, recipe)) notFound();
+  if (!viewer || !recipe || !canEditRecipeDraft(viewer, recipe)) notFound();
   if (recipe.status === "ARCHIVED") redirect(`/${locale}/recipes/${recipeId}`);
 
   const { data: open } = await supabase
@@ -61,12 +61,17 @@ export default async function EditRecipePage({
       p.all_outlets ||
       (!recipe.all_outlets && recipe.recipe_outlets.every((o) => p.recipe_outlets.some((po) => po.outlet_id === o.outlet_id))),
   );
+  // Uploads go under an outlet the viewer manages (storage and media_assets policies).
+  const uploadOutletId =
+    viewer.role === "ADMIN" || viewer.managedOutletIds.includes(recipe.outlet_id)
+      ? recipe.outlet_id
+      : (recipe.recipe_outlets.find((o) => viewer.managedOutletIds.includes(o.outlet_id))?.outlet_id ?? recipe.outlet_id);
   const prepNames = await getRecipeNames(supabase, usablePreps.map((p) => p.id));
 
   return (
     <RecipeEditor
       recipeId={recipeId}
-      outletId={recipe.outlet_id}
+      outletId={uploadOutletId}
       outletName={outletLabel(recipe, outlets, t("allOutletsOption"))}
       isPrep={recipe.is_prep}
       version={version}

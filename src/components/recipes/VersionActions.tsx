@@ -12,9 +12,11 @@ type Props = {
   open: { id: string; status: ApprovalStatus; versionNo: number; submittedByMe: boolean } | null;
   hasApproved: boolean;
   canReview: boolean;
+  // Manager of every outlet (or Admin): may also start a new version or delete the draft.
+  canManage: boolean;
 };
 
-export function VersionActions({ recipeId, open, hasApproved, canReview }: Props) {
+export function VersionActions({ recipeId, open, hasApproved, canReview, canManage }: Props) {
   const t = useTranslations("Recipes");
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -58,7 +60,7 @@ export function VersionActions({ recipeId, open, hasApproved, canReview }: Props
             {t("review")}
           </Link>
         )}
-        {!open && hasApproved && (
+        {!open && hasApproved && canManage && (
           <button
             type="button"
             disabled={pending}
@@ -73,7 +75,7 @@ export function VersionActions({ recipeId, open, hasApproved, canReview }: Props
             {t("newVersion")}
           </button>
         )}
-        {open?.status === "DRAFT" && (
+        {open?.status === "DRAFT" && canManage && (
           <button
             type="button"
             disabled={pending}
