@@ -391,6 +391,17 @@
     "unitCost": "单位成本",
     "statusLabel": "状态",
     "allStatuses": "全部状态（不含已归档）",
+    "tableFilter": {
+      "min": "最小",
+      "max": "最大",
+      "contains": "包含…",
+      "all": "全部",
+      "allUnits": "全部单位",
+      "unit": "单位",
+      "from": "从",
+      "to": "到",
+      "sortBy": "排序"
+    },
     "piece": "件",
     "approvalsIntro": "核对资料与成本后批准，或填写原因退回。批准前不会改变任何现行资料。",
     "approvalsEmpty": "目前没有待审批项目。",
