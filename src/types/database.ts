@@ -2333,6 +2333,7 @@ export type Database = {
           p_prep_mapping: Json
           p_product_name: string
           p_source_recipe_id: string
+          p_source_version_id?: string
           p_target_outlet_id: string
         }
         Returns: Json
