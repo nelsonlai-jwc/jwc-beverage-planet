@@ -400,7 +400,10 @@
       "unit": "单位",
       "from": "从",
       "to": "到",
-      "sortBy": "排序"
+      "sortBy": "排序",
+      "clear": "清除",
+      "ascending": "升序",
+      "descending": "降序"
     },
     "piece": "件",
     "approvalsIntro": "核对资料与成本后批准，或填写原因退回。批准前不会改变任何现行资料。",

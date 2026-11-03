@@ -400,7 +400,10 @@
       "unit": "unit",
       "from": "From",
       "to": "To",
-      "sortBy": "Sort by"
+      "sortBy": "Sort by",
+      "clear": "Clear",
+      "ascending": "Ascending",
+      "descending": "Descending"
     },
     "piece": "piece",
     "approvalsIntro": "Check the details and cost, then approve or return with a reason. Nothing changes until you approve.",
