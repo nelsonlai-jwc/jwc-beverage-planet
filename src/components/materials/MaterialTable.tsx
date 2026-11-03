@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
@@ -12,7 +12,10 @@ import {
   type SortDir,
   type SortKey,
 } from "@/lib/materials/table";
-import { StatusBadge, inputClass, secondaryButtonClass } from "./ui";
+import { StatusBadge } from "./ui";
+
+const CHIPS = ["name", "brand", "type", "pack", "cost", "status", "updated"] as const;
+type ChipKey = (typeof CHIPS)[number];
 
 const compactInput =
   "h-9 w-full min-w-0 rounded-lg border-[1.5px] border-black bg-white px-2 text-sm font-normal";
@@ -106,7 +109,6 @@ export function MaterialTable({
   const [filters, setFilters] = useState(initialFilters);
   const [sort, setSort] = useState<SortKey>(initialSort);
   const [dir, setDir] = useState<SortDir>(initialDir);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const shown = useMemo(
     () => sortRows(rows.filter((row) => matches(row, filters)), sort, dir),
@@ -164,7 +166,7 @@ export function MaterialTable({
     </div>
   );
 
-  // The same controls are used in the desktop header row and the phone filter panel.
+  // Filter controls shown in each chip's pop-up.
   const controls = (cls: string) => ({
     name: (
       <input
@@ -247,91 +249,228 @@ export function MaterialTable({
     ),
   });
 
-  const desktop = controls(compactInput);
-  const phone = controls(inputClass);
-  const activeCount = Object.values(filters).filter(Boolean).length;
+  const inputs = controls(compactInput);
 
+  // Which chip's pop-up is open, and where to draw it (fixed, so the scrolling chip row can't clip it).
+  const [open, setOpen] = useState<ChipKey | "sort" | null>(null);
+  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (e.type === "keydown" && (e as KeyboardEvent).key !== "Escape") return;
+      if (e.type === "mousedown" && popRef.current?.contains(e.target as Node)) return;
+      if (e.type === "mousedown" && (e.target as HTMLElement).closest("[data-chip]")) return;
+      setOpen(null);
+    };
+    const onResize = () => setOpen(null);
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onResize, true);
+    return () => {
+      window.removeEventListener("scroll", onResize, true);
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [open]);
+
+  const toggle = (key: ChipKey | "sort", button: HTMLElement) => {
+    if (open === key) return setOpen(null);
+    const rect = button.getBoundingClientRect();
+    const width = Math.min(288, window.innerWidth - 32);
+    setAnchor({
+      left: Math.max(16, Math.min(rect.left, window.innerWidth - width - 16)),
+      top: rect.bottom + 8,
+    });
+    setOpen(key);
+  };
+
+  const rangeText = (min: string, max: string) =>
+    min && max ? `${min}–${max}` : min ? `≥ ${min}` : max ? `≤ ${max}` : "";
+
+  // What a chip shows when its filter is set (empty = not set).
+  const summary: Record<ChipKey, string> = {
+    name: filters.name.trim(),
+    brand: brands.find((b) => b.key === filters.brand)?.label ?? "",
+    type: types.find((type) => type.id === filters.type)?.name ?? "",
+    pack: [filters.packUnit, rangeText(filters.packMin, filters.packMax)].filter(Boolean).join(" · "),
+    cost: rangeText(filters.costMin, filters.costMax) && `RM ${rangeText(filters.costMin, filters.costMax)}`,
+    status: filters.status ? t(`status.${filters.status}`) : "",
+    updated: rangeText(filters.from, filters.to),
+  };
+
+  const chipFields: Record<ChipKey, (keyof MaterialFilters)[]> = {
+    name: ["name"],
+    brand: ["brand"],
+    type: ["type"],
+    pack: ["packUnit", "packMin", "packMax"],
+    cost: ["costMin", "costMax"],
+    status: ["status"],
+    updated: ["from", "to"],
+  };
+
+  const clearChip = (key: ChipKey) => {
+    const next = { ...filters };
+    for (const field of chipFields[key]) next[field] = "";
+    setFilters(next);
+    writeUrl(next, sort, dir);
+    if (open === key) setOpen(null);
+  };
+
+  const chipLabels: Record<ChipKey, string> = {
+    name: t("name"),
+    brand: t("brand"),
+    type: t("type"),
+    pack: t("mainPack"),
+    cost: t("unitCost"),
+    status: t("statusLabel"),
+    updated: t("updated"),
+  };
+
+  const chipBase =
+    "inline-flex h-10 shrink-0 items-center rounded-lg border-[1.5px] border-black text-sm font-semibold whitespace-nowrap";
+
+  const chip = (key: ChipKey) => {
+    const value = summary[key];
+    const active = value !== "";
+    return (
+      <span
+        key={key}
+        data-chip
+        className={`${chipBase} ${active ? "bg-black text-white" : "bg-white"}`}
+      >
+        <button
+          type="button"
+          onClick={(e) => toggle(key, e.currentTarget.parentElement!)}
+          aria-expanded={open === key}
+          aria-haspopup="dialog"
+          className={`flex h-full items-center gap-1.5 ${active ? "pl-3.5 pr-1.5" : "px-3.5"}`}
+        >
+          <span>{active ? `${chipLabels[key]}: ${value}` : chipLabels[key]}</span>
+          {!active && (
+            <span aria-hidden className="text-[10px]">
+              ▼
+            </span>
+          )}
+        </button>
+        {active && (
+          <button
+            type="button"
+            onClick={() => clearChip(key)}
+            aria-label={`${t("tableFilter.clear")} ${chipLabels[key]}`}
+            className="flex h-full items-center pl-1 pr-3"
+          >
+            ✕
+          </button>
+        )}
+      </span>
+    );
+  };
+
+  const sortIcon = (
+    <span
+      aria-hidden
+      className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-green text-sm font-bold text-black"
+    >
+      {dir === "asc" ? "↑" : "↓"}
+    </span>
+  );
+
+  // Desktop header: click to sort; only the sorted column shows the round arrow.
   const header = (key: SortKey, align: "left" | "right" = "left") => {
     const active = sort === key;
     return (
       <th
-        className={`px-3 py-3 font-semibold ${align === "right" ? "text-right" : ""}`}
+        className={`px-5 py-3 font-semibold ${align === "right" ? "text-right" : ""}`}
         aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
       >
         <button
           type="button"
           onClick={() => clickHeader(key)}
-          className={`inline-flex items-center gap-1 ${align === "right" ? "flex-row-reverse" : ""}`}
+          className={`inline-flex h-7 items-center gap-1.5 ${active ? "text-black" : "hover:text-black"}`}
         >
           {sortLabels[key]}
-          <span aria-hidden className={active ? "" : "opacity-30"}>
-            {active ? (dir === "asc" ? "↑" : "↓") : "↕"}
-          </span>
+          {active && sortIcon}
         </button>
       </th>
     );
   };
 
-  const empty = <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("empty")}</p>;
+  const option = (selected: boolean, label: string, onClick: () => void) => (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={selected}
+      onClick={onClick}
+      className="flex h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-black/5"
+    >
+      <span aria-hidden className="w-4">
+        {selected ? "✓" : ""}
+      </span>
+      {label}
+    </button>
+  );
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Phone: sort dropdown plus a filter panel, since cards have no header. */}
-      <div className="flex flex-col gap-3 md:hidden">
-        <div className="grid grid-cols-[1fr_auto] gap-3">
-          <select
-            value={`${sort}:${dir}`}
-            onChange={(e) => {
-              const [key, nextDir] = e.target.value.split(":") as [SortKey, SortDir];
-              applySort(key, nextDir);
-            }}
-            aria-label={t("tableFilter.sortBy")}
-            className={inputClass}
-          >
-            {SORT_KEYS.flatMap((key) =>
-              (["asc", "desc"] as const).map((d) => (
-                <option key={`${key}:${d}`} value={`${key}:${d}`}>
-                  {t("tableFilter.sortBy")}: {sortLabels[key]} {d === "asc" ? "↑" : "↓"}
-                </option>
-              )),
-            )}
-          </select>
+      {/* One row of filter chips (scrolls sideways on phones), plus Sort on phones. */}
+      <div className="flex items-center gap-3">
+        <div className="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 py-0.5 md:flex-wrap">
+          {CHIPS.map(chip)}
+        </div>
+        <span data-chip className="md:hidden">
           <button
             type="button"
-            onClick={() => setPanelOpen((open) => !open)}
-            aria-expanded={panelOpen}
-            className={secondaryButtonClass}
+            onClick={(e) => toggle("sort", e.currentTarget)}
+            aria-expanded={open === "sort"}
+            aria-haspopup="menu"
+            className={`${chipBase} gap-1.5 bg-white px-3.5`}
           >
-            {t("filter")}
-            {activeCount > 0 && (
-              <span className="ml-2 rounded-full bg-black px-2 text-xs text-white">{activeCount}</span>
-            )}
+            <span aria-hidden>☰</span>
+            {t("tableFilter.sortBy")}
           </button>
+        </span>
+      </div>
+
+      {open && anchor && (
+        <div
+          ref={popRef}
+          role={open === "sort" ? "menu" : "dialog"}
+          aria-label={open === "sort" ? t("tableFilter.sortBy") : chipLabels[open]}
+          style={{ left: anchor.left, top: anchor.top, width: "min(18rem, calc(100vw - 2rem))" }}
+          className="fixed z-50 flex flex-col gap-3 rounded-2xl border-[1.5px] border-black bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
+        >
+          {open === "sort" ? (
+            <div className="flex flex-col">
+              {SORT_KEYS.map((key) => (
+                <div key={key}>{option(sort === key, sortLabels[key], () => applySort(key, dir))}</div>
+              ))}
+              <div className="my-1 border-t border-black/15" />
+              {option(dir === "asc", t("tableFilter.ascending"), () => applySort(sort, "asc"))}
+              {option(dir === "desc", t("tableFilter.descending"), () => applySort(sort, "desc"))}
+            </div>
+          ) : (
+            <>
+              <span className="text-sm font-semibold">{chipLabels[open]}</span>
+              {inputs[open]}
+              {summary[open] !== "" && (
+                <button type="button" onClick={() => clearChip(open)} className="self-start text-sm underline">
+                  {t("tableFilter.clear")}
+                </button>
+              )}
+            </>
+          )}
         </div>
-        {panelOpen && (
-          <div className="flex flex-col gap-3 rounded-[20px] bg-white p-4">
-            {(
-              [
-                ["name", t("name")],
-                ["brand", t("brand")],
-                ["type", t("type")],
-                ["pack", t("mainPack")],
-                ["cost", t("unitCost")],
-                ["status", t("statusLabel")],
-                ["updated", t("updated")],
-              ] as const
-            ).map(([key, label]) => (
-              <div key={key} className="flex flex-col gap-1.5">
-                <span className="text-sm font-semibold">{label}</span>
-                {phone[key]}
-              </div>
-            ))}
-          </div>
-        )}
-        {shown.length === 0 ? (
-          empty
-        ) : (
-          <ul className="flex flex-col gap-3">
+      )}
+
+      {shown.length === 0 ? (
+        <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("empty")}</p>
+      ) : (
+        <>
+          <ul className="flex flex-col gap-3 md:hidden">
             {shown.map((row) => (
               <li key={row.id}>
                 <Link href={`/raw-materials/${row.id}`} className="flex flex-col gap-2 rounded-[20px] bg-white p-4">
@@ -358,65 +497,47 @@ export function MaterialTable({
               </li>
             ))}
           </ul>
-        )}
-      </div>
-
-      {/* Desktop: click a header to sort, filter in the row under it. */}
-      <div className="hidden overflow-x-auto rounded-[20px] bg-white md:block">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-black/15 text-[#3d3f3a]">
-            <tr>
-              {header("name")}
-              {header("brand")}
-              {header("type")}
-              <th className="px-3 py-3 font-semibold">{t("mainPack")}</th>
-              {header("cost", "right")}
-              {header("status")}
-              {header("updated")}
-            </tr>
-            <tr className="align-top">
-              <td className="px-3 pb-3">{desktop.name}</td>
-              <td className="px-3 pb-3">{desktop.brand}</td>
-              <td className="px-3 pb-3">{desktop.type}</td>
-              <td className="w-36 px-3 pb-3">{desktop.pack}</td>
-              <td className="w-44 px-3 pb-3">{desktop.cost}</td>
-              <td className="px-3 pb-3">{desktop.status}</td>
-              <td className="w-40 px-3 pb-3">{desktop.updated}</td>
-            </tr>
-          </thead>
-          <tbody>
-            {shown.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-3 py-6 text-[#3d3f3a]">
-                  {t("empty")}
-                </td>
-              </tr>
-            )}
-            {shown.map((row) => (
-              <tr key={row.id} className="border-b border-black/10 last:border-0">
-                <td className="px-3 py-3">
-                  <Link href={`/raw-materials/${row.id}`} className="font-semibold underline">
-                    {row.name}
-                  </Link>
-                </td>
-                <td className="px-3 py-3">{row.brand}</td>
-                <td className="px-3 py-3">{row.type}</td>
-                <td className="px-3 py-3">
-                  {row.pack}
-                  {row.extraPacks > 0 && <span className="text-[#3d3f3a]"> +{row.extraPacks}</span>}
-                </td>
-                <td className="px-3 py-3 text-right tabular-nums">
-                  {row.unitCost ?? <span className="text-[#3d3f3a]">{t("noApprovedCost")}</span>}
-                </td>
-                <td className="px-3 py-3">
-                  <StatusBadge status={row.status} />
-                </td>
-                <td className="px-3 py-3 whitespace-nowrap">{row.updated}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <div className="hidden overflow-hidden rounded-[20px] bg-white md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-black/15 text-[#3d3f3a]">
+                <tr>
+                  {header("name")}
+                  {header("brand")}
+                  {header("type")}
+                  <th className="px-5 py-3 font-semibold">{t("mainPack")}</th>
+                  {header("cost", "right")}
+                  {header("status")}
+                  {header("updated")}
+                </tr>
+              </thead>
+              <tbody>
+                {shown.map((row) => (
+                  <tr key={row.id} className="border-b border-black/10 last:border-0">
+                    <td className="px-5 py-3">
+                      <Link href={`/raw-materials/${row.id}`} className="font-semibold underline">
+                        {row.name}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3">{row.brand}</td>
+                    <td className="px-5 py-3">{row.type}</td>
+                    <td className="px-5 py-3">
+                      {row.pack}
+                      {row.extraPacks > 0 && <span className="text-[#3d3f3a]"> +{row.extraPacks}</span>}
+                    </td>
+                    <td className="px-5 py-3 text-right tabular-nums">
+                      {row.unitCost ?? <span className="text-[#3d3f3a]">{t("noApprovedCost")}</span>}
+                    </td>
+                    <td className="px-5 py-3">
+                      <StatusBadge status={row.status} />
+                    </td>
+                    <td className="px-5 py-3 whitespace-nowrap">{row.updated}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }
