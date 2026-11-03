@@ -370,31 +370,38 @@ export function MaterialTable({
     );
   };
 
-  const sortIcon = (
-    <span
-      aria-hidden
-      className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-green text-sm font-bold text-black"
-    >
-      {dir === "asc" ? "↑" : "↓"}
-    </span>
-  );
-
-  // Desktop header: click to sort; only the sorted column shows the round arrow.
+  // Desktop header: the name toggles the sort; a faint ▲▼ pair next to it sorts directly.
+  // The arrow in use turns black.
   const header = (key: SortKey, align: "left" | "right" = "left") => {
     const active = sort === key;
+    const arrow = (d: SortDir) => {
+      const on = active && dir === d;
+      return (
+        <button
+          type="button"
+          onClick={() => applySort(key, d)}
+          aria-label={`${sortLabels[key]} ${t(d === "asc" ? "tableFilter.ascending" : "tableFilter.descending")}`}
+          aria-pressed={on}
+          className={`flex h-3 w-4 items-center justify-center text-[9px] leading-none ${on ? "text-black" : "text-black/25 hover:text-black/60"}`}
+        >
+          {d === "asc" ? "▲" : "▼"}
+        </button>
+      );
+    };
     return (
       <th
         className={`px-5 py-3 font-semibold ${align === "right" ? "text-right" : ""}`}
         aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
       >
-        <button
-          type="button"
-          onClick={() => clickHeader(key)}
-          className={`inline-flex h-7 items-center gap-1.5 ${active ? "text-black" : "hover:text-black"}`}
-        >
-          {sortLabels[key]}
-          {active && sortIcon}
-        </button>
+        <span className="inline-flex h-7 items-center gap-1">
+          <button type="button" onClick={() => clickHeader(key)} className={active ? "text-black" : undefined}>
+            {sortLabels[key]}
+          </button>
+          <span className="flex flex-col">
+            {arrow("asc")}
+            {arrow("desc")}
+          </span>
+        </span>
       </th>
     );
   };
