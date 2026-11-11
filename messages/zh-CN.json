@@ -416,6 +416,7 @@
       "SUPERSEDED": "已被取代",
       "ARCHIVED": "已归档"
     },
+    "requestedBy": "申请人：{name}",
     "approvalKinds": {
       "material": "新原料",
       "pack": "新包装规格",

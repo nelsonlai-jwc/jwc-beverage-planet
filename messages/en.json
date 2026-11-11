@@ -416,6 +416,7 @@
       "SUPERSEDED": "Superseded",
       "ARCHIVED": "Archived"
     },
+    "requestedBy": "Requested by: {name}",
     "approvalKinds": {
       "material": "New material",
       "pack": "New pack",
