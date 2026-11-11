@@ -31,42 +31,59 @@ export default async function ApprovalsPage({
     supabase
       .from("materials")
       .select(
-        "id, name, brand, no_brand, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status, material_price_versions(price, free_reason, status))",
+        "id, name, brand, no_brand, created_by, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status, material_price_versions(price, free_reason, status))",
       )
       .eq("status", "PENDING")
       .order("updated_at"),
     supabase
       .from("material_packs")
       .select(
-        "id, pack_quantity, unit, description, materials!material_packs_material_id_fkey!inner(id, name, brand, status), material_price_versions(price, status)",
+        "id, pack_quantity, unit, description, created_by, materials!material_packs_material_id_fkey!inner(id, name, brand, status), material_price_versions(price, status)",
       )
       .eq("status", "PENDING")
       .eq("materials.status", "APPROVED"),
     supabase
       .from("material_price_versions")
       .select(
-        "id, price, free_reason, material_packs!inner(id, pack_quantity, unit, status, material_id, materials!material_packs_material_id_fkey(id, name, brand), material_price_versions(price, status))",
+        "id, price, free_reason, created_by, material_packs!inner(id, pack_quantity, unit, status, material_id, materials!material_packs_material_id_fkey(id, name, brand), material_price_versions(price, status))",
       )
       .eq("status", "PENDING")
       .eq("material_packs.status", "APPROVED"),
     supabase
       .from("packaging_items")
-      .select("id, name, brand, packaging_prices(price_per_piece, free_reason, status)")
+      .select("id, name, brand, created_by, packaging_prices(price_per_piece, free_reason, status)")
       .eq("status", "PENDING"),
     supabase
       .from("packaging_prices")
       .select(
-        "id, price_per_piece, free_reason, packaging_items!inner(id, name, brand, status, packaging_prices(price_per_piece, status))",
+        "id, price_per_piece, free_reason, created_by, packaging_items!inner(id, name, brand, status, packaging_prices(price_per_piece, status))",
       )
       .eq("status", "PENDING")
       .eq("packaging_items.status", "APPROVED"),
     supabase
       .from("change_requests")
-      .select("id, entity_type, entity_id, action, changes, old_values, reason")
+      .select("id, entity_type, entity_id, action, changes, old_values, reason, requested_by")
       .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
       .eq("status", "PENDING")
       .order("created_at"),
   ]);
+
+  // Who submitted each request: Admins can read every profile.
+  const requesterIds = [
+    ...new Set([
+      ...(materials.data ?? []).map((row) => row.created_by),
+      ...(packs.data ?? []).map((row) => row.created_by),
+      ...(prices.data ?? []).map((row) => row.created_by),
+      ...(packagingItems.data ?? []).map((row) => row.created_by),
+      ...(packagingPrices.data ?? []).map((row) => row.created_by),
+      ...(requests.data ?? []).map((row) => row.requested_by),
+    ]),
+  ];
+  const { data: people } = requesterIds.length
+    ? await supabase.from("profiles").select("id, full_name").in("id", requesterIds)
+    : { data: [] };
+  const personName = new Map((people ?? []).map((p) => [p.id, p.full_name]));
+  const requestedBy = (id: string) => t("requestedBy", { name: personName.get(id) ?? "—" });
 
   const requestRows = await Promise.all(
     (requests.data ?? []).map(async (request) => {
@@ -157,6 +174,7 @@ export default async function ApprovalsPage({
                 title={material.name}
                 subtitle={material.no_brand ? t("noBrand") : (material.brand ?? "")}
                 href={`/raw-materials/${material.id}`}
+                requester={requestedBy(material.created_by)}
               />
               <dl className="grid grid-cols-3 gap-2 text-sm">
                 <Item label={t("form.type")} value={material.material_types?.name} />
@@ -193,6 +211,7 @@ export default async function ApprovalsPage({
                 title={pack.materials.name}
                 subtitle={pack.materials.brand ?? ""}
                 href={`/raw-materials/${pack.materials.id}`}
+                requester={requestedBy(pack.created_by)}
               />
               <dl className="grid grid-cols-3 gap-2 text-sm">
                 <Item label={t("form.pack")} value={`${pack.pack_quantity} ${pack.unit}`} />
@@ -211,6 +230,7 @@ export default async function ApprovalsPage({
               title={row.pack.materials.name}
               subtitle={`${row.pack.materials.brand ?? ""} · ${row.pack.pack_quantity} ${row.pack.unit}`}
               href={`/raw-materials/${row.pack.materials.id}`}
+              requester={requestedBy(row.created_by)}
             />
             <PriceComparison
               oldPrice={row.current}
@@ -233,6 +253,7 @@ export default async function ApprovalsPage({
                 title={item.name}
                 subtitle={item.brand ?? ""}
                 href={`/raw-materials/packaging/${item.id}`}
+                requester={requestedBy(item.created_by)}
               />
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <Item
@@ -253,6 +274,7 @@ export default async function ApprovalsPage({
               title={row.item.name}
               subtitle={row.item.brand ?? ""}
               href={`/raw-materials/packaging/${row.item.id}`}
+              requester={requestedBy(row.created_by)}
             />
             <PriceComparison
               oldPrice={row.current}
@@ -272,6 +294,7 @@ export default async function ApprovalsPage({
               title={row.title}
               subtitle={row.subtitle}
               href={row.href}
+              requester={requestedBy(row.requested_by)}
             />
             {row.changes.length > 0 && <ChangeTable changes={row.changes} />}
             {row.reason && (
@@ -292,11 +315,13 @@ function Header({
   title,
   subtitle,
   href,
+  requester,
 }: {
   kind: string;
   title: string;
   subtitle: string;
   href: string;
+  requester: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -305,6 +330,7 @@ function Header({
         {title}
       </Link>
       {subtitle && <span className="text-sm text-[#3d3f3a]">{subtitle}</span>}
+      <span className="text-sm text-[#3d3f3a]">{requester}</span>
     </div>
   );
 }
