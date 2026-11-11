@@ -711,6 +711,7 @@
     "statusLabel": "Status",
     "allStatuses": "All statuses",
     "mineEmpty": "No recipes match.",
+    "pendingCount": "{count} pending",
     "pendingEmpty": "Nothing waiting for approval.",
     "catalogueEmpty": "No approved recipes yet.",
     "catalogueNote": "Approved recipes of your outlets. Copying creates an independent draft for another outlet you manage; it still needs approval and does not put the drink on a menu.",

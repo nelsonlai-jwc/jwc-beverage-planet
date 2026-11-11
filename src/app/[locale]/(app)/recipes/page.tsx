@@ -124,6 +124,19 @@ export default async function RecipesPage({
     );
   }
 
+  // Admin: open recipe change requests, listed on the pending tab and counted on its badge.
+  const { data: archiveRequests } =
+    viewer.role === "ADMIN"
+      ? await supabase
+          .from("change_requests")
+          .select("id, entity_id, reason, created_at")
+          .eq("entity_type", "RECIPE")
+          .eq("status", "PENDING")
+          .order("created_at")
+      : { data: [] };
+  const pendingCount =
+    rows.filter((r) => r.open?.status === "PENDING").length + (archiveRequests ?? []).length;
+
   const tabBar = (
     <nav aria-label={t("tabsLabel")} className="flex flex-wrap gap-1">
       {tabs.map((key) => (
@@ -138,6 +151,14 @@ export default async function RecipesPage({
           }
         >
           {t(`tabs.${key}`)}
+          {key === "pending" && pendingCount > 0 && (
+            <span
+              aria-label={t("pendingCount", { count: pendingCount })}
+              className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff6062] px-1.5 align-middle text-xs font-semibold leading-none text-white"
+            >
+              {pendingCount > 99 ? "99+" : pendingCount}
+            </span>
+          )}
         </Link>
       ))}
     </nav>
@@ -145,12 +166,6 @@ export default async function RecipesPage({
 
   if (tab === "pending") {
     const pending = rows.filter((r) => r.open?.status === "PENDING" && matches(r.name));
-    const { data: archiveRequests } = await supabase
-      .from("change_requests")
-      .select("id, entity_id, reason, created_at")
-      .eq("entity_type", "RECIPE")
-      .eq("status", "PENDING")
-      .order("created_at");
     const recipeById = new Map(rows.map((r) => [r.id, r]));
     return (
       <div className="flex flex-col gap-6">

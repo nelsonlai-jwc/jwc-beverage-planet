@@ -711,6 +711,7 @@
     "statusLabel": "状态",
     "allStatuses": "全部状态",
     "mineEmpty": "没有符合的配方。",
+    "pendingCount": "{count} 项待审批",
     "pendingEmpty": "目前没有待审批的配方。",
     "catalogueEmpty": "尚无已批准的配方。",
     "catalogueNote": "你所管分店已批准的配方。复制会为你管理的另一间分店建立独立草稿，仍需审批，也不会直接上架菜单。",
