@@ -11,7 +11,7 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
 
 type Props = { recipeId: string; versionId: string; menuNames: string[]; drinkNames: string[] };
 
-export function ReviewActions({ recipeId, versionId, menuNames, drinkNames }: Props) {
+export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
   const t = useTranslations("Recipes");
   const router = useRouter();
   // One key per page load, so a double click cannot approve twice (ch. 9.1).
@@ -30,7 +30,7 @@ export function ReviewActions({ recipeId, versionId, menuNames, drinkNames }: Pr
       setError(explainApprovalError(t, result.message ?? result.error, result.details));
       return;
     }
-    router.push(`/recipes/${recipeId}`);
+    router.push("/recipes?tab=pending");
   }
 
   async function sendBack() {
