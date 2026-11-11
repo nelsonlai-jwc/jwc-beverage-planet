@@ -30,7 +30,7 @@ export function ReviewActions({ recipeId, versionId, menuNames, drinkNames }: Pr
       setError(explainApprovalError(t, result.message ?? result.error, result.details));
       return;
     }
-    router.push(`/recipes/${recipeId}`);
+    router.push("/recipes?tab=pending");
   }
 
   async function sendBack() {
