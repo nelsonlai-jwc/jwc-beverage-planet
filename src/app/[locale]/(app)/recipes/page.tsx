@@ -4,8 +4,10 @@ import { getOutlets, getViewer, signPhotos } from "@/lib/recipes/data";
 import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
+import { CatalogueGrid } from "@/components/recipes/CatalogueGrid";
+import { catalogueStateFromSearch, type CatalogueCard } from "@/lib/recipes/catalogue";
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
-import { PurposeBadge, StatusBadge, card, inputClass, primaryButton, secondaryButton, smallButton } from "@/components/recipes/ui";
+import { StatusBadge, card, inputClass, primaryButton, secondaryButton, smallButton } from "@/components/recipes/ui";
 
 type Tab = "mine" | "pending" | "catalogue";
 const OPEN: ApprovalStatus[] = ["DRAFT", "PENDING", "RETURNED"];
@@ -15,7 +17,7 @@ export default async function RecipesPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; outlet?: string; status?: string; q?: string; after?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -227,49 +229,35 @@ export default async function RecipesPage({
   if (tab === "catalogue") {
     const catalogue = rows.filter((r) => r.approved && r.status === "ACTIVE" && matches(r.name));
     const photos = await firstPhotos(supabase, catalogue.map((r) => r.approved!.id));
+    const cards: CatalogueCard[] = catalogue.map((r) => ({
+      id: r.id,
+      name: r.name,
+      isPrep: r.is_prep,
+      allOutlets: r.all_outlets,
+      outletIds: r.recipe_outlets.map((o) => o.outlet_id),
+      outlets: outletName(r),
+      versionNo: r.approved!.version_no,
+      purpose: r.approved!.purpose,
+      style: r.approved!.style,
+      temperature: r.approved!.temperature,
+      photo: photos.get(r.approved!.id) ?? null,
+    }));
+    // Outlet chip: only outlets that at least one catalogue recipe covers.
+    const outletOptions = outlets.filter((o) => catalogue.some((r) => coversOutlet(r, o.id)));
+    const state = catalogueStateFromSearch(query);
     return (
       <div className="flex flex-col gap-6">
         {header}
         {tabBar}
         <p className="text-sm text-[#3d3f3a]">{t("catalogueNote")}</p>
-        {searchBox()}
-        {catalogue.length === 0 ? (
-          <p className={card}>{t("catalogueEmpty")}</p>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {catalogue.map((r) => (
-              <li key={r.id} className={card}>
-                <Thumb url={photos.get(r.approved!.id)} alt={r.name} />
-                <div className="flex flex-col gap-1">
-                  <span className="text-base font-semibold">{r.name}</span>
-                  <span className="text-sm text-[#3d3f3a]">
-                    {outletName(r)} · V{r.approved!.version_no}
-                  </span>
-                  <span className="text-sm text-[#3d3f3a]">
-                    {[
-                      r.approved!.style && t(`style.${r.approved!.style}`),
-                      r.approved!.temperature && t(`temp.${r.approved!.temperature}`),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <PurposeBadge purpose={r.approved!.purpose} />
-                  {r.is_prep && <span className="text-xs font-semibold">{t("prep")}</span>}
-                </div>
-                <div className="mt-auto flex flex-wrap gap-2">
-                  <Link href={`/recipes/${r.id}`} className={secondaryButton}>
-                    {t("view")}
-                  </Link>
-                  <Link href={`/recipes/${r.id}/copy`} className={primaryButton}>
-                    {t("copy")}
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <CatalogueGrid
+          rows={cards}
+          outlets={outletOptions}
+          search={query.q ?? ""}
+          initialFilters={state.filters}
+          initialSort={state.sort}
+          initialDir={state.dir}
+        />
       </div>
     );
   }

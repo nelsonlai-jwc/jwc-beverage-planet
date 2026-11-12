@@ -1052,6 +1052,19 @@
       "open": "修改分店",
       "save": "保存分店",
       "note": "保存后立即生效，不需要审批。被移除分店的员工将看不到这个配方。"
+    },
+    "catalogueFilter": {
+      "name": "名称",
+      "outlets": "分店",
+      "type": "类型",
+      "purpose": "用途",
+      "style": "类别",
+      "temp": "温度",
+      "all": "全部",
+      "clear": "清除",
+      "sortBy": "排序",
+      "ascending": "升序",
+      "descending": "降序"
     }
   },
   "Reports": {
