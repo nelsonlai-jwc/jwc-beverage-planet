@@ -417,6 +417,7 @@
       "ARCHIVED": "已归档"
     },
     "requestedBy": "申请人：{name}",
+    "requestedAt": "申请时间：{date}",
     "approvalKinds": {
       "material": "新原料",
       "pack": "新包装规格",

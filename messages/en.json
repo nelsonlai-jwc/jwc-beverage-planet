@@ -417,6 +417,7 @@
       "ARCHIVED": "Archived"
     },
     "requestedBy": "Requested by: {name}",
+    "requestedAt": "Requested on {date}",
     "approvalKinds": {
       "material": "New material",
       "pack": "New pack",

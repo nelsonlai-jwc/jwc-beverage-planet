@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { PriceComparison } from "@/components/materials/PriceComparison";
 import { ChangeTable, describeChanges } from "@/components/materials/ItemSections";
 import { ReviewActions } from "@/components/materials/ReviewActions";
@@ -21,6 +21,7 @@ export default async function ApprovalsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
+  const format = await getFormatter();
   const { supabase, role } = await getViewer();
 
   if (role !== "ADMIN") {
@@ -31,38 +32,38 @@ export default async function ApprovalsPage({
     supabase
       .from("materials")
       .select(
-        "id, name, brand, no_brand, created_by, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status, material_price_versions(price, free_reason, status))",
+        "id, name, brand, no_brand, created_by, updated_at, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status, material_price_versions(price, free_reason, status))",
       )
       .eq("status", "PENDING")
       .order("updated_at"),
     supabase
       .from("material_packs")
       .select(
-        "id, pack_quantity, unit, description, created_by, materials!material_packs_material_id_fkey!inner(id, name, brand, status), material_price_versions(price, status)",
+        "id, pack_quantity, unit, description, created_by, updated_at, materials!material_packs_material_id_fkey!inner(id, name, brand, status), material_price_versions(price, status)",
       )
       .eq("status", "PENDING")
       .eq("materials.status", "APPROVED"),
     supabase
       .from("material_price_versions")
       .select(
-        "id, price, free_reason, created_by, material_packs!inner(id, pack_quantity, unit, status, material_id, materials!material_packs_material_id_fkey(id, name, brand), material_price_versions(price, status))",
+        "id, price, free_reason, created_by, updated_at, material_packs!inner(id, pack_quantity, unit, status, material_id, materials!material_packs_material_id_fkey(id, name, brand), material_price_versions(price, status))",
       )
       .eq("status", "PENDING")
       .eq("material_packs.status", "APPROVED"),
     supabase
       .from("packaging_items")
-      .select("id, name, brand, created_by, packaging_prices(price_per_piece, free_reason, status)")
+      .select("id, name, brand, created_by, updated_at, packaging_prices(price_per_piece, free_reason, status)")
       .eq("status", "PENDING"),
     supabase
       .from("packaging_prices")
       .select(
-        "id, price_per_piece, free_reason, created_by, packaging_items!inner(id, name, brand, status, packaging_prices(price_per_piece, status))",
+        "id, price_per_piece, free_reason, created_by, updated_at, packaging_items!inner(id, name, brand, status, packaging_prices(price_per_piece, status))",
       )
       .eq("status", "PENDING")
       .eq("packaging_items.status", "APPROVED"),
     supabase
       .from("change_requests")
-      .select("id, entity_type, entity_id, action, changes, old_values, reason, requested_by")
+      .select("id, entity_type, entity_id, action, changes, old_values, reason, requested_by, created_at")
       .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
       .eq("status", "PENDING")
       .order("created_at"),
@@ -84,6 +85,11 @@ export default async function ApprovalsPage({
     : { data: [] };
   const personName = new Map((people ?? []).map((p) => [p.id, p.full_name]));
   const requestedBy = (id: string) => t("requestedBy", { name: personName.get(id) ?? "—" });
+  // Last time the request was submitted, in Malaysia time.
+  const requestedAt = (value: string) =>
+    t("requestedAt", {
+      date: format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" }),
+    });
 
   const requestRows = await Promise.all(
     (requests.data ?? []).map(async (request) => {
@@ -175,6 +181,7 @@ export default async function ApprovalsPage({
                 subtitle={material.no_brand ? t("noBrand") : (material.brand ?? "")}
                 href={`/raw-materials/${material.id}`}
                 requester={requestedBy(material.created_by)}
+                requestedAt={requestedAt(material.updated_at)}
               />
               <dl className="grid grid-cols-3 gap-2 text-sm">
                 <Item label={t("form.type")} value={material.material_types?.name} />
@@ -212,6 +219,7 @@ export default async function ApprovalsPage({
                 subtitle={pack.materials.brand ?? ""}
                 href={`/raw-materials/${pack.materials.id}`}
                 requester={requestedBy(pack.created_by)}
+                requestedAt={requestedAt(pack.updated_at)}
               />
               <dl className="grid grid-cols-3 gap-2 text-sm">
                 <Item label={t("form.pack")} value={`${pack.pack_quantity} ${pack.unit}`} />
@@ -231,6 +239,7 @@ export default async function ApprovalsPage({
               subtitle={`${row.pack.materials.brand ?? ""} · ${row.pack.pack_quantity} ${row.pack.unit}`}
               href={`/raw-materials/${row.pack.materials.id}`}
               requester={requestedBy(row.created_by)}
+              requestedAt={requestedAt(row.updated_at)}
             />
             <PriceComparison
               oldPrice={row.current}
@@ -254,6 +263,7 @@ export default async function ApprovalsPage({
                 subtitle={item.brand ?? ""}
                 href={`/raw-materials/packaging/${item.id}`}
                 requester={requestedBy(item.created_by)}
+                requestedAt={requestedAt(item.updated_at)}
               />
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <Item
@@ -275,6 +285,7 @@ export default async function ApprovalsPage({
               subtitle={row.item.brand ?? ""}
               href={`/raw-materials/packaging/${row.item.id}`}
               requester={requestedBy(row.created_by)}
+              requestedAt={requestedAt(row.updated_at)}
             />
             <PriceComparison
               oldPrice={row.current}
@@ -295,6 +306,7 @@ export default async function ApprovalsPage({
               subtitle={row.subtitle}
               href={row.href}
               requester={requestedBy(row.requested_by)}
+              requestedAt={requestedAt(row.created_at)}
             />
             {row.changes.length > 0 && <ChangeTable changes={row.changes} />}
             {row.reason && (
@@ -316,12 +328,14 @@ function Header({
   subtitle,
   href,
   requester,
+  requestedAt,
 }: {
   kind: string;
   title: string;
   subtitle: string;
   href: string;
   requester: string;
+  requestedAt: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -331,6 +345,7 @@ function Header({
       </Link>
       {subtitle && <span className="text-sm text-[#3d3f3a]">{subtitle}</span>}
       <span className="text-sm text-[#3d3f3a]">{requester}</span>
+      <span className="text-xs text-[#3d3f3a]">{requestedAt}</span>
     </div>
   );
 }
