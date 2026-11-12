@@ -119,7 +119,7 @@ export default async function ReviewRecipePage({
         )}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
         <div className="flex flex-col gap-4">
           <section className={card}>
             <h2 className="text-base font-semibold">{t("sections.basic")}</h2>

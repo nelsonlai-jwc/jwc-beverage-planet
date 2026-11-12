@@ -9,6 +9,22 @@ import { alertClass, card, primaryButton, secondaryButton, textareaClass } from 
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
+// Preset return reasons; keys under Recipes.returnPresets in messages.
+const RETURN_PRESETS = [
+  "drinkTypeIngredient",
+  "stepUnit",
+  "drinkTypeMethod",
+  "unlistedIngredient",
+  "unusedIngredient",
+  "quantity",
+  "stepOrder",
+  "unclearStep",
+  "missingSettings",
+  "cupSize",
+  "costHigh",
+  "media",
+] as const;
+
 type Props = { recipeId: string; versionId: string; menuNames: string[]; drinkNames: string[] };
 
 export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
@@ -31,6 +47,17 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       return;
     }
     router.push("/recipes?tab=pending&after=review");
+  }
+
+  // Tapping a preset adds its sentence as a line in the reason box; tapping again removes it.
+  const reasonLines = reason.split("\n").map((line) => line.trim());
+  function togglePreset(text: string) {
+    const lines = reason.split("\n");
+    if (lines.some((line) => line.trim() === text)) {
+      setReason(lines.filter((line) => line.trim() !== text).join("\n"));
+    } else {
+      setReason(reason.trim() ? `${reason.replace(/\n+$/, "")}\n${text}` : text);
+    }
   }
 
   async function sendBack() {
@@ -79,6 +106,26 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       )}
       {mode === "return" && (
         <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            {RETURN_PRESETS.map((key) => {
+              const text = t(`returnPresets.${key}`);
+              const selected = reasonLines.includes(text);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={pending}
+                  onClick={() => togglePreset(text)}
+                  className={`rounded-full border-[1.5px] border-black px-3 py-1.5 text-left text-sm disabled:opacity-50 ${
+                    selected ? "bg-black text-white" : "bg-white"
+                  }`}
+                >
+                  {text}
+                </button>
+              );
+            })}
+          </div>
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-semibold">{t("returnReason")} *</span>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} className={textareaClass} />
