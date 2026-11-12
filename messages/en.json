@@ -1052,6 +1052,19 @@
       "open": "Change outlets",
       "save": "Save outlets",
       "note": "Applies at once, without approval. Staff of removed outlets stop seeing this recipe."
+    },
+    "catalogueFilter": {
+      "name": "Name",
+      "outlets": "Outlets",
+      "type": "Type",
+      "purpose": "Purpose",
+      "style": "Style",
+      "temp": "Temp",
+      "all": "All",
+      "clear": "Clear",
+      "sortBy": "Sort by",
+      "ascending": "Ascending",
+      "descending": "Descending"
     }
   },
   "Reports": {
