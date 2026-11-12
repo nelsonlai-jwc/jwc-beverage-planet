@@ -32,13 +32,13 @@ export default async function EditRecipePage({
     .maybeSingle();
   if (!open) redirect(`/${locale}/recipes/${recipeId}`);
 
-  const [version, outlets, materials, preps, packaging, events, cost] = await Promise.all([
+  const [version, outlets, materials, preps, packaging, events, cost, materialUnits] = await Promise.all([
     loadFullVersion(supabase, open.id),
     getOutlets(supabase),
     supabase.from("materials").select("id, name, brand, status").neq("status", "ARCHIVED").order("name"),
     supabase
       .from("recipes")
-      .select(`id, ${RECIPE_OUTLETS}`)
+      .select(`id, current_approved_version_id, ${RECIPE_OUTLETS}`)
       .eq("is_prep", true)
       .eq("status", "ACTIVE")
       .neq("id", recipeId),
@@ -51,6 +51,8 @@ export default async function EditRecipePage({
       .order("created_at", { ascending: false })
       .limit(1),
     getRecipeCost(supabase, open.id),
+    // Costing unit of each material, filled in when it is picked as an ingredient.
+    supabase.from("material_current_costs").select("material_id, unit"),
   ]);
   if (!version) notFound();
   const labels = await getOptionLabels();
@@ -67,6 +69,13 @@ export default async function EditRecipePage({
       ? recipe.outlet_id
       : (recipe.recipe_outlets.find((o) => viewer.managedOutletIds.includes(o.outlet_id))?.outlet_id ?? recipe.outlet_id);
   const prepNames = await getRecipeNames(supabase, usablePreps.map((p) => p.id));
+  const costUnits = new Map((materialUnits.data ?? []).map((m) => [m.material_id, m.unit]));
+  // A Prep is costed by the yield unit of its approved version.
+  const prepVersionIds = usablePreps.map((p) => p.current_approved_version_id).filter((id): id is string => Boolean(id));
+  const { data: prepYields } = prepVersionIds.length
+    ? await supabase.from("recipe_versions").select("recipe_id, yield_unit").in("id", prepVersionIds)
+    : { data: [] };
+  const yieldUnits = new Map((prepYields ?? []).map((v) => [v.recipe_id, v.yield_unit]));
 
   return (
     <RecipeEditor
@@ -80,8 +89,9 @@ export default async function EditRecipePage({
         id: m.id,
         name: m.brand ? `${m.name} (${m.brand})` : m.name,
         approved: m.status === "APPROVED",
+        unit: costUnits.get(m.id) ?? null,
       }))}
-      preps={usablePreps.map((p) => ({ id: p.id, name: prepNames.get(p.id) ?? "—" }))}
+      preps={usablePreps.map((p) => ({ id: p.id, name: prepNames.get(p.id) ?? "—", unit: yieldUnits.get(p.id) ?? null }))}
       packagingItems={(packaging.data ?? []).map((p) => ({
         id: p.id,
         name: p.brand ? `${p.name} (${p.brand})` : p.name,

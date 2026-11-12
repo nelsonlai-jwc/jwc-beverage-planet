@@ -39,7 +39,7 @@ import {
 } from "./ui";
 import { useDragSort } from "./useDragSort";
 
-type Option = { id: string; name: string; approved?: boolean };
+type Option = { id: string; name: string; approved?: boolean; unit?: MeasureUnit | null };
 type IngredientLine = {
   key: string;
   ref: string; // "m:<material id>" or "p:<prep recipe id>"
@@ -131,6 +131,8 @@ export function RecipeEditor(props: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [cost, setCost] = useState<CostResult | null>(props.initialCost);
+  // Cost of the last save, read by Submit right after saving.
+  const costRef = useRef<CostResult | null>(props.initialCost);
   const [showPreview, setShowPreview] = useState(false);
   const [publishErrors, setPublishErrors] = useState<string[] | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -199,6 +201,12 @@ export function RecipeEditor(props: Props) {
       ? (preps.find((p) => `p:${p.id}` === ref)?.name ?? "—")
       : (materials.find((m) => `m:${m.id}` === ref)?.name ?? "—");
 
+  // Costing unit of the picked material, or the yield unit of a Prep; empty if it has none.
+  const unitFor = (ref: string): MeasureUnit | "" =>
+    (ref.startsWith("p:")
+      ? preps.find((p) => `p:${p.id}` === ref)?.unit
+      : materials.find((m) => `m:${m.id}` === ref)?.unit) ?? "";
+
   // Empty ingredient lines are not saved, so letters after them move up.
   function savedInstructions() {
     return relabelSteps(
@@ -252,7 +260,9 @@ export function RecipeEditor(props: Props) {
     setRevision(data);
     setDirty(editsRef.current !== startEdits);
     setSavedAt(new Date());
-    setCost(await getRecipeCost(supabase, version.id));
+    const nextCost = await getRecipeCost(supabase, version.id);
+    costRef.current = nextCost;
+    setCost(nextCost);
     return data;
   }
 
@@ -285,6 +295,19 @@ export function RecipeEditor(props: Props) {
     const saved = await save();
     if (saved == null) {
       setSaving("idle");
+      return;
+    }
+    // Any cost warning blocks submitting; jump to the first ingredient row with one.
+    const costErrors = costWarnings(costRef.current);
+    if (costErrors.length) {
+      setSaving("idle");
+      setErrors(costErrors);
+      const firstLine = costErrors.find((e) => e.line)?.line;
+      const target = firstLine ? `ingredient-row-${firstLine}` : "submit-errors";
+      window.setTimeout(
+        () => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+        0,
+      );
       return;
     }
     const { data, error } = await supabase.rpc("submit_recipe_version", {
@@ -405,6 +428,28 @@ export function RecipeEditor(props: Props) {
     if (fileInput.current) fileInput.current.value = "";
   }
 
+  // Cost warnings as editor errors. Saved ingredients are the non-empty rows in order,
+  // so the n-th cost line belongs to the n-th non-empty row; `line` is that row's number.
+  function costWarnings(result: CostResult | null): ValidationError[] {
+    if (!result || result.is_complete) return [];
+    const filledRows = ingredients.map((line, index) => (line.ref ? index + 1 : 0)).filter(Boolean);
+    const lineIds = result.lines.map((line) => line.ingredient_id);
+    const found: ValidationError[] = [];
+    for (const reason of result.incomplete_reasons) {
+      const position = reason.line_id ? lineIds.indexOf(reason.line_id) : -1;
+      // Reasons inside a Prep's own recipe show as "Prep cost incomplete" on the Prep row.
+      if (reason.line_id && position < 0) continue;
+      found.push({
+        code: `COST_${reason.code}`,
+        field: "ingredients",
+        line: position >= 0 ? filledRows[position] : undefined,
+      });
+    }
+    return found.length ? found : [{ code: "COST_UNKNOWN", field: "ingredients" }];
+  }
+
+  const errorText = (code: string) => (t.has(`errors.${code}`) ? t(`errors.${code}`) : t("errors.COST_UNKNOWN"));
+
   const errorFor = (field: string, line?: number) =>
     errors.filter((e) => e.field === field && (line === undefined || e.line === line));
   const fieldError = (field: string) =>
@@ -481,7 +526,7 @@ export function RecipeEditor(props: Props) {
             {errors.map((e, index) => (
               <li key={index}>
                 <a href={`#field-${e.field}`} className="underline">
-                  {t(`errors.${e.code}`)}
+                  {errorText(e.code)}
                   {e.line ? ` (${t("line", { no: e.line })})` : ""}
                 </a>
               </li>
@@ -615,6 +660,7 @@ export function RecipeEditor(props: Props) {
               {ingredients.map((line, index) => (
                 <li
                   key={line.key}
+                  id={`ingredient-row-${index + 1}`}
                   ref={ingredientDrag.rowRef(index)}
                   className={`flex flex-col gap-2 rounded-[12px] border border-black/15 p-3 ${
                     errorFor("ingredients", index + 1).length ? "ring-2 ring-brand-red" : ""
@@ -641,7 +687,11 @@ export function RecipeEditor(props: Props) {
                       value={line.ref}
                       aria-label={t("fields.ingredient")}
                       onChange={(e) =>
-                        updateIngredients(ingredients.map((l) => (l.key === line.key ? { ...l, ref: e.target.value } : l)))
+                        updateIngredients(
+                          ingredients.map((l) =>
+                            l.key === line.key ? { ...l, ref: e.target.value, unit: unitFor(e.target.value) } : l,
+                          ),
+                        )
                       }
                       className={inputClass}
                     >
@@ -709,7 +759,7 @@ export function RecipeEditor(props: Props) {
                   </div>
                   {errorFor("ingredients", index + 1).map((e, i) => (
                     <p key={i} className="pl-[3.25rem] text-sm font-semibold">
-                      {t(`errors.${e.code}`)}
+                      {errorText(e.code)}
                     </p>
                   ))}
                 </li>

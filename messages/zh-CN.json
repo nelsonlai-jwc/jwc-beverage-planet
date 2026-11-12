@@ -892,7 +892,17 @@
       "COST_INCOMPLETE": "成本不完整，不能批准：",
       "COST_UNAVAILABLE": "成本计算尚未安装，暂时不能批准。",
       "OUTLET_REQUIRED": "请选择分店",
-      "PREP_REQUIRED": "尚未批准的预制原料请逐项选择替代。"
+      "PREP_REQUIRED": "尚未批准的预制原料请逐项选择替代。",
+      "COST_QUANTITY_MISSING": "缺少用量或单位",
+      "COST_COST_PACK_MISSING": "原料没有已批准的计价包装",
+      "COST_PRICE_MISSING": "没有已批准的采购价",
+      "COST_UNIT_MISMATCH": "单位与计价单位不符",
+      "COST_PREP_NOT_APPROVED": "预制原料没有已批准版本",
+      "COST_YIELD_MISSING": "预制原料缺少可用产量",
+      "COST_PREP_COST_INCOMPLETE": "预制原料成本不完整",
+      "COST_CYCLE_DETECTED": "配方通过预制原料引用了自己",
+      "COST_NO_INGREDIENTS": "至少添加一种原料",
+      "COST_UNKNOWN": "成本不完整"
     },
     "nothingToReview": "目前没有待审批的版本。",
     "reviewTitle": "审批 {name}",

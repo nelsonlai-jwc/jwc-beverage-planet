@@ -892,7 +892,17 @@
       "COST_INCOMPLETE": "Cost is incomplete, so this can't be approved:",
       "COST_UNAVAILABLE": "Cost calculation isn't installed yet, so approval is blocked.",
       "OUTLET_REQUIRED": "Choose an outlet",
-      "PREP_REQUIRED": "Choose a Prep for each one that isn't approved yet."
+      "PREP_REQUIRED": "Choose a Prep for each one that isn't approved yet.",
+      "COST_QUANTITY_MISSING": "Quantity or unit is missing",
+      "COST_COST_PACK_MISSING": "Material has no approved costing pack",
+      "COST_PRICE_MISSING": "No approved purchase price",
+      "COST_UNIT_MISMATCH": "Unit does not match the costing unit",
+      "COST_PREP_NOT_APPROVED": "Prep Material has no approved version",
+      "COST_YIELD_MISSING": "Prep Material has no usable yield",
+      "COST_PREP_COST_INCOMPLETE": "Prep Material cost is incomplete",
+      "COST_CYCLE_DETECTED": "Recipe uses itself through Prep Material",
+      "COST_NO_INGREDIENTS": "Add at least one ingredient",
+      "COST_UNKNOWN": "Cost is incomplete"
     },
     "nothingToReview": "No version is waiting for approval.",
     "reviewTitle": "Review {name}",
