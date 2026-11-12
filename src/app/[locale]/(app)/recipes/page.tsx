@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { getOutlets, getViewer, signPhotos } from "@/lib/recipes/data";
 import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
 import type { ApprovalStatus } from "@/lib/recipes/types";
@@ -15,7 +15,7 @@ export default async function RecipesPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; outlet?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ tab?: string; outlet?: string; status?: string; q?: string; after?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -136,6 +136,8 @@ export default async function RecipesPage({
       : { data: [] };
   const pendingCount =
     rows.filter((r) => r.open?.status === "PENDING").length + (archiveRequests ?? []).length;
+  // Right after an approve/return decision: nothing left to review, so go to the recipe home.
+  if (tab === "pending" && query.after === "review" && pendingCount === 0) redirect({ href: "/recipes", locale });
 
   const tabBar = (
     <nav aria-label={t("tabsLabel")} className="flex flex-wrap gap-1">

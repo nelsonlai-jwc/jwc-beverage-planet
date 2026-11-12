@@ -30,7 +30,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       setError(explainApprovalError(t, result.message ?? result.error, result.details));
       return;
     }
-    router.push("/recipes?tab=pending");
+    router.push("/recipes?tab=pending&after=review");
   }
 
   async function sendBack() {
@@ -46,7 +46,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       setError([`${t("actionFailed")} ${result.message ?? result.error}`]);
       return;
     }
-    router.push("/recipes?tab=pending");
+    router.push("/recipes?tab=pending&after=review");
   }
 
   return (
