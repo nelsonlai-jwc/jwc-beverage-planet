@@ -181,18 +181,30 @@ export function RecipeEditor(props: Props) {
   const ingredientDrag = useDragSort(ingredients, (next) => updateIngredients(next));
   const stepDrag = useDragSort(steps, (next) => updateSteps(next));
 
-  // Puts [A] at the cursor of a step, or at its end.
+  // Last cursor or selection of each step's text box, kept after the box loses focus
+  // (clicking an insert button moves focus to the button).
+  const stepCarets = useRef<Record<string, { start: number; end: number }>>({});
+  const rememberCaret = (key: string, field: HTMLTextAreaElement) => {
+    stepCarets.current[key] = { start: field.selectionStart, end: field.selectionEnd };
+  };
+
+  // Puts [A] at the last cursor of a step (replacing any selection), or at its end.
   function insertReference(key: string, letter: string) {
     const field = document.getElementById(`step-${key}`) as HTMLTextAreaElement | null;
     const step = steps.find((s) => s.key === key);
     if (!step) return;
-    const at = field && document.activeElement === field ? field.selectionStart : step.instruction.length;
+    const length = step.instruction.length;
+    const caret = stepCarets.current[key];
+    const start = caret ? Math.min(caret.start, length) : length;
+    const end = caret ? Math.min(Math.max(caret.end, start), length) : length;
     const token = `[${letter}]`;
-    const instruction = step.instruction.slice(0, at) + token + step.instruction.slice(at);
+    const instruction = step.instruction.slice(0, start) + token + step.instruction.slice(end);
+    const at = start + token.length;
+    stepCarets.current[key] = { start: at, end: at };
     updateSteps(steps.map((s) => (s.key === key ? { ...s, instruction } : s)));
     requestAnimationFrame(() => {
       field?.focus();
-      field?.setSelectionRange(at + token.length, at + token.length);
+      field?.setSelectionRange(at, at);
     });
   }
 
@@ -864,7 +876,12 @@ export function RecipeEditor(props: Props) {
                     id={`step-${step.key}`}
                     value={step.instruction}
                     aria-label={t("stepLabel", { no: index + 1 })}
-                    onChange={(e) => updateSteps(steps.map((s) => (s.key === step.key ? { ...s, instruction: e.target.value } : s)))}
+                    onChange={(e) => {
+                      rememberCaret(step.key, e.target);
+                      updateSteps(steps.map((s) => (s.key === step.key ? { ...s, instruction: e.target.value } : s)));
+                    }}
+                    onSelect={(e) => rememberCaret(step.key, e.currentTarget)}
+                    onBlur={(e) => rememberCaret(step.key, e.currentTarget)}
                     className={textareaClass}
                   />
                   <div className="flex flex-col gap-2">
