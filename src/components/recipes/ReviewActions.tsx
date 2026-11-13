@@ -1,8 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { approveRecipeVersion, returnRecipeVersion } from "@/app/[locale]/(app)/recipes/actions";
+import { aiReviewRecipeVersion, type AiReview } from "@/app/[locale]/(app)/recipes/ai-review";
 import { useRouter } from "@/i18n/navigation";
 import type { ValidationError } from "@/lib/recipes/types";
 import { alertClass, card, primaryButton, secondaryButton, textareaClass } from "./ui";
@@ -36,6 +37,26 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string[] | null>(null);
+  const locale = useLocale();
+  const [ai, setAi] = useState<AiReview | null>(null);
+  const [aiPending, setAiPending] = useState(false);
+  const [aiError, setAiError] = useState(false);
+
+  // AI first-pass review: suggestion only; its return reason pre-fills the reason box.
+  async function runAiReview() {
+    setAiPending(true);
+    setAiError(false);
+    const result = await aiReviewRecipeVersion(versionId, locale);
+    setAiPending(false);
+    if (!result.ok) {
+      setAiError(true);
+      return;
+    }
+    setAi(result.review);
+    if (result.review.returnReason.trim() && (!reason.trim() || reason === ai?.returnReason)) {
+      setReason(result.review.returnReason.trim());
+    }
+  }
 
   async function approve() {
     setPending(true);
@@ -76,80 +97,120 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
     router.push("/recipes?tab=pending&after=review");
   }
 
+  const verdictClass = {
+    APPROVE: "bg-brand-green/40",
+    CHECK: "bg-brand-orange/40",
+    RETURN: "bg-brand-red/30",
+  };
+
   return (
-    <section className={card}>
-      <h2 className="text-base font-semibold">{t("decision")}</h2>
-      {mode === "idle" && (
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className={primaryButton} onClick={() => setMode("approve")}>
-            {t("approve")}
-          </button>
-          <button type="button" className={secondaryButton} onClick={() => setMode("return")}>
-            {t("return")}
+    <>
+      <section className={card}>
+        <h2 className="text-base font-semibold">{t("aiReview.title")}</h2>
+        <p className="text-[13px] text-[#3d3f3a]">{t("aiReview.intro")}</p>
+        <div>
+          <button type="button" className={secondaryButton} disabled={aiPending || pending} onClick={runAiReview}>
+            {aiPending ? t("aiReview.running") : ai ? t("aiReview.again") : t("aiReview.run")}
           </button>
         </div>
-      )}
-      {mode === "approve" && (
-        <div className="flex flex-col gap-3 text-sm">
-          <p className="font-semibold">{t("approveConfirm")}</p>
-          {menuNames.length > 0 && <p>{t("approveMenus", { menus: menuNames.join("、") })}</p>}
-          {drinkNames.length > 0 && <p>{t("approveDrinks", { drinks: drinkNames.join("、") })}</p>}
+        {aiError && (
+          <p role="alert" className={alertClass}>
+            {t("aiReview.failed")}
+          </p>
+        )}
+        {ai && !aiPending && (
+          <div className="flex flex-col gap-3 text-sm">
+            <span className={`self-start rounded-full px-3 py-1 font-semibold ${verdictClass[ai.verdict]}`}>
+              {t(`aiReview.verdict.${ai.verdict}`)}
+            </span>
+            {ai.summary && <p>{ai.summary}</p>}
+            {ai.issues.length > 0 && (
+              <ul className="flex list-disc flex-col gap-1 pl-5">
+                {ai.issues.map((issue, index) => (
+                  <li key={index}>
+                    <span className="font-semibold">{issue.where}:</span> {issue.problem}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {ai.returnReason.trim() && <p className="text-[13px] text-[#3d3f3a]">{t("aiReview.reasonFilled")}</p>}
+          </div>
+        )}
+      </section>
+      <section className={card}>
+        <h2 className="text-base font-semibold">{t("decision")}</h2>
+        {mode === "idle" && (
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={primaryButton} disabled={pending} onClick={approve}>
-              {t("approveNow")}
+            <button type="button" className={primaryButton} onClick={() => setMode("approve")}>
+              {t("approve")}
             </button>
-            <button type="button" className={secondaryButton} disabled={pending} onClick={() => setMode("idle")}>
-              {t("cancel")}
+            <button type="button" className={secondaryButton} onClick={() => setMode("return")}>
+              {t("return")}
             </button>
           </div>
-        </div>
-      )}
-      {mode === "return" && (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-2">
-            {RETURN_PRESETS.map((key) => {
-              const text = t(`returnPresets.${key}`);
-              const selected = reasonLines.includes(text);
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  aria-pressed={selected}
-                  disabled={pending}
-                  onClick={() => togglePreset(text)}
-                  className={`rounded-full border-[1.5px] border-black px-3 py-1.5 text-left text-sm disabled:opacity-50 ${
-                    selected ? "bg-black text-white" : "bg-white"
-                  }`}
-                >
-                  {text}
-                </button>
-              );
-            })}
+        )}
+        {mode === "approve" && (
+          <div className="flex flex-col gap-3 text-sm">
+            <p className="font-semibold">{t("approveConfirm")}</p>
+            {menuNames.length > 0 && <p>{t("approveMenus", { menus: menuNames.join("、") })}</p>}
+            {drinkNames.length > 0 && <p>{t("approveDrinks", { drinks: drinkNames.join("、") })}</p>}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className={primaryButton} disabled={pending} onClick={approve}>
+                {t("approveNow")}
+              </button>
+              <button type="button" className={secondaryButton} disabled={pending} onClick={() => setMode("idle")}>
+                {t("cancel")}
+              </button>
+            </div>
           </div>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold">{t("returnReason")} *</span>
-            <textarea value={reason} onChange={(e) => setReason(e.target.value)} className={textareaClass} />
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className={primaryButton} disabled={pending} onClick={sendBack}>
-              {t("returnNow")}
-            </button>
-            <button type="button" className={secondaryButton} disabled={pending} onClick={() => setMode("idle")}>
-              {t("cancel")}
-            </button>
+        )}
+        {mode === "return" && (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-2">
+              {RETURN_PRESETS.map((key) => {
+                const text = t(`returnPresets.${key}`);
+                const selected = reasonLines.includes(text);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={selected}
+                    disabled={pending}
+                    onClick={() => togglePreset(text)}
+                    className={`rounded-full border-[1.5px] border-black px-3 py-1.5 text-left text-sm disabled:opacity-50 ${
+                      selected ? "bg-black text-white" : "bg-white"
+                    }`}
+                  >
+                    {text}
+                  </button>
+                );
+              })}
+            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">{t("returnReason")} *</span>
+              <textarea value={reason} onChange={(e) => setReason(e.target.value)} className={textareaClass} />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className={primaryButton} disabled={pending} onClick={sendBack}>
+                {t("returnNow")}
+              </button>
+              <button type="button" className={secondaryButton} disabled={pending} onClick={() => setMode("idle")}>
+                {t("cancel")}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      {error && (
-        <ul role="alert" className={`${alertClass} flex flex-col gap-1`}>
-          {error.map((line, index) => (
-            <li key={index} className={index === 0 ? "font-semibold" : ""}>
-              {line}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+        )}
+        {error && (
+          <ul role="alert" className={`${alertClass} flex flex-col gap-1`}>
+            {error.map((line, index) => (
+              <li key={index} className={index === 0 ? "font-semibold" : ""}>
+                {line}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
   );
 }
 

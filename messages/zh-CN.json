@@ -1066,6 +1066,20 @@
       "sortBy": "排序",
       "ascending": "升序",
       "descending": "降序"
+    },
+    "aiReview": {
+      "title": "AI 初步审核",
+      "intro": "AI 先检查这个版本并给出建议，通过或退回仍由你决定。",
+      "run": "开始 AI 审核",
+      "running": "AI 审核中…",
+      "again": "重新审核",
+      "failed": "AI 审核失败，请稍后再试。",
+      "reasonFilled": "如要退回，AI 写的原因已填入退回原因框，送出前可以修改。",
+      "verdict": {
+        "APPROVE": "建议通过",
+        "CHECK": "需留意",
+        "RETURN": "建议退回"
+      }
     }
   },
   "Reports": {
