@@ -1066,6 +1066,20 @@
       "sortBy": "Sort by",
       "ascending": "Ascending",
       "descending": "Descending"
+    },
+    "aiReview": {
+      "title": "AI pre-review",
+      "intro": "AI checks this version first and gives a suggestion. You still decide to approve or return.",
+      "run": "Run AI review",
+      "running": "AI is reviewing…",
+      "again": "Review again",
+      "failed": "AI review failed. Please try again later.",
+      "reasonFilled": "If you return it, this reason is already filled in the return reason box. You can edit it before sending.",
+      "verdict": {
+        "APPROVE": "Suggest approve",
+        "CHECK": "Please check",
+        "RETURN": "Suggest return"
+      }
     }
   },
   "Reports": {
