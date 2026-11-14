@@ -5,26 +5,11 @@ import { useMemo, useState } from "react";
 import { approveRecipeVersion, returnRecipeVersion } from "@/app/[locale]/(app)/recipes/actions";
 import { aiReviewRecipeVersion, type AiReview } from "@/app/[locale]/(app)/recipes/ai-review";
 import { useRouter } from "@/i18n/navigation";
+import { RETURN_PRESETS } from "@/lib/recipes/return-presets";
 import type { ValidationError } from "@/lib/recipes/types";
 import { alertClass, card, primaryButton, secondaryButton, textareaClass } from "./ui";
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
-
-// Preset return reasons; keys under Recipes.returnPresets in messages.
-const RETURN_PRESETS = [
-  "drinkTypeIngredient",
-  "stepUnit",
-  "drinkTypeMethod",
-  "unlistedIngredient",
-  "unusedIngredient",
-  "quantity",
-  "stepOrder",
-  "unclearStep",
-  "missingSettings",
-  "cupSize",
-  "costHigh",
-  "media",
-] as const;
 
 type Props = { recipeId: string; versionId: string; menuNames: string[]; drinkNames: string[] };
 
@@ -41,8 +26,10 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
   const [ai, setAi] = useState<AiReview | null>(null);
   const [aiPending, setAiPending] = useState(false);
   const [aiError, setAiError] = useState(false);
+  const [aiReason, setAiReason] = useState("");
 
-  // AI first-pass review: suggestion only; its return reason pre-fills the reason box.
+  // AI first-pass review: suggestion only. Its findings pre-select the matching return
+  // reason tags and add one specific line each, unless the Admin already wrote a reason.
   async function runAiReview() {
     setAiPending(true);
     setAiError(false);
@@ -53,9 +40,11 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       return;
     }
     setAi(result.review);
-    if (result.review.returnReason.trim() && (!reason.trim() || reason === ai?.returnReason)) {
-      setReason(result.review.returnReason.trim());
-    }
+    const { verdict, issues, returnReason } = result.review;
+    const tags = [...new Set(issues.map((issue) => t(`returnPresets.${issue.preset}`)))];
+    const filled = verdict === "APPROVE" ? "" : [...tags, returnReason.trim()].filter(Boolean).join("\n");
+    if (!reason.trim() || reason === aiReason) setReason(filled);
+    setAiReason(filled);
   }
 
   async function approve() {
@@ -133,7 +122,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
                 ))}
               </ul>
             )}
-            {ai.returnReason.trim() && <p className="text-[13px] text-[#3d3f3a]">{t("aiReview.reasonFilled")}</p>}
+            {aiReason && <p className="text-[13px] text-[#3d3f3a]">{t("aiReview.reasonFilled")}</p>}
           </div>
         )}
       </section>

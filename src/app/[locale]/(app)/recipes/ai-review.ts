@@ -4,6 +4,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 import { getRecipeCost, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { letterFor } from "@/lib/recipes/letters";
+import { RETURN_PRESETS } from "@/lib/recipes/return-presets";
 import type { CostResult, FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,7 +21,13 @@ const MODELS = [
 const reviewSchema = z.object({
   verdict: z.enum(["APPROVE", "CHECK", "RETURN"]),
   summary: z.string(),
-  issues: z.array(z.object({ where: z.string(), problem: z.string() })),
+  issues: z.array(
+    z.object({
+      preset: z.enum(RETURN_PRESETS.filter((key) => key !== "media") as [string, ...string[]]),
+      where: z.string(),
+      problem: z.string(),
+    }),
+  ),
   returnReason: z.string(),
 });
 
@@ -29,21 +36,37 @@ export type AiReviewResult = { ok: true; review: AiReview } | { ok: false; error
 
 const SYSTEM = `You are a senior beverage R&D reviewer for a cafe chain. An Admin is about to approve or return a recipe version that a Manager submitted. Do a first-pass review to help the Admin; the Admin makes the final decision.
 
-Check mainly:
-1. Ingredients fit the drink type (style and temperature), e.g. ice in a HOT drink.
-2. Quantities and units written in the steps match the ingredient list (each ingredient is g or ml).
-3. The method fits the drink type.
-4. Steps mention ingredients that are not in the list ([X] letters or names), or listed ingredients are never used in the steps.
-5. Quantities that are clearly too much or too little for the yield / serving size.
-6. Step order, unclear steps, missing key settings (temperature, time, shots), cup size vs yield.
-7. Cost: incomplete cost, or a large unexplained cost change compared with the approved version.
+Check ONLY these problems. Each issue you report must use exactly one of these preset keys:
+- drinkTypeIngredient: an ingredient does not fit the drink type (style / temperature), e.g. ice in a HOT drink.
+- stepUnit: a step writes a unit different from the ingredient's unit (e.g. the ingredient is ml but the step says g).
+- drinkTypeMethod: the method does not fit the drink type.
+- unlistedIngredient: a step uses an ingredient that is not in the ingredient list.
+- unusedIngredient: a listed ingredient is never used by any step (by its [X] letter or its name).
+- quantity: a listed quantity is clearly unreasonable (far too much or too little).
+- stepOrder: the steps are in an order that cannot work.
+- unclearStep: a step is too unclear for staff to follow.
+- missingSettings: a key setting is missing where it is essential, e.g. no extraction time for espresso, no temperature for heating.
+- cupSize: cup type or serving size is filled in AND clearly does not fit the drink.
+- costHigh: cost is clearly too high, or rose a lot versus the approved version without a reason in the change summary.
 
-Rules:
-- Only report real, specific problems you can point to in the data. Do not invent problems or give style advice.
-- verdict APPROVE when nothing needs fixing; CHECK when there are minor doubts the Admin should look at; RETURN when something must be fixed before staff can use it.
+These are NOT problems; never report them:
+- A step that does not write a quantity: it means the whole listed quantity of that ingredient is used.
+- Empty yield, serving size, cup type, garnish, storage, shelf life, notes or taste fields.
+- A step marked optional.
+- Wording, formatting, style or "could be clearer" suggestions when staff can still follow it.
+- Anything about photos or videos (you cannot see them).
+
+Verdict:
+- RETURN when at least one problem above is clearly present.
+- CHECK when you suspect one of the problems above but are not sure.
+- APPROVE when none of the problems above is present. Then issues is empty.
+
+Output:
 - "where" names the place, e.g. "Ingredient B: Milk" or "Step 3".
-- returnReason: if verdict is RETURN or CHECK, a short reason addressed to the Manager listing what to fix, one item per line, no bullets or numbering; otherwise an empty string.
-- Write summary, issues and returnReason in LANGUAGE.`;
+- "problem" is one short sentence.
+- summary: one short sentence.
+- returnReason: if verdict is RETURN or CHECK, one short line per issue telling the Manager exactly what to fix (e.g. "Step 2: write the milk in ml"), no bullets or numbering; otherwise an empty string.
+- Write summary, where, problem and returnReason in LANGUAGE.`;
 
 function describe(version: FullVersion, materialUnits: Map<string, string>) {
   const taste = Object.entries(version)
