@@ -7,8 +7,15 @@ import { letterFor } from "@/lib/recipes/letters";
 import type { CostResult, FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 
-// Claude through Vercel AI Gateway; on Vercel it signs in with the project's OIDC token.
-const MODEL = "anthropic/claude-sonnet-5.5";
+// Models allowed on AI Gateway's free tier, tried in order; on Vercel the gateway
+// signs in with the project's OIDC token. A model the free tier refuses (HTTP 403)
+// moves on to the next one.
+const MODELS = [
+  "anthropic/claude-haiku-5.5",
+  "anthropic/claude-haiku-4.5",
+  "google/gemini-2.5-flash",
+  "deepseek/deepseek-v4-flash",
+];
 
 const reviewSchema = z.object({
   verdict: z.enum(["APPROVE", "CHECK", "RETURN"]),
@@ -124,17 +131,22 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
   };
   const language = locale === "en" ? "English" : "Simplified Chinese";
 
-  try {
-    const { output } = await generateText({
-      model: MODEL,
-      system: SYSTEM.replace("LANGUAGE", language),
-      prompt: `Review this submitted recipe version. Data (JSON):\n${JSON.stringify(input, null, 1)}`,
-      output: Output.object({ schema: reviewSchema }),
-      maxOutputTokens: 2000,
-    });
-    return { ok: true, review: output };
-  } catch (error) {
-    console.error("AI review failed", error);
-    return { ok: false, error: "AI_FAILED" };
+  for (const model of MODELS) {
+    try {
+      const { output } = await generateText({
+        model,
+        system: SYSTEM.replace("LANGUAGE", language),
+        prompt: `Review this submitted recipe version. Data (JSON):\n${JSON.stringify(input, null, 1)}`,
+        output: Output.object({ schema: reviewSchema }),
+        maxOutputTokens: 2000,
+      });
+      console.info("AI review done with", model);
+      return { ok: true, review: output };
+    } catch (error) {
+      const status = (error as { statusCode?: number }).statusCode;
+      console.error("AI review failed with", model, error);
+      if (status !== 403) break;
+    }
   }
+  return { ok: false, error: "AI_FAILED" };
 }
