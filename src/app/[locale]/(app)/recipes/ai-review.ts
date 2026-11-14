@@ -47,7 +47,7 @@ Check ONLY these problems. Each issue you report must use exactly one of these p
 - quantity: a listed quantity is clearly unreasonable (far too much or too little).
 - stepOrder: the steps are in an order that cannot work.
 - unclearStep: a step is too unclear for staff to follow.
-- missingSettings: a key setting is missing where it is essential, e.g. no extraction time for espresso, no temperature for heating.
+- missingSettings: one key setting is missing that staff truly need to make the drink right, e.g. no extraction time for espresso. Report at most one missingSettings issue, never a list of nice-to-have details. missingSettings alone is never a reason to RETURN; it is CHECK at most.
 - cupSize: cup type or serving size is filled in AND clearly does not fit the drink.
 - costHigh: cost is clearly too high, or rose a lot versus the approved version without a reason in the change summary.
 
@@ -178,6 +178,10 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
       console.info("AI review done with", model);
       // No issues means nothing to return, whatever the verdict says.
       if (output.issues.length === 0) return { ok: true, review: { ...output, verdict: "APPROVE", returnReason: "" } };
+      // Missing key settings alone is "please check", never "suggest return".
+      if (output.verdict === "RETURN" && output.issues.every((issue) => issue.preset === "missingSettings")) {
+        return { ok: true, review: { ...output, verdict: "CHECK" } };
+      }
       return { ok: true, review: output };
     } catch (error) {
       console.error("AI review failed with", model, error);
