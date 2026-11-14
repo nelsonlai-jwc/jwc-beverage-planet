@@ -18,16 +18,18 @@ const MODELS = [
   "deepseek/deepseek-v4-flash",
 ];
 
+// Issues come first so the verdict follows from them; each issue quotes its evidence.
 const reviewSchema = z.object({
-  verdict: z.enum(["APPROVE", "CHECK", "RETURN"]),
-  summary: z.string(),
   issues: z.array(
     z.object({
       preset: z.enum(RETURN_PRESETS.filter((key) => key !== "media") as [string, ...string[]]),
       where: z.string(),
+      evidence: z.string(),
       problem: z.string(),
     }),
   ),
+  verdict: z.enum(["APPROVE", "CHECK", "RETURN"]),
+  summary: z.string(),
   returnReason: z.string(),
 });
 
@@ -52,14 +54,21 @@ Check ONLY these problems. Each issue you report must use exactly one of these p
 These are NOT problems; never report them:
 - A step that does not write a quantity: it means the whole listed quantity of that ingredient is used.
 - Empty yield, serving size, cup type, garnish, storage, shelf life, notes or taste fields.
-- A step marked optional.
+- A step marked optional, or an ingredient used only in an optional step: it counts as used.
+- Splitting, dividing or combining ingredients across steps (e.g. "split the milk", "mix with [C]"): staff can follow it.
 - Wording, formatting, style or "could be clearer" suggestions when staff can still follow it.
 - Anything about photos or videos (you cannot see them).
+- Anything you are only guessing about.
 
-Verdict:
-- RETURN when at least one problem above is clearly present.
-- CHECK when you suspect one of the problems above but are not sure.
-- APPROVE when none of the problems above is present. Then issues is empty.
+Be strict about evidence and consistent between runs:
+- Report an issue only if you can quote the exact text from the data that shows it ("evidence": the ingredient row or step text, copied as-is).
+- unclearStep only when a step cannot be carried out at all as written (e.g. it names no ingredient or action). If an experienced barista could follow it, it is not unclear.
+- When in doubt, do not report it. The same recipe must always get the same result.
+
+Verdict (decide after listing issues):
+- RETURN only when at least one issue is certain from its evidence.
+- CHECK when every issue is a possible problem but not certain.
+- APPROVE when there are no issues. Then issues is empty and returnReason is empty.
 
 Output:
 - "where" names the place, e.g. "Ingredient B: Milk" or "Step 3".
@@ -161,10 +170,14 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
         system: SYSTEM.replace("LANGUAGE", language),
         prompt: `Review this submitted recipe version. Data (JSON):\n${JSON.stringify(input, null, 1)}`,
         output: Output.object({ schema: reviewSchema }),
+        // Same recipe, same answer as far as the model allows.
+        temperature: 0,
         // Reasoning models (e.g. Gemini 2.5 Flash) spend part of this on thinking.
         maxOutputTokens: 8000,
       });
       console.info("AI review done with", model);
+      // No issues means nothing to return, whatever the verdict says.
+      if (output.issues.length === 0) return { ok: true, review: { ...output, verdict: "APPROVE", returnReason: "" } };
       return { ok: true, review: output };
     } catch (error) {
       console.error("AI review failed with", model, error);
