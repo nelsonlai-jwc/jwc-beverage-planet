@@ -43,7 +43,7 @@ Check ONLY these problems. Each issue you report must use exactly one of these p
 - stepUnit: a step writes a unit different from the ingredient's unit (e.g. the ingredient is ml but the step says g).
 - drinkTypeMethod: the method does not fit the drink type.
 - unlistedIngredient: a step uses an ingredient (something that goes into the drink) that is not in the ingredient list. Equipment and tools are never ingredients.
-- unusedIngredient: a listed ingredient is never used by any step (by its [X] letter or its name).
+- unusedIngredient: do NOT report this; the system checks it itself (every listed ingredient must be referenced as [X] in a step).
 - quantity: a listed quantity is clearly unreasonable (far too much or too little).
 - stepOrder: the steps are in an order that cannot work.
 - unclearStep: a step is too unclear for staff to follow.
@@ -177,6 +177,37 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
         maxOutputTokens: 8000,
       });
       console.info("AI review done with", model);
+      // Unused ingredients are checked here, not by the model: every listed ingredient must
+      // be referenced by its [X] letter in some step; writing its name instead does not count.
+      const unused = next.ingredients
+        .map((ingredient, index) => ({ letter: letterFor(index), name: ingredient.name }))
+        .filter(({ letter }) => !next.steps.some((step) => step.instruction?.includes(`[${letter}]`)));
+      if (unused.length) {
+        const lines = unused.map(({ letter, name }) =>
+          locale === "en"
+            ? `Ingredient ${letter}: ${name} is not used as [${letter}] in any step; write [${letter}] in the step that uses it`
+            : `原料 ${letter}：${name} 没有在任何步骤中以 [${letter}] 使用，请在使用它的步骤写上 [${letter}]`,
+        );
+        const issues = [
+          ...output.issues.filter((issue) => issue.preset !== "unusedIngredient"),
+          ...unused.map(({ letter, name }, index) => ({
+            preset: "unusedIngredient",
+            where: locale === "en" ? `Ingredient ${letter}: ${name}` : `原料 ${letter}：${name}`,
+            evidence: `[${letter}]`,
+            problem: lines[index],
+          })),
+        ];
+        const modelReason = output.verdict === "APPROVE" ? "" : output.returnReason.trim();
+        return {
+          ok: true,
+          review: {
+            issues,
+            verdict: "RETURN",
+            summary: output.verdict === "APPROVE" ? lines.join("; ") : output.summary,
+            returnReason: [...lines, modelReason].filter(Boolean).join("\n"),
+          },
+        };
+      }
       // No issues means nothing to return, whatever the verdict says.
       if (output.issues.length === 0) return { ok: true, review: { ...output, verdict: "APPROVE", returnReason: "" } };
       // Missing key settings alone is "please check", never "suggest return".
