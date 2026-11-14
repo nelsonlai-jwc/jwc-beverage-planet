@@ -9,8 +9,8 @@ import type { CostResult, FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 
 // Models allowed on AI Gateway's free tier, tried in order; on Vercel the gateway
-// signs in with the project's OIDC token. A model the free tier refuses (HTTP 403)
-// moves on to the next one.
+// signs in with the project's OIDC token. Any failure (free tier refuses the model,
+// unparsable answer, ...) moves on to the next one.
 const MODELS = [
   "anthropic/claude-haiku-5.5",
   "anthropic/claude-haiku-4.5",
@@ -161,14 +161,13 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
         system: SYSTEM.replace("LANGUAGE", language),
         prompt: `Review this submitted recipe version. Data (JSON):\n${JSON.stringify(input, null, 1)}`,
         output: Output.object({ schema: reviewSchema }),
-        maxOutputTokens: 2000,
+        // Reasoning models (e.g. Gemini 2.5 Flash) spend part of this on thinking.
+        maxOutputTokens: 8000,
       });
       console.info("AI review done with", model);
       return { ok: true, review: output };
     } catch (error) {
-      const status = (error as { statusCode?: number }).statusCode;
       console.error("AI review failed with", model, error);
-      if (status !== 403) break;
     }
   }
   return { ok: false, error: "AI_FAILED" };
