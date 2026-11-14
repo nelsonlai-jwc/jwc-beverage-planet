@@ -42,7 +42,7 @@ Check ONLY these problems. Each issue you report must use exactly one of these p
 - drinkTypeIngredient: an ingredient does not fit the drink type (style / temperature), e.g. ice in a HOT drink.
 - stepUnit: a step writes a unit different from the ingredient's unit (e.g. the ingredient is ml but the step says g).
 - drinkTypeMethod: the method does not fit the drink type.
-- unlistedIngredient: a step uses an ingredient that is not in the ingredient list.
+- unlistedIngredient: a step uses an ingredient (something that goes into the drink) that is not in the ingredient list. Equipment and tools are never ingredients.
 - unusedIngredient: a listed ingredient is never used by any step (by its [X] letter or its name).
 - quantity: a listed quantity is clearly unreasonable (far too much or too little).
 - stepOrder: the steps are in an order that cannot work.
@@ -57,6 +57,7 @@ These are NOT problems; never report them:
 - A step marked optional, or an ingredient used only in an optional step: it counts as used.
 - Splitting, dividing or combining ingredients across steps (e.g. "split the milk", "mix with [C]"): staff can follow it.
 - Wording, formatting, style or "could be clearer" suggestions when staff can still follow it.
+- Equipment and tools named in a step but not in the ingredient list, e.g. CO2 charger, soda siphon, shaker, blender, espresso machine, steam wand, jigger, strainer, cup or glass. They are not ingredients.
 - Anything about photos or videos (you cannot see them).
 - Anything you are only guessing about.
 
