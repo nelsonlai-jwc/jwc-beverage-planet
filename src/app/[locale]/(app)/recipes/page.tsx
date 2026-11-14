@@ -169,19 +169,40 @@ export default async function RecipesPage({
   );
 
   if (tab === "pending") {
-    const pending = rows.filter((r) => r.open?.status === "PENDING" && matches(r.name));
+    const pendingOutlet = outlets.some((o) => o.id === query.outlet) ? query.outlet : undefined;
+    const keep = (r: (typeof rows)[number]) => matches(r.name) && (!pendingOutlet || coversOutlet(r, pendingOutlet));
+    const pending = rows.filter((r) => r.open?.status === "PENDING" && keep(r));
     const recipeById = new Map(rows.map((r) => [r.id, r]));
+    // The badge keeps the full count; the filters only narrow what is listed.
+    const requests = (archiveRequests ?? []).filter((request) => {
+      const r = recipeById.get(request.entity_id);
+      return r ? keep(r) : !search && !pendingOutlet;
+    });
+    const filtered = Boolean(search || pendingOutlet);
     return (
       <div className="flex flex-col gap-6">
         {header}
         {tabBar}
-        {(archiveRequests ?? []).length > 0 && (
+        {searchBox(
+          <label className="basis-48">
+            <span className="sr-only">{t("outlet")}</span>
+            <select name="outlet" defaultValue={pendingOutlet ?? ""} className={inputClass}>
+              <option value="">{t("allOutletsOption")}</option>
+              {outlets.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>,
+        )}
+        {requests.length > 0 && (
           <section className="flex flex-col gap-3" aria-labelledby="archive-requests">
             <h2 id="archive-requests" className="text-base font-semibold">
               {t("archive.requestsTitle")}
             </h2>
             <ul className="flex flex-col gap-3">
-              {(archiveRequests ?? []).map((request) => {
+              {requests.map((request) => {
                 const r = recipeById.get(request.entity_id);
                 return (
                   <li key={request.id}>
@@ -203,8 +224,8 @@ export default async function RecipesPage({
             </ul>
           </section>
         )}
-        {pending.length === 0 && (archiveRequests ?? []).length > 0 ? null : pending.length === 0 ? (
-          <p className={card}>{t("pendingEmpty")}</p>
+        {pending.length === 0 && requests.length > 0 ? null : pending.length === 0 ? (
+          <p className={card}>{filtered ? t("mineEmpty") : t("pendingEmpty")}</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {pending.map((r) => (
