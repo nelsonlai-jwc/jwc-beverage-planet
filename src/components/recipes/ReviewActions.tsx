@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { approveRecipeVersion, returnRecipeVersion } from "@/app/[locale]/(app)/recipes/actions";
 import { aiReviewRecipeVersion, type AiReview } from "@/app/[locale]/(app)/recipes/ai-review";
@@ -16,6 +17,14 @@ type Props = { recipeId: string; versionId: string; menuNames: string[]; drinkNa
 export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
   const t = useTranslations("Recipes");
   const router = useRouter();
+  // Back to the Pending approval tab with the name / outlet filters the Admin came from.
+  const searchParams = useSearchParams();
+  const backParams = new URLSearchParams({ tab: "pending", after: "review" });
+  for (const key of ["q", "outlet"]) {
+    const value = searchParams.get(key);
+    if (value) backParams.set(key, value);
+  }
+  const backHref = `/recipes?${backParams.toString()}`;
   // One key per page load, so a double click cannot approve twice (ch. 9.1).
   const idempotencyKey = useMemo(() => crypto.randomUUID(), []);
   const [mode, setMode] = useState<"idle" | "approve" | "return">("idle");
@@ -56,7 +65,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       setError(explainApprovalError(t, result.message ?? result.error, result.details));
       return;
     }
-    router.push("/recipes?tab=pending&after=review");
+    router.push(backHref);
   }
 
   // Tapping a preset adds its sentence as a line in the reason box; tapping again removes it.
@@ -83,7 +92,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       setError([`${t("actionFailed")} ${result.message ?? result.error}`]);
       return;
     }
-    router.push("/recipes?tab=pending&after=review");
+    router.push(backHref);
   }
 
   const verdictClass = {
