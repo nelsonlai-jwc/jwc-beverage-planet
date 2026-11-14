@@ -539,7 +539,11 @@
       "DUPLICATE_EXISTING": "Already exists in the system.",
       "DUPLICATE_IN_FILE": "Appears twice in the file.",
       "ON_MENU": "This recipe is on a published menu. Take it off the menu first.",
-      "VERSION_PENDING": "A version of this recipe is waiting for approval. Review it first."
+      "VERSION_PENDING": "A version of this recipe is waiting for approval. Review it first.",
+      "NOT_CURRENT_APPROVAL": "Only the current approval can be undone. Refresh the page.",
+      "OPEN_PRICE_EXISTS": "Another price is waiting for approval. Approve or return it first.",
+      "NO_PREVIOUS_PRICE": "There is no earlier price to go back to.",
+      "LATER_CHANGES": "A later price change was approved. Undo that price change first."
     },
     "export": "Export CSV",
     "import": {
@@ -688,6 +692,15 @@
       "price_per_piece": "Price per piece",
       "free_reason": "Why free",
       "status": "Status"
+    },
+    "undo": {
+      "button": "Undo approval",
+      "priceButton": "Undo price approval",
+      "materialNote": "The material, its packs and prices go back to Pending approval. It can't be used in recipes until it is approved again.",
+      "priceNote": "This price goes back to Pending approval and the previous price is used again, including in drink costs.",
+      "reason": "Reason",
+      "confirm": "Undo approval",
+      "cancel": "Cancel"
     }
   },
   "Recipes": {
@@ -983,7 +996,9 @@
       "OUTLET_REQUIRED": "Choose at least one outlet.",
       "OUTLET_ON_MENU": "A menu of an outlet you are removing still uses this recipe. Take it off that menu first.",
       "OUTLET_NEEDED": "A recipe that uses this Prep Material is made for an outlet you are removing. Change that recipe first.",
-      "PREP_NOT_COVERED": "This recipe uses a Prep Material that is not made for every chosen outlet. Change the Prep Material's outlets first."
+      "PREP_NOT_COVERED": "This recipe uses a Prep Material that is not made for every chosen outlet. Change the Prep Material's outlets first.",
+      "NOT_CURRENT_APPROVAL": "Only the current approved version can be undone. Refresh the page.",
+      "OPEN_VERSION_EXISTS": "This recipe already has an open version. Delete, withdraw or review it first."
     },
     "changeLog": {
       "open": "Change log",
@@ -1080,6 +1095,13 @@
         "CHECK": "Please check",
         "RETURN": "Suggest return"
       }
+    },
+    "undoApproval": {
+      "button": "Undo approval",
+      "note": "V{version} goes back to Pending approval and the previous approved version is used again. If there is no previous version, the recipe has no approved version until it is approved again.",
+      "reason": "Reason",
+      "confirm": "Undo approval",
+      "cancel": "Cancel"
     }
   },
   "Reports": {

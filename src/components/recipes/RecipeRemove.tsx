@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { archiveRecipe, restoreRecipe, type RecipeActionResult } from "@/app/[locale]/(app)/recipes/actions";
+import { archiveRecipe, restoreRecipe, undoRecipeApproval, type RecipeActionResult } from "@/app/[locale]/(app)/recipes/actions";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { alertClass, primaryButton, secondaryButton, smallButton, textareaClass } from "./ui";
@@ -151,6 +151,60 @@ export function RestoreRecipeButton({ recipeId }: { recipeId: string }) {
       >
         {t("restore")}
       </button>
+      {error && (
+        <p role="alert" className={alertClass}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Admin only: the current approved version goes back to Pending approval, with a reason. */
+export function UndoRecipeApprovalButton({ versionId, versionNo }: { versionId: string; versionNo: number }) {
+  const t = useTranslations("Recipes.undoApproval");
+  const router = useRouter();
+  const { error, pending, run } = useRecipeAction();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={`${secondaryButton} self-start`}>
+        {t("button")}
+      </button>
+    );
+  }
+
+  return (
+    <div role="dialog" aria-label={t("button")} className="flex flex-col gap-3 rounded-[12px] border-[1.5px] border-black p-4">
+      <p className="text-sm font-semibold">{t("note", { version: versionNo })}</p>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold">{t("reason")}</span>
+        <textarea value={reason} onChange={(e) => setReason(e.target.value)} className={textareaClass} />
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className={primaryButton}
+          disabled={pending || !reason.trim()}
+          onClick={() =>
+            run(
+              () => undoRecipeApproval(versionId, reason),
+              () => {
+                setOpen(false);
+                setReason("");
+                router.refresh();
+              },
+            )
+          }
+        >
+          {t("confirm")}
+        </button>
+        <button type="button" className={secondaryButton} onClick={() => setOpen(false)}>
+          {t("cancel")}
+        </button>
+      </div>
       {error && (
         <p role="alert" className={alertClass}>
           {error}

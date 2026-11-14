@@ -31,6 +31,10 @@ const KNOWN_ERRORS = [
   "REQUEST_ALREADY_PENDING",
   "ON_MENU",
   "VERSION_PENDING",
+  "NOT_CURRENT_APPROVAL",
+  "OPEN_PRICE_EXISTS",
+  "NO_PREVIOUS_PRICE",
+  "LATER_CHANGES",
 ];
 
 function fail(error: PostgrestError | null): ActionResult {
@@ -253,6 +257,23 @@ export async function archiveItem(entity: ChangeEntity, id: string, reason: stri
 export async function restoreItem(entity: ChangeEntity, id: string): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("restore_archived", { p_entity_type: entity, p_entity_id: id });
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
+/** Admin only: send an approval made by mistake back to Pending approval. */
+export async function undoApproval(
+  entity: "MATERIAL" | "MATERIAL_PRICE" | "PACKAGING_PRICE",
+  id: string,
+  reason: string,
+): Promise<ActionResult> {
+  if (blank(reason)) return { ok: false, error: "REASON_REQUIRED" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("undo_approval", {
+    p_entity_type: entity,
+    p_entity_id: id,
+    p_reason: reason.trim(),
+  });
   refresh();
   return error ? fail(error) : { ok: true };
 }

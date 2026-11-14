@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ReviewActions as ChangeReview } from "@/components/materials/ReviewActions";
 import { CostSummary } from "@/components/recipes/CostSummary";
 import { RecipeOutletsEditor } from "@/components/recipes/RecipeOutletsEditor";
-import { ArchiveRecipeButton, RestoreRecipeButton } from "@/components/recipes/RecipeRemove";
+import { ArchiveRecipeButton, RestoreRecipeButton, UndoRecipeApprovalButton } from "@/components/recipes/RecipeRemove";
 import { SopView } from "@/components/recipes/SopView";
 import { VersionActions } from "@/components/recipes/VersionActions";
 import { PurposeBadge, StatusBadge, card, primaryButton } from "@/components/recipes/ui";
@@ -167,6 +167,9 @@ export default async function RecipeDetailPage({
                   canReview={viewer.role === "ADMIN"}
                   canManage={canManage}
                 />
+              )}
+              {viewer.role === "ADMIN" && !archived && !open && approved && approvedMeta && (
+                <UndoRecipeApprovalButton versionId={approved.id} versionNo={approvedMeta.version_no} />
               )}
               {canManage && !archived && !neverSubmitted && !pendingArchive && (
                 <ArchiveRecipeButton recipeId={recipe.id} mode={archiveMode} />

@@ -6,6 +6,7 @@ import {
   archiveItem,
   deleteDraft,
   restoreItem,
+  undoApproval,
 } from "@/app/[locale]/(app)/raw-materials/actions";
 import { useRouter } from "@/i18n/navigation";
 import { errorClass, primaryButtonClass, secondaryButtonClass } from "./ui";
@@ -133,6 +134,79 @@ export function RestoreButton({ entity, id }: { entity: Entity; id: string }) {
       >
         {t("restore")}
       </button>
+      {error && (
+        <p role="alert" className={errorClass}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Admin only: send an approval made by mistake back to Pending approval, with a reason. */
+export function UndoApprovalButton({
+  entity,
+  id,
+}: {
+  entity: "MATERIAL" | "MATERIAL_PRICE" | "PACKAGING_PRICE";
+  id: string;
+}) {
+  const t = useTranslations("RawMaterials.undo");
+  const te = useTranslations("RawMaterials.errors");
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={secondaryButtonClass}>
+        {entity === "MATERIAL" ? t("button") : t("priceButton")}
+      </button>
+    );
+  }
+
+  return (
+    <div role="dialog" aria-label={t("button")} className="flex w-full flex-col gap-3 rounded-[20px] border-[1.5px] border-black bg-white p-5">
+      <p className="text-sm font-semibold">{entity === "MATERIAL" ? t("materialNote") : t("priceNote")}</p>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`undo-${id}`} className="text-sm font-semibold">
+          {t("reason")}
+        </label>
+        <textarea
+          id={`undo-${id}`}
+          rows={2}
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
+        />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={pending || !reason.trim()}
+          className={primaryButtonClass}
+          onClick={() =>
+            startTransition(async () => {
+              setError(null);
+              const result = await undoApproval(entity, id, reason);
+              if (!result.ok) {
+                setError(te.has(result.error) ? te(result.error) : te("UNKNOWN"));
+                return;
+              }
+              setOpen(false);
+              setReason("");
+              router.refresh();
+            })
+          }
+        >
+          {t("confirm")}
+        </button>
+        <button type="button" onClick={() => setOpen(false)} className={secondaryButtonClass}>
+          {t("cancel")}
+        </button>
+      </div>
       {error && (
         <p role="alert" className={errorClass}>
           {error}

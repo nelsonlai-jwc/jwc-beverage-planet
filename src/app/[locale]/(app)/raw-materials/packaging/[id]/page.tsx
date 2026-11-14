@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PriceComparison } from "@/components/materials/PriceComparison";
-import { DeleteButton, RestoreButton } from "@/components/materials/ItemActions";
+import { DeleteButton, RestoreButton, UndoApprovalButton } from "@/components/materials/ItemActions";
 import { ChangeRequestNotice, UsageSection } from "@/components/materials/ItemSections";
 import { PriceChangeForm, ReviewActions, SubmitButton } from "@/components/materials/ReviewActions";
 import { BackLink, StatusBadge, cardClass, secondaryButtonClass } from "@/components/materials/ui";
@@ -156,6 +156,10 @@ export default async function PackagingPage({
               )}
             </div>
           )}
+          {isAdmin && item.status === "APPROVED" && current && !proposed &&
+            item.packaging_prices.some((p) => p.status === "SUPERSEDED") && (
+              <UndoApprovalButton entity="PACKAGING_PRICE" id={current.id} />
+            )}
           {item.status === "APPROVED" && !proposed && (
             <PriceChangeForm
               id={id}

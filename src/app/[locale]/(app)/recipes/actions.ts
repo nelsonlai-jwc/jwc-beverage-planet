@@ -21,6 +21,8 @@ const KNOWN_ERRORS = [
   "OUTLET_ON_MENU",
   "OUTLET_NEEDED",
   "PREP_NOT_COVERED",
+  "NOT_CURRENT_APPROVAL",
+  "OPEN_VERSION_EXISTS",
 ];
 
 export type RecipeActionResult =
@@ -72,6 +74,18 @@ export async function setRecipeOutlets(
 export async function restoreRecipe(recipeId: string): Promise<RecipeActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("restore_archived", { p_entity_type: "RECIPE", p_entity_id: recipeId });
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
+/** Admin only: the current approved version goes back to Pending approval. */
+export async function undoRecipeApproval(versionId: string, reason: string): Promise<RecipeActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("undo_approval", {
+    p_entity_type: "RECIPE_VERSION",
+    p_entity_id: versionId,
+    p_reason: reason.trim(),
+  });
   refresh();
   return error ? fail(error) : { ok: true };
 }
