@@ -88,7 +88,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
 
   const verdictClass = {
     APPROVE: "bg-brand-green/40",
-    CHECK: "bg-brand-orange/40",
+    CHECK: "bg-yellow-300",
     RETURN: "bg-brand-red/30",
   };
 
