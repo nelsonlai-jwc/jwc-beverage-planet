@@ -2410,6 +2410,10 @@ export type Database = {
         Returns: string
       }
       restore_archived: { Args: { p_entity_id: string; p_entity_type: string }; Returns: undefined }
+      undo_approval: {
+        Args: { p_entity_id: string; p_entity_type: string; p_reason: string }
+        Returns: undefined
+      }
       review_change_request: {
         Args: { p_approve: boolean; p_reason?: string | null; p_request_id: string }
         Returns: undefined

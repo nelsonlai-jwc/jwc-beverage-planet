@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AddPackForm } from "@/components/materials/AddPackForm";
-import { DeleteButton, RestoreButton } from "@/components/materials/ItemActions";
+import { DeleteButton, RestoreButton, UndoApprovalButton } from "@/components/materials/ItemActions";
 import { ChangeRequestNotice, UsageSection } from "@/components/materials/ItemSections";
 import {
   PriceChangeForm,
@@ -77,7 +77,8 @@ export default async function MaterialPage({
       const prices = pack.material_price_versions;
       const current = prices.find((p) => p.status === "APPROVED");
       const proposed = prices.find((p) => p.status !== "APPROVED" && p.status !== "SUPERSEDED");
-      return { ...pack, current, proposed };
+      const hasPrevious = prices.some((p) => p.status === "SUPERSEDED");
+      return { ...pack, current, proposed, hasPrevious };
     });
 
   const brand = material.no_brand ? t("noBrand") : material.brand;
@@ -108,6 +109,7 @@ export default async function MaterialPage({
           {deleteMode && (
             <DeleteButton entity="MATERIAL" id={id} mode={deleteMode} listHref="/raw-materials" />
           )}
+          {isAdmin && material.status === "APPROVED" && <UndoApprovalButton entity="MATERIAL" id={id} />}
         </div>
       </div>
 
@@ -235,6 +237,9 @@ export default async function MaterialPage({
                   )}
                   {isAdmin && pack.status === "PENDING" && material.status === "APPROVED" && (
                     <ReviewActions kind="pack" id={pack.id} />
+                  )}
+                  {isAdmin && material.status === "APPROVED" && pack.current && pack.hasPrevious && !pack.proposed && (
+                    <UndoApprovalButton entity="MATERIAL_PRICE" id={pack.current.id} />
                   )}
                   {material.status === "APPROVED" && pack.status === "APPROVED" && !pack.proposed && (
                     <PriceChangeForm

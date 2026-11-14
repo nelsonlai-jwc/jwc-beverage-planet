@@ -539,7 +539,11 @@
       "DUPLICATE_EXISTING": "系统里已经有这个项目。",
       "DUPLICATE_IN_FILE": "文件里重复出现。",
       "ON_MENU": "这个配方在已发布的菜单上，请先从菜单移除。",
-      "VERSION_PENDING": "这个配方有版本正在等待审批，请先审批。"
+      "VERSION_PENDING": "这个配方有版本正在等待审批，请先审批。",
+      "NOT_CURRENT_APPROVAL": "只能撤回目前生效的审批，请刷新页面。",
+      "OPEN_PRICE_EXISTS": "已有另一个价格在等待审批，请先批准或退回。",
+      "NO_PREVIOUS_PRICE": "没有更早的价格可以恢复。",
+      "LATER_CHANGES": "之后已批准过改价，请先撤回那次改价。"
     },
     "export": "导出 CSV",
     "import": {
@@ -688,6 +692,15 @@
       "price_per_piece": "每件价格",
       "free_reason": "免费原因",
       "status": "状态"
+    },
+    "undo": {
+      "button": "撤回审批",
+      "priceButton": "撤回价格审批",
+      "materialNote": "原料、包装和价格会退回“待审批”。再次批准前，配方不能使用它。",
+      "priceNote": "这个价格会退回“待审批”，改用上一个价格，饮品成本也会跟着变回去。",
+      "reason": "原因",
+      "confirm": "撤回审批",
+      "cancel": "取消"
     }
   },
   "Recipes": {
@@ -983,7 +996,9 @@
       "OUTLET_REQUIRED": "请至少选择一间分店。",
       "OUTLET_ON_MENU": "要移除的分店还有菜单在用这个配方，请先从那份菜单移除。",
       "OUTLET_NEEDED": "有用到这个预制原料的配方属于要移除的分店，请先修改那个配方。",
-      "PREP_NOT_COVERED": "这个配方用到的预制原料没有涵盖所选的全部分店，请先修改该预制原料的分店。"
+      "PREP_NOT_COVERED": "这个配方用到的预制原料没有涵盖所选的全部分店，请先修改该预制原料的分店。",
+      "NOT_CURRENT_APPROVAL": "只能撤回目前生效的版本，请刷新页面。",
+      "OPEN_VERSION_EXISTS": "这个配方已有未完成的版本，请先删除、撤回或审批它。"
     },
     "changeLog": {
       "open": "修改记录",
@@ -1080,6 +1095,13 @@
         "CHECK": "需留意",
         "RETURN": "建议退回"
       }
+    },
+    "undoApproval": {
+      "button": "撤回审批",
+      "note": "V{version} 会退回“待审批”，改用上一个已批准版本。如果没有上一个版本，配方在再次批准前没有生效版本。",
+      "reason": "原因",
+      "confirm": "撤回审批",
+      "cancel": "取消"
     }
   },
   "Reports": {
