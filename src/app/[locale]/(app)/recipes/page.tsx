@@ -179,6 +179,11 @@ export default async function RecipesPage({
       return r ? keep(r) : !search && !pendingOutlet;
     });
     const filtered = Boolean(search || pendingOutlet);
+    // Carried into the review page so Approve / Return come back to the same filters.
+    const filterQuery = new URLSearchParams({
+      ...(query.q?.trim() ? { q: query.q.trim() } : {}),
+      ...(pendingOutlet ? { outlet: pendingOutlet } : {}),
+    }).toString();
     return (
       <div className="flex flex-col gap-6">
         {header}
@@ -230,7 +235,7 @@ export default async function RecipesPage({
           <ul className="flex flex-col gap-3">
             {pending.map((r) => (
               <li key={r.id}>
-                <Link href={`/recipes/${r.id}/review`} className={`${card} flex-row flex-wrap items-center justify-between hover:ring-2 hover:ring-black`}>
+                <Link href={`/recipes/${r.id}/review${filterQuery ? `?${filterQuery}` : ""}`} className={`${card} flex-row flex-wrap items-center justify-between hover:ring-2 hover:ring-black`}>
                   <span className="flex flex-col gap-1">
                     <span className="text-base font-semibold">{r.name}</span>
                     <span className="text-sm text-[#3d3f3a]">
