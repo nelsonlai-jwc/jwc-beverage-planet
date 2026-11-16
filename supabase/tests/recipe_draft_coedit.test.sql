@@ -21,6 +21,9 @@ insert into public.user_outlets (user_id, outlet_id)
 insert into public.user_outlets (user_id, outlet_id)
   select '00000000-0000-0000-0000-0000000000a4', id from public.outlets where code = 'KL-CABINET8';
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 
 -- MA creates a drink for both JB outlets.

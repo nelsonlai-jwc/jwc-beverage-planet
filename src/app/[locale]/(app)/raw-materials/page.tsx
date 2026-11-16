@@ -45,7 +45,7 @@ export default async function RawMaterialsPage({
   setRequestLocale(locale);
   const search = await searchParams;
   const t = await getTranslations("RawMaterials");
-  const { supabase, role } = await getViewer();
+  const { supabase, role, outletAdmin } = await getViewer();
 
   if (role !== "ADMIN" && role !== "MANAGER") {
     return (
@@ -62,34 +62,56 @@ export default async function RawMaterialsPage({
     ? (search.status as ApprovalStatus)
     : undefined;
 
+  // An outlet Admin only counts requests from people of their outlets (the ones they can approve).
+  const showApprovals = role === "ADMIN" || outletAdmin;
+  const requesters: string[] = outletAdmin
+    ? ((await supabase.rpc("approvable_requester_ids")).data ?? [])
+    : [];
+  const mine = <Q extends { in: (column: string, values: string[]) => Q }>(query: Q, column: string) =>
+    outletAdmin ? query.in(column, requesters) : query;
+
   // Same groups as the approvals page: new items, plus packs and prices on approved items.
-  const counts = await Promise.all([
-    supabase.from("materials").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
-    supabase
-      .from("material_packs")
-      .select("id, materials!material_packs_material_id_fkey!inner(status)", { count: "exact", head: true })
-      .eq("status", "PENDING")
-      .eq("materials.status", "APPROVED"),
-    supabase
-      .from("material_price_versions")
-      .select("id, material_packs!inner(status)", { count: "exact", head: true })
-      .eq("status", "PENDING")
-      .eq("material_packs.status", "APPROVED"),
-    supabase
-      .from("packaging_items")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "PENDING"),
-    supabase
-      .from("packaging_prices")
-      .select("id, packaging_items!inner(status)", { count: "exact", head: true })
-      .eq("status", "PENDING")
-      .eq("packaging_items.status", "APPROVED"),
-    supabase
-      .from("change_requests")
-      .select("id", { count: "exact", head: true })
-      .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
-      .eq("status", "PENDING"),
-  ]);
+  const counts = showApprovals
+    ? await Promise.all([
+        mine(supabase.from("materials").select("id", { count: "exact", head: true }).eq("status", "PENDING"), "created_by"),
+        mine(
+          supabase
+            .from("material_packs")
+            .select("id, materials!material_packs_material_id_fkey!inner(status)", { count: "exact", head: true })
+            .eq("status", "PENDING")
+            .eq("materials.status", "APPROVED"),
+          "created_by",
+        ),
+        mine(
+          supabase
+            .from("material_price_versions")
+            .select("id, material_packs!inner(status)", { count: "exact", head: true })
+            .eq("status", "PENDING")
+            .eq("material_packs.status", "APPROVED"),
+          "created_by",
+        ),
+        mine(
+          supabase.from("packaging_items").select("id", { count: "exact", head: true }).eq("status", "PENDING"),
+          "created_by",
+        ),
+        mine(
+          supabase
+            .from("packaging_prices")
+            .select("id, packaging_items!inner(status)", { count: "exact", head: true })
+            .eq("status", "PENDING")
+            .eq("packaging_items.status", "APPROVED"),
+          "created_by",
+        ),
+        mine(
+          supabase
+            .from("change_requests")
+            .select("id", { count: "exact", head: true })
+            .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
+            .eq("status", "PENDING"),
+          "requested_by",
+        ),
+      ])
+    : [];
   const waiting = counts.reduce((sum, { count }) => sum + (count ?? 0), 0);
 
   return (
@@ -100,7 +122,7 @@ export default async function RawMaterialsPage({
           <p className="text-sm text-[#3d3f3a]">{t("intro")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {role === "ADMIN" && (
+          {showApprovals && (
             <Link href="/raw-materials/approvals" className={secondaryButtonClass}>
               {t("approvals")}
               {waiting > 0 && (

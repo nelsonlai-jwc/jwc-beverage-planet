@@ -11,6 +11,9 @@ insert into public.profiles (id, email, full_name, role) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@test.local', 'TEST ADMIN', 'ADMIN'),
   ('00000000-0000-0000-0000-00000000000b', 'manager@test.local', 'TEST MANAGER', 'MANAGER');
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 
 -- Manager cannot add a style.

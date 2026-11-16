@@ -14,7 +14,8 @@ export default async function UsersPage({
   const t = await getTranslations("Users");
   const user = await getCurrentUser();
   if (!user) return null;
-  if (user.role !== "ADMIN") {
+  // Super Admin, or an outlet Admin (RLS limits them to users of their outlets).
+  if (user.role !== "ADMIN" && !user.outletAdmin) {
     return (
       <div className="flex flex-col gap-6">
         <PageHeader title={t("title")} />
@@ -28,7 +29,7 @@ export default async function UsersPage({
     supabase
       .from("profiles")
       .select(
-        `id, email, full_name, role, status, revision,
+        `id, email, full_name, role, status, revision, is_super_admin,
          user_outlets(outlet_id), user_identity(document_type, document_last4)`,
       )
       .order("full_name"),
@@ -52,6 +53,7 @@ export default async function UsersPage({
           role: p.role,
           status: p.status,
           revision: p.revision,
+          superAdmin: p.is_super_admin,
           outletIds: p.user_outlets.map((uo) => uo.outlet_id),
           documentType: p.user_identity?.document_type ?? null,
           documentLast4: p.user_identity?.document_last4 ?? null,

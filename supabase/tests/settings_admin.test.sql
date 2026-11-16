@@ -18,6 +18,9 @@ insert into public.materials (name, brand, material_type_id, created_by)
   select 'Test Syrup', 'Test', id, '00000000-0000-0000-0000-00000000000b'
     from public.material_types where name = 'Syrup';
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 
 -- Manager cannot change anything.

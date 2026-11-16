@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import type { Outlet, UserRole } from "@/lib/auth/currentUser";
 
-// Barista: exactly one outlet; Manager: one or more; Admin: global, none (D02).
+// Barista: exactly one outlet; Manager and Admin: one or more (only the Super Admin is
+// global, and that account is never edited here).
 export function OutletPicker({
   idPrefix,
   role,
@@ -18,10 +19,6 @@ export function OutletPicker({
   onChange: (next: string[]) => void;
 }) {
   const t = useTranslations("Users");
-
-  if (role === "ADMIN") {
-    return <p className="text-sm">{t("adminAllOutlets")}</p>;
-  }
 
   return (
     <fieldset className="flex flex-col gap-1.5">

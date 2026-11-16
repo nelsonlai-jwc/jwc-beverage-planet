@@ -384,7 +384,6 @@
       "NRIC": "NRIC",
       "PASSPORT": "护照"
     },
-    "adminAllOutlets": "管理员可访问全部分店。",
     "outletOne": "分店（选一间）",
     "outletMany": "分店（一间或多间）",
     "inviteHint": "系统会自动把邀请链接发到对方邮箱。链接 72 小时内有效，只能使用一次。",
@@ -398,10 +397,10 @@
     "copied": "已复制",
     "linkNote": "有效期至 {date}。链接只显示这一次，遗失请重新建立。",
     "emailHasAccount": "此邮箱已有账号，请直接修改该用户。",
-    "outletRule": "咖啡师需选一间分店，经理至少一间，管理员不选分店。",
+    "outletRule": "咖啡师需选一间分店，经理和管理员至少一间。",
     "inviteFailed": "无法建立邀请，请重试。",
     "actionFailed": "操作失败，请重试。",
-    "adminConfirm": "确定给此人管理员权限（可访问全部分店和设置）？",
+    "adminConfirm": "确定让此人成为所选分店的管理员？他可以管理这些分店的用户，并审批这些分店的配方和原料申请。",
     "invitations": "邀请",
     "expires": "有效期至 {date}",
     "newLink": "重新发送邀请",
@@ -420,7 +419,10 @@
     "resetConfirm": "要寄重设密码邮件给 {email} 吗？",
     "resetSent": "重设邮件已寄给 {email}。",
     "resetRateLimited": "寄出的邮件太多，请稍后再试。",
-    "resetFailed": "无法寄出重设邮件，请重试。"
+    "resetFailed": "无法寄出重设邮件，请重试。",
+    "superAdmin": "超级管理员",
+    "superAdminNote": "受保护账号：不能被修改、停用或删除。",
+    "notAllowed": "你只能管理自己负责分店的用户和分店。"
   },
   "RawMaterials": {
     "title": "原料",

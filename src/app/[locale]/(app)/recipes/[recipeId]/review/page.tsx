@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getRecipeCost, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { formatDateTime } from "@/lib/recipes/format";
-import { outletLabel } from "@/lib/recipes/outlets";
+import { canApproveRecipe, outletLabel } from "@/lib/recipes/outlets";
 import type { FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { CostSummary, formatMoney } from "@/components/recipes/CostSummary";
@@ -28,7 +28,7 @@ export default async function ReviewRecipePage({
     .select("*, recipe_outlets(outlet_id)")
     .eq("id", recipeId)
     .maybeSingle();
-  if (!viewer || viewer.role !== "ADMIN" || !recipe) notFound();
+  if (!viewer || !recipe || !canApproveRecipe(viewer, recipe)) notFound();
 
   const { data: pendingRow } = await supabase
     .from("recipe_versions")

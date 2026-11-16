@@ -54,6 +54,9 @@ insert into public.menus (id, outlet_id, name, status, created_by)
 insert into public.menu_items (menu_id, recipe_id, price, sort_order) values
   ('60000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000003', 12, 1);
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', true);
 

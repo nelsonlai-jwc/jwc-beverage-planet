@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { getOutlets, getViewer, signPhotos } from "@/lib/recipes/data";
-import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
+import { RECIPE_OUTLETS, canApproveRecipe, canManageRecipe, coversOutlet, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { CatalogueGrid } from "@/components/recipes/CatalogueGrid";
@@ -39,7 +39,9 @@ export default async function RecipesPage({
   const outlets = await getOutlets(supabase);
   const outletName = (r: RecipeOutlets) => outletLabel(r, outlets, t("allOutletsOption"));
   const isStaff = viewer.role === "BARISTA";
-  const tabs: Tab[] = isStaff ? [] : viewer.role === "ADMIN" ? ["mine", "pending", "catalogue"] : ["mine", "catalogue"];
+  // Super Admin, or an outlet Admin (who reviews only recipes of their outlets).
+  const reviewer = viewer.role === "ADMIN" || viewer.outletAdmin;
+  const tabs: Tab[] = isStaff ? [] : reviewer ? ["mine", "pending", "catalogue"] : ["mine", "catalogue"];
   const tab: Tab = tabs.includes(query.tab as Tab) ? (query.tab as Tab) : "mine";
   const search = (query.q ?? "").trim().toLowerCase();
 
@@ -143,8 +145,8 @@ export default async function RecipesPage({
   }
 
   // Admin: open recipe change requests, listed on the pending tab and counted on its badge.
-  const { data: archiveRequests } =
-    viewer.role === "ADMIN"
+  const { data: changeRequests } =
+    reviewer
       ? await supabase
           .from("change_requests")
           .select("id, entity_id, reason, created_at")
@@ -152,8 +154,14 @@ export default async function RecipesPage({
           .eq("status", "PENDING")
           .order("created_at")
       : { data: [] };
+  const recipeById = new Map(rows.map((r) => [r.id, r]));
+  const canReview = (r: (typeof rows)[number]) => canApproveRecipe(viewer, r);
+  const archiveRequests = (changeRequests ?? []).filter((request) => {
+    const r = recipeById.get(request.entity_id);
+    return viewer.role === "ADMIN" || (r !== undefined && canReview(r));
+  });
   const pendingCount =
-    rows.filter((r) => r.open?.status === "PENDING").length + (archiveRequests ?? []).length;
+    rows.filter((r) => r.open?.status === "PENDING" && canReview(r)).length + archiveRequests.length;
   // Right after an approve/return decision: nothing left to review, so go to the recipe home.
   if (tab === "pending" && query.after === "review" && pendingCount === 0) redirect({ href: "/recipes", locale });
 
@@ -188,10 +196,9 @@ export default async function RecipesPage({
   if (tab === "pending") {
     const pendingOutlet = outlets.some((o) => o.id === query.outlet) ? query.outlet : undefined;
     const keep = (r: (typeof rows)[number]) => matches(r) && (!pendingOutlet || coversOutlet(r, pendingOutlet));
-    const pending = rows.filter((r) => r.open?.status === "PENDING" && keep(r));
-    const recipeById = new Map(rows.map((r) => [r.id, r]));
+    const pending = rows.filter((r) => r.open?.status === "PENDING" && canReview(r) && keep(r));
     // The badge keeps the full count; the filters only narrow what is listed.
-    const requests = (archiveRequests ?? []).filter((request) => {
+    const requests = archiveRequests.filter((request) => {
       const r = recipeById.get(request.entity_id);
       return r ? keep(r) : !search && !pendingOutlet;
     });

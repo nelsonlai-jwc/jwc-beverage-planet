@@ -118,7 +118,7 @@ function describeCost(cost: CostResult | null) {
 export async function aiReviewRecipeVersion(versionId: string, locale: string): Promise<AiReviewResult> {
   const supabase = await createClient();
   const viewer = await getViewer(supabase);
-  if (!viewer || viewer.role !== "ADMIN") return { ok: false, error: "NOT_ALLOWED" };
+  if (!viewer || (viewer.role !== "ADMIN" && !viewer.outletAdmin)) return { ok: false, error: "NOT_ALLOWED" };
 
   const next = await loadFullVersion(supabase, versionId);
   if (!next || next.status !== "PENDING") return { ok: false, error: "NOT_FOUND" };

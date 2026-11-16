@@ -8,8 +8,14 @@ export type Outlet = { id: string; name: string };
 
 export type CurrentUser = {
   id: string;
+  // Permission role: an outlet Admin is "MANAGER" here (see outletAdmin); only the
+  // Super Admin is "ADMIN".
   role: UserRole;
-  // Outlets the user belongs to; every active outlet for an Admin.
+  // Admin bound to outlets: Manager rights plus users and approvals of those outlets.
+  outletAdmin: boolean;
+  // Role shown to the user ("ADMIN" for an outlet Admin too).
+  displayRole: UserRole;
+  // Outlets the user belongs to; every active outlet for the Super Admin.
   outlets: Outlet[];
 };
 
@@ -23,13 +29,15 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, status, user_outlets(outlets(id, name, sort_order))")
+    .select("id, role, status, is_super_admin, user_outlets(outlets(id, name, sort_order))")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile || profile.status !== "ACTIVE") return null;
 
+  const outletAdmin = profile.role === "ADMIN" && !profile.is_super_admin;
+  const role: UserRole = outletAdmin ? "MANAGER" : profile.role;
   let outlets: Outlet[];
-  if (profile.role === "ADMIN") {
+  if (role === "ADMIN") {
     const { data } = await supabase
       .from("outlets")
       .select("id, name")
@@ -43,5 +51,5 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       .map(({ id, name }) => ({ id, name }));
   }
 
-  return { id: profile.id, role: profile.role, outlets };
+  return { id: profile.id, role, outletAdmin, displayRole: profile.role, outlets };
 });

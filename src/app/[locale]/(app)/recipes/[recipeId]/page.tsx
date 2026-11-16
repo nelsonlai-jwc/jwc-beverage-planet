@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOutlets, getRecipeCost, getViewer, loadFullVersion } from "@/lib/recipes/data";
-import { canEditRecipeDraft, canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
+import { canApproveRecipe, canEditRecipeDraft, canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
 import { formatDateTime, toSopData } from "@/lib/recipes/format";
 import { createClient } from "@/lib/supabase/server";
 import { localizeVersion, sopTexts } from "@/lib/content/recipes";
@@ -37,6 +37,8 @@ export default async function RecipeDetailPage({
   const outlets = await getOutlets(supabase);
   const outletName = outletLabel(recipe, outlets, t("allOutletsOption"));
   const canManage = canManageRecipe(viewer, recipe);
+  // Super Admin, or an outlet Admin of every outlet of the recipe.
+  const canApprove = canApproveRecipe(viewer, recipe);
   // A Manager of only some of its outlets co-edits the open draft.
   const canEditDraft = canEditRecipeDraft(viewer, recipe);
 
@@ -173,11 +175,11 @@ export default async function RecipeDetailPage({
                       : null
                   }
                   hasApproved={Boolean(approved)}
-                  canReview={viewer.role === "ADMIN"}
+                  canReview={canApprove}
                   canManage={canManage}
                 />
               )}
-              {viewer.role === "ADMIN" && !archived && !open && approved && approvedMeta && (
+              {canApprove && !archived && !open && approved && approvedMeta && (
                 <UndoRecipeApprovalButton versionId={approved.id} versionNo={approvedMeta.version_no} />
               )}
               {canManage && !archived && !neverSubmitted && !pendingArchive && (
@@ -199,7 +201,7 @@ export default async function RecipeDetailPage({
                   {t("archive.reason")}: {pendingArchive.reason}
                 </p>
               )}
-              {viewer.role === "ADMIN" ? (
+              {canApprove ? (
                 <ChangeReview kind="change" id={pendingArchive.id} />
               ) : (
                 <p className="text-[13px] text-[#3d3f3a]">{t("archive.waiting")}</p>

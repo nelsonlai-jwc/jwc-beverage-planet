@@ -22,52 +22,65 @@ export default async function ApprovalsPage({
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
   const format = await getFormatter();
-  const { supabase, role } = await getViewer();
+  const { supabase, role, outletAdmin } = await getViewer();
 
-  if (role !== "ADMIN") {
+  if (role !== "ADMIN" && !outletAdmin) {
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
   }
 
-  const [materials, packs, prices, packagingItems, packagingPrices, requests] = await Promise.all([
-    supabase
-      .from("materials")
-      .select(
-        "id, name, brand, no_brand, created_by, updated_at, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status, material_price_versions(price, free_reason, status))",
-      )
-      .eq("status", "PENDING")
-      .order("updated_at"),
-    supabase
-      .from("material_packs")
-      .select(
-        "id, pack_quantity, unit, description, created_by, updated_at, materials!material_packs_material_id_fkey!inner(id, name, brand, status), material_price_versions(price, status)",
-      )
-      .eq("status", "PENDING")
-      .eq("materials.status", "APPROVED"),
-    supabase
-      .from("material_price_versions")
-      .select(
-        "id, price, free_reason, created_by, updated_at, material_packs!inner(id, pack_quantity, unit, status, material_id, materials!material_packs_material_id_fkey(id, name, brand), material_price_versions(price, status))",
-      )
-      .eq("status", "PENDING")
-      .eq("material_packs.status", "APPROVED"),
-    supabase
-      .from("packaging_items")
-      .select("id, name, brand, created_by, updated_at, packaging_prices(price_per_piece, free_reason, status)")
-      .eq("status", "PENDING"),
-    supabase
-      .from("packaging_prices")
-      .select(
-        "id, price_per_piece, free_reason, created_by, updated_at, packaging_items!inner(id, name, brand, status, packaging_prices(price_per_piece, status))",
-      )
-      .eq("status", "PENDING")
-      .eq("packaging_items.status", "APPROVED"),
-    supabase
-      .from("change_requests")
-      .select("id, entity_type, entity_id, action, changes, old_values, reason, requested_by, created_at")
-      .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
-      .eq("status", "PENDING")
-      .order("created_at"),
+  const [all, allowed] = await Promise.all([
+    Promise.all([
+      supabase
+        .from("materials")
+        .select(
+          "id, name, brand, no_brand, created_by, updated_at, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status, material_price_versions(price, free_reason, status))",
+        )
+        .eq("status", "PENDING")
+        .order("updated_at"),
+      supabase
+        .from("material_packs")
+        .select(
+          "id, pack_quantity, unit, description, created_by, updated_at, materials!material_packs_material_id_fkey!inner(id, name, brand, status), material_price_versions(price, status)",
+        )
+        .eq("status", "PENDING")
+        .eq("materials.status", "APPROVED"),
+      supabase
+        .from("material_price_versions")
+        .select(
+          "id, price, free_reason, created_by, updated_at, material_packs!inner(id, pack_quantity, unit, status, material_id, materials!material_packs_material_id_fkey(id, name, brand), material_price_versions(price, status))",
+        )
+        .eq("status", "PENDING")
+        .eq("material_packs.status", "APPROVED"),
+      supabase
+        .from("packaging_items")
+        .select("id, name, brand, created_by, updated_at, packaging_prices(price_per_piece, free_reason, status)")
+        .eq("status", "PENDING"),
+      supabase
+        .from("packaging_prices")
+        .select(
+          "id, price_per_piece, free_reason, created_by, updated_at, packaging_items!inner(id, name, brand, status, packaging_prices(price_per_piece, status))",
+        )
+        .eq("status", "PENDING")
+        .eq("packaging_items.status", "APPROVED"),
+      supabase
+        .from("change_requests")
+        .select("id, entity_type, entity_id, action, changes, old_values, reason, requested_by, created_at")
+        .in("entity_type", ["MATERIAL", "PACKAGING_ITEM"])
+        .eq("status", "PENDING")
+        .order("created_at"),
+    ]),
+    // An outlet Admin sees only requests from people of their outlets (the ones they can approve).
+    outletAdmin ? supabase.rpc("approvable_requester_ids").then(({ data }) => new Set(data ?? [])) : null,
   ]);
+  const canApprove = (requester: string) => !allowed || allowed.has(requester);
+  const [materials, packs, prices, packagingItems, packagingPrices, requests] = [
+    { data: all[0].data?.filter((row) => canApprove(row.created_by)) },
+    { data: all[1].data?.filter((row) => canApprove(row.created_by)) },
+    { data: all[2].data?.filter((row) => canApprove(row.created_by)) },
+    { data: all[3].data?.filter((row) => canApprove(row.created_by)) },
+    { data: all[4].data?.filter((row) => canApprove(row.created_by)) },
+    { data: all[5].data?.filter((row) => canApprove(row.requested_by)) },
+  ];
 
   // Who submitted each request: Admins can read every profile.
   const requesterIds = [

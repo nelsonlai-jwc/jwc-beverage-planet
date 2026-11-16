@@ -16,6 +16,9 @@ insert into public.recipe_versions (id, recipe_id, version_no, status, product_n
 values ('50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 1, 'DRAFT',
         'Iced Latte', 'COFFEE', 'COLD', '00000000-0000-0000-0000-00000000000b');
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', true);
 

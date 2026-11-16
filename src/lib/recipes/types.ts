@@ -36,8 +36,11 @@ export type Taste = (typeof TASTES)[number];
 export type Viewer = {
   id: string;
   role: Role;
-  // Outlets the viewer can edit recipes for (all outlets for an Admin).
+  // Outlets the viewer can edit recipes for (all outlets for the Super Admin).
   managedOutletIds: string[];
+  // An Admin bound to outlets: role is "MANAGER" for permissions, plus approving
+  // recipes of their outlets.
+  outletAdmin: boolean;
 };
 
 export type Outlet = { id: string; name: string };

@@ -384,7 +384,6 @@
       "NRIC": "NRIC",
       "PASSPORT": "Passport"
     },
-    "adminAllOutlets": "Admins have access to all outlets.",
     "outletOne": "Outlet (choose one)",
     "outletMany": "Outlets (one or more)",
     "inviteHint": "The system emails the invite link to the person. The link is valid for 72 hours and works once.",
@@ -398,10 +397,10 @@
     "copied": "Copied",
     "linkNote": "Valid until {date}. This link is shown only once; create a new link if you lose it.",
     "emailHasAccount": "This email already has an account. Edit that user instead.",
-    "outletRule": "Barista needs exactly one outlet, Manager at least one, Admin none.",
+    "outletRule": "Barista needs exactly one outlet; Manager and Admin need at least one.",
     "inviteFailed": "Could not create the invitation. Please try again.",
     "actionFailed": "Something went wrong. Please try again.",
-    "adminConfirm": "Give this person Admin access to all outlets and settings?",
+    "adminConfirm": "Make this person an Admin of the selected outlets? They can manage users and approve recipes and raw material requests for those outlets.",
     "invitations": "Invitations",
     "expires": "Expires {date}",
     "newLink": "Resend invite",
@@ -420,7 +419,10 @@
     "resetConfirm": "Send a password reset email to {email}?",
     "resetSent": "Reset email sent to {email}.",
     "resetRateLimited": "Too many emails sent. Please wait a while and try again.",
-    "resetFailed": "Could not send the reset email. Please try again."
+    "resetFailed": "Could not send the reset email. Please try again.",
+    "superAdmin": "Super Admin",
+    "superAdminNote": "Protected account: it cannot be changed, suspended or removed.",
+    "notAllowed": "You can only manage users and outlets that you manage."
   },
   "RawMaterials": {
     "title": "Raw Material",
