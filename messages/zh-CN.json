@@ -266,7 +266,22 @@
     "uncategorized": "未分类",
     "categoryFor": "{name} 的分类",
     "addCategory": "新饮品的分类",
-    "noCategories": "这间分店还没有分类。"
+    "noCategories": "这间分店还没有分类。",
+    "pricing": {
+      "cost": "成本 RM {cost}",
+      "suggested": "建议售价 RM {price}（成本 40%）",
+      "ratio": "成本占比 {ratio}%",
+      "ratioOver": "成本占比 {ratio}%（超过 40%）",
+      "costIncomplete": "成本不完整（有原料没有价格），无法给建议售价",
+      "costUnavailable": "没有成本资料",
+      "aiButton": "AI 估价",
+      "aiButtonFor": "{name} 的 AI 估价",
+      "aiRunning": "估价中…",
+      "aiAgain": "重新估价",
+      "aiFailed": "AI 估价失败，请稍后再试。",
+      "aiRange": "AI 估价 RM {low} – {high}",
+      "aiDisclaimer": "（AI 估计，非网络搜索结果，仅供参考）"
+    }
   },
   "MenuCategories": {
     "title": "菜单分类",

@@ -3,6 +3,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { MenuStatus } from "@/components/menus/MenuStatus";
+import { PriceHint, type DrinkCost } from "@/components/menus/PriceHint";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   cardClass,
@@ -41,6 +42,7 @@ export function MenuEditor({
   recipes,
   allRecipeNames,
   categories,
+  costs,
 }: {
   menu: {
     id: string;
@@ -57,6 +59,8 @@ export function MenuEditor({
   allRecipeNames: Record<string, string>;
   // The outlet's categories in tree order.
   categories: FlatCategory[];
+  // Current cost of each drink, keyed by recipe id; missing when not available.
+  costs: Record<string, DrinkCost>;
 }) {
   const t = useTranslations("Menus");
   const format = useFormatter();
@@ -332,6 +336,16 @@ export function MenuEditor({
                             : code}
                         </span>
                       ))}
+                      {!archived && (
+                        <div className="mt-1">
+                          <PriceHint
+                            recipeId={row.recipeId}
+                            name={name}
+                            cost={costs[row.recipeId]}
+                            price={row.price}
+                          />
+                        </div>
+                      )}
                     </div>
                     {showGroups && (
                       <select
