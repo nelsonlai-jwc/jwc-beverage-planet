@@ -1279,5 +1279,20 @@
     "samePassword": "Kata laluan baharu mesti berbeza daripada kata laluan semasa.",
     "networkError": "Tidak dapat menghubungi pelayan. Semak sambungan anda dan cuba lagi.",
     "failed": "Kata laluan tidak dapat ditukar. Sila minta pautan baharu."
+  },
+  "Content": {
+    "aiTranslated": "Terjemahan AI",
+    "translated": "Diterjemah",
+    "correct": "Betulkan terjemahan",
+    "close": "Tutup",
+    "original": "Asal",
+    "manual": "Dibetulkan oleh Admin",
+    "save": "Simpan",
+    "saved": "Disimpan.",
+    "errors": {
+      "REQUIRED": "Isi ketiga-tiga bahasa.",
+      "NOT_ALLOWED": "Hanya Admin boleh membetulkan terjemahan.",
+      "UNKNOWN": "Tidak dapat menyimpan. Sila cuba lagi."
+    }
   }
 }

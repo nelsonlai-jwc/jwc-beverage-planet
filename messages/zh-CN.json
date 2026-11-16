@@ -1294,5 +1294,20 @@
     "samePassword": "新密码不能和当前密码相同。",
     "networkError": "无法连接服务器，请检查网络后重试。",
     "failed": "无法修改密码，请重新申请链接。"
+  },
+  "Content": {
+    "aiTranslated": "AI 翻译",
+    "translated": "已翻译",
+    "correct": "修正翻译",
+    "close": "关闭",
+    "original": "原文",
+    "manual": "Admin 已修正",
+    "save": "保存",
+    "saved": "已保存。",
+    "errors": {
+      "REQUIRED": "三种语言都要填写。",
+      "NOT_ALLOWED": "只有 Admin 可以修正翻译。",
+      "UNKNOWN": "保存失败，请再试一次。"
+    }
   }
 }

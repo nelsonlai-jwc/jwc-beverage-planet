@@ -12,6 +12,8 @@ import { SORT_KEYS, filtersFromSearch, type MaterialRow, type SortKey } from "@/
 import { Link } from "@/i18n/navigation";
 import { formatMoney, formatUnitCost } from "@/lib/materials/decimal";
 import { getViewer } from "@/lib/materials/viewer";
+import { TranslationNote } from "@/components/content/TranslationNote";
+import { getLocalizer } from "@/lib/content/translations";
 
 const STATUSES: ApprovalStatus[] = ["DRAFT", "PENDING", "APPROVED", "RETURNED", "ARCHIVED"];
 
@@ -134,7 +136,7 @@ export default async function RawMaterialsPage({
 
 async function MaterialList({ locale, search }: { locale: string; search: Search }) {
   const t = await getTranslations("RawMaterials");
-  const { supabase } = await getViewer();
+  const { supabase, role } = await getViewer();
 
   const { data: types } = await supabase
     .from("material_types")
@@ -155,6 +157,11 @@ async function MaterialList({ locale, search }: { locale: string; search: Search
     ? await supabase.from("material_current_costs").select("material_id, unit, unit_cost").in("material_id", ids)
     : { data: [] };
   const costById = new Map((costs ?? []).map((c) => [c.material_id, c]));
+  // Names in the viewer's language (AI translated).
+  const loc = await getLocalizer(
+    (materials ?? []).map((m) => m.name),
+    locale,
+  );
 
   const rows: MaterialRow[] = (materials ?? []).map((m) => {
     const packs = m.material_packs.filter((p) => p.status !== "ARCHIVED");
@@ -162,7 +169,7 @@ async function MaterialList({ locale, search }: { locale: string; search: Search
     const cost = costById.get(m.id);
     return {
       id: m.id,
-      name: m.name,
+      name: loc.t(m.name),
       brand: m.no_brand ? t("noBrand") : (m.brand ?? ""),
       brandKey: m.no_brand ? NO_BRAND : (m.brand ?? ""),
       typeId: m.material_type_id ?? "",
@@ -191,15 +198,18 @@ async function MaterialList({ locale, search }: { locale: string; search: Search
   const dir = search.dir === "desc" ? "desc" : "asc";
 
   return (
-    <MaterialTable
-      rows={rows}
-      types={types ?? []}
-      brands={brands}
-      units={units}
-      initialFilters={filtersFromSearch(search)}
-      initialSort={sort}
-      initialDir={dir}
-    />
+    <>
+      <TranslationNote entries={loc.shown()} canEdit={role === "ADMIN"} />
+      <MaterialTable
+        rows={rows}
+        types={types ?? []}
+        brands={brands}
+        units={units}
+        initialFilters={filtersFromSearch(search)}
+        initialSort={sort}
+        initialDir={dir}
+      />
+    </>
   );
 }
 
@@ -227,7 +237,7 @@ async function PackagingList({
   status?: ApprovalStatus;
 }) {
   const t = await getTranslations("RawMaterials");
-  const { supabase } = await getViewer();
+  const { supabase, role } = await getViewer();
 
   let query = supabase
     .from("packaging_items")
@@ -238,11 +248,15 @@ async function PackagingList({
   else query = query.neq("status", "ARCHIVED");
   const { data: items } = await query;
 
+  const loc = await getLocalizer(
+    (items ?? []).map((item) => item.name),
+    locale,
+  );
   const rows = (items ?? []).map((item) => {
     const current = item.packaging_prices.find((p) => p.status === "APPROVED");
     return {
       id: item.id,
-      name: item.name,
+      name: loc.t(item.name),
       brand: item.brand ?? "",
       status: item.status,
       updated: formatDate(item.updated_at, locale),
@@ -263,6 +277,7 @@ async function PackagingList({
           {t("filter")}
         </button>
       </form>
+      <TranslationNote entries={loc.shown()} canEdit={role === "ADMIN"} />
 
       {rows.length === 0 ? (
         <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("emptyPackaging")}</p>

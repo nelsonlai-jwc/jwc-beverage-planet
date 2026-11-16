@@ -8,6 +8,8 @@ import { BackLink, StatusBadge, cardClass, secondaryButtonClass } from "@/compon
 import { Link } from "@/i18n/navigation";
 import { formatMoney } from "@/lib/materials/decimal";
 import { getViewer } from "@/lib/materials/viewer";
+import { TranslationNote } from "@/components/content/TranslationNote";
+import { getLocalizer } from "@/lib/content/translations";
 import { proposePackagingPrice, submitPackagingItem } from "../../actions";
 
 export default async function PackagingPage({
@@ -43,6 +45,8 @@ export default async function PackagingPage({
   ]);
 
   const isAdmin = role === "ADMIN";
+  // Name and details in the viewer's language (AI translated).
+  const loc = await getLocalizer([item.name, item.description], locale);
   const isOwner = isAdmin || item.created_by === userId;
   const editable = isOwner && (item.status === "DRAFT" || item.status === "RETURNED");
   const deleteMode =
@@ -64,10 +68,11 @@ export default async function PackagingPage({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-serif text-[32px] font-normal">{item.name}</h1>
+            <h1 className="font-serif text-[32px] font-normal">{loc.t(item.name)}</h1>
             <StatusBadge status={item.status} />
           </div>
           {item.brand && <p className="text-sm text-[#3d3f3a]">{item.brand}</p>}
+          <TranslationNote entries={loc.shown()} canEdit={isAdmin} />
         </div>
         <div className="flex flex-wrap gap-2">
           {(editable || item.status === "APPROVED") && (
@@ -134,7 +139,7 @@ export default async function PackagingPage({
             </p>
           )}
           <p className="text-sm text-[#3d3f3a]">{t("detail.recipes", { count: affected ?? 0 })}</p>
-          {item.description && <p className="text-sm whitespace-pre-line">{item.description}</p>}
+          {item.description && <p className="text-sm whitespace-pre-line">{loc.t(item.description)}</p>}
           {proposed && item.status === "APPROVED" && (
             <div className="flex flex-col gap-3 rounded-[14px] bg-brand-base/60 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">

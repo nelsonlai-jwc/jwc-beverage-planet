@@ -18,6 +18,8 @@ import { Link } from "@/i18n/navigation";
 import { PriceComparison } from "@/components/materials/PriceComparison";
 import { divide, formatMoney, formatUnitCost } from "@/lib/materials/decimal";
 import { getViewer } from "@/lib/materials/viewer";
+import { TranslationNote } from "@/components/content/TranslationNote";
+import { getLocalizer } from "@/lib/content/translations";
 import { signedMediaUrl } from "@/lib/media/signedUrl";
 import { proposeMaterialPrice, submitMaterial } from "../actions";
 
@@ -57,6 +59,8 @@ export default async function MaterialPage({
   ]);
 
   const isAdmin = role === "ADMIN";
+  // Name, specification and details in the viewer's language (AI translated).
+  const loc = await getLocalizer([material.name, material.specification, material.description], locale);
   const isOwner = isAdmin || material.created_by === userId;
   const editable = isOwner && (material.status === "DRAFT" || material.status === "RETURNED");
   const deleteMode =
@@ -89,12 +93,13 @@ export default async function MaterialPage({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-serif text-[32px] font-normal">{material.name}</h1>
+            <h1 className="font-serif text-[32px] font-normal">{loc.t(material.name)}</h1>
             <StatusBadge status={material.status} />
           </div>
           <p className="text-sm text-[#3d3f3a]">
             {brand} · {material.material_types?.name}
           </p>
+          <TranslationNote entries={loc.shown()} canEdit={isAdmin} />
         </div>
         <div className="flex flex-wrap gap-2">
           {(editable || material.status === "APPROVED") && (
@@ -150,10 +155,10 @@ export default async function MaterialPage({
             {t("form.identity")}
           </h2>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <Detail label={t("form.name")} value={material.name} />
+            <Detail label={t("form.name")} value={loc.t(material.name)} />
             <Detail label={t("form.brand")} value={brand} />
             <Detail label={t("form.type")} value={material.material_types?.name} />
-            <Detail label={t("form.specification")} value={material.specification} />
+            <Detail label={t("form.specification")} value={loc.t(material.specification)} />
             <Detail label={t("form.abv")} value={material.abv != null ? `${material.abv}%` : null} />
             <Detail label={t("form.bx")} value={material.bx != null ? `${material.bx}%` : null} />
             <Detail
@@ -162,7 +167,7 @@ export default async function MaterialPage({
             />
             <Detail label={t("detail.usedBy")} value={t("detail.recipes", { count: affected ?? 0 })} />
           </dl>
-          {material.description && <p className="text-sm whitespace-pre-line">{material.description}</p>}
+          {material.description && <p className="text-sm whitespace-pre-line">{loc.t(material.description)}</p>}
           {photoUrl && (
             // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
             <img src={photoUrl} alt={t("photo.alt")} className="h-48 w-48 rounded-[14px] object-cover" />

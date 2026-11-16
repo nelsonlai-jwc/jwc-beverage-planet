@@ -351,6 +351,42 @@ export type Database = {
           },
         ]
       }
+      content_translations: {
+        Row: {
+          created_at: string
+          en: string
+          is_manual: boolean
+          ms: string
+          source: string
+          source_hash: string
+          updated_at: string
+          updated_by: string | null
+          zh: string
+        }
+        Insert: {
+          created_at?: string
+          en: string
+          is_manual?: boolean
+          ms: string
+          source: string
+          source_hash: string
+          updated_at?: string
+          updated_by?: string | null
+          zh: string
+        }
+        Update: {
+          created_at?: string
+          en?: string
+          is_manual?: boolean
+          ms?: string
+          source?: string
+          source_hash?: string
+          updated_at?: string
+          updated_by?: string | null
+          zh?: string
+        }
+        Relationships: []
+      }
       cost_snapshot_lines: {
         Row: {
           conversion_id: string | null
@@ -2576,6 +2612,11 @@ export type Database = {
       save_recipe_draft: {
         Args: { p_draft: Json; p_revision: number; p_version_id: string }
         Returns: number
+      }
+      save_ai_translations: { Args: { p_rows: Json }; Returns: number }
+      save_manual_translation: {
+        Args: { p_en: string; p_ms: string; p_source: string; p_zh: string }
+        Returns: undefined
       }
       set_my_locale: {
         Args: { p_locale: Database["public"]["Enums"]["app_locale"] }

@@ -5,6 +5,8 @@ import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type Recipe
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { CatalogueGrid } from "@/components/recipes/CatalogueGrid";
+import { TranslationNote } from "@/components/content/TranslationNote";
+import { getLocalizer } from "@/lib/content/translations";
 import { CATALOGUE_STYLES, catalogueStateFromSearch, type CatalogueCard } from "@/lib/recipes/catalogue";
 import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
@@ -53,14 +55,21 @@ export default async function RecipesPage({
         .order("version_no", { ascending: false })
     : { data: [] };
 
-  const rows = (recipes ?? []).map((r) => {
+  const base = (recipes ?? []).map((r) => {
     const own = (versions ?? []).filter((v) => v.recipe_id === r.id);
     const approved = own.find((v) => v.id === r.current_approved_version_id) ?? null;
     const open = own.find((v) => OPEN.includes(v.status)) ?? null;
     const neverSubmitted = !approved && own.every((v) => v.status === "DRAFT");
-    return { ...r, approved, open, neverSubmitted, name: (approved ?? open ?? own[0])?.product_name ?? t("untitled") };
+    return { ...r, approved, open, neverSubmitted, sourceName: (approved ?? open ?? own[0])?.product_name ?? null };
   });
-  const matches = (name: string) => !search || name.toLowerCase().includes(search);
+  // Names in the viewer's language (AI translated); search still matches the original names.
+  const loc = await getLocalizer(
+    base.map((r) => r.sourceName),
+    locale,
+  );
+  const rows = base.map((r) => ({ ...r, name: loc.t(r.sourceName) ?? t("untitled") }));
+  const matches = (r: { sourceName: string | null }) => !search || (r.sourceName ?? "").toLowerCase().includes(search);
+  const translationNote = <TranslationNote entries={loc.shown()} canEdit={viewer.role === "ADMIN"} />;
 
   const header = (
     <div className="flex flex-wrap items-end justify-between gap-3">
@@ -98,11 +107,13 @@ export default async function RecipesPage({
 
   // Staff: the official SOPs of their outlet's published menus.
   if (isStaff) {
-    const visible = rows.filter((r) => r.approved && matches(r.name));
+    const visible = rows.filter((r) => r.approved && matches(r));
     const photos = await firstPhotos(supabase, visible.map((r) => r.approved!.id));
     return (
       <div className="flex flex-col gap-6">
         {header}
+      {translationNote}
+        {translationNote}
         {searchBox()}
         {visible.length === 0 ? (
           <p className={card}>{t("staffEmpty")}</p>
@@ -171,7 +182,7 @@ export default async function RecipesPage({
 
   if (tab === "pending") {
     const pendingOutlet = outlets.some((o) => o.id === query.outlet) ? query.outlet : undefined;
-    const keep = (r: (typeof rows)[number]) => matches(r.name) && (!pendingOutlet || coversOutlet(r, pendingOutlet));
+    const keep = (r: (typeof rows)[number]) => matches(r) && (!pendingOutlet || coversOutlet(r, pendingOutlet));
     const pending = rows.filter((r) => r.open?.status === "PENDING" && keep(r));
     const recipeById = new Map(rows.map((r) => [r.id, r]));
     // The badge keeps the full count; the filters only narrow what is listed.
@@ -188,6 +199,8 @@ export default async function RecipesPage({
     return (
       <div className="flex flex-col gap-6">
         {header}
+      {translationNote}
+        {translationNote}
         {tabBar}
         {searchBox(
           <label className="basis-48">
@@ -254,7 +267,7 @@ export default async function RecipesPage({
   }
 
   if (tab === "catalogue") {
-    const catalogue = rows.filter((r) => r.approved && r.status === "ACTIVE" && matches(r.name));
+    const catalogue = rows.filter((r) => r.approved && r.status === "ACTIVE" && matches(r));
     const photos = await firstPhotos(supabase, catalogue.map((r) => r.approved!.id));
     const cards: CatalogueCard[] = catalogue.map((r) => ({
       id: r.id,
@@ -275,6 +288,8 @@ export default async function RecipesPage({
     return (
       <div className="flex flex-col gap-6">
         {header}
+      {translationNote}
+        {translationNote}
         {tabBar}
         <p className="text-sm text-[#3d3f3a]">{t("catalogueNote")}</p>
         <CatalogueGrid
@@ -298,7 +313,7 @@ export default async function RecipesPage({
   // Archived recipes show only when that filter is chosen.
   const mine = rows.filter(
     (r) =>
-      matches(r.name) &&
+      matches(r) &&
       (!outletFilter || coversOutlet(r, outletFilter)) &&
       (statusFilter === "ARCHIVED"
         ? r.status === "ARCHIVED"
@@ -321,6 +336,7 @@ export default async function RecipesPage({
   return (
     <div className="flex flex-col gap-6">
       {header}
+      {translationNote}
       {tabBar}
       {searchBox(
         <>
