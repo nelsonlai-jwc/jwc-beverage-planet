@@ -352,22 +352,6 @@ export function MenuEditor({
                           </div>
                         )}
                       </div>
-                      {showGroups && (
-                        <select
-                          disabled={archived}
-                          aria-label={t("categoryFor", { name })}
-                          value={row.categoryId ?? ""}
-                          onChange={(event) => setRow(row.recipeId, { categoryId: event.target.value })}
-                          className={`${inputClass} w-full md:w-64`}
-                        >
-                          <option value="">{t("uncategorized")}</option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {categoryLabel(category)}
-                            </option>
-                          ))}
-                        </select>
-                      )}
                       <label className="flex items-center gap-2 text-sm">
                         <span className="font-semibold">MYR</span>
                         <input
@@ -383,45 +367,63 @@ export function MenuEditor({
                         />
                       </label>
                     </div>
-                    {/* All of the row's buttons, small, in one bar at the bottom. */}
-                    <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!archived && (
-                        <EstimateButton
-                          recipeId={row.recipeId}
-                          name={name}
-                          state={estimates[row.recipeId]}
-                          onChange={(state) =>
-                            setEstimates((current) => ({ ...current, [row.recipeId]: state }))
-                          }
-                          className={rowButton}
-                        />
+                    {/* Category (left) and all of the row's buttons, small, in one bar at the bottom. */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {showGroups && (
+                        <select
+                          disabled={archived}
+                          aria-label={t("categoryFor", { name })}
+                          value={row.categoryId ?? ""}
+                          onChange={(event) => setRow(row.recipeId, { categoryId: event.target.value })}
+                          className="h-8 max-w-full rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40"
+                        >
+                          <option value="">{t("uncategorized")}</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {categoryLabel(category)}
+                            </option>
+                          ))}
+                        </select>
                       )}
-                      <button
-                        type="button"
-                        disabled={archived || !prev}
-                        onClick={() => prev && swap(row.recipeId, prev.recipeId)}
-                        aria-label={t("moveUp", { name })}
-                        className={rowButton}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        disabled={archived || !next}
-                        onClick={() => next && swap(row.recipeId, next.recipeId)}
-                        aria-label={t("moveDown", { name })}
-                        className={rowButton}
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        disabled={archived}
-                        onClick={() => update(rows.filter((r) => r.recipeId !== row.recipeId))}
-                        className={`${rowButton} whitespace-nowrap`}
-                      >
-                        {t("remove")}
-                      </button>
+                      <div className="ml-auto flex items-center gap-1.5">
+                        {!archived && (
+                          <EstimateButton
+                            recipeId={row.recipeId}
+                            name={name}
+                            state={estimates[row.recipeId]}
+                            onChange={(state) =>
+                              setEstimates((current) => ({ ...current, [row.recipeId]: state }))
+                            }
+                            className={rowButton}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          disabled={archived || !prev}
+                          onClick={() => prev && swap(row.recipeId, prev.recipeId)}
+                          aria-label={t("moveUp", { name })}
+                          className={rowButton}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          disabled={archived || !next}
+                          onClick={() => next && swap(row.recipeId, next.recipeId)}
+                          aria-label={t("moveDown", { name })}
+                          className={rowButton}
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          disabled={archived}
+                          onClick={() => update(rows.filter((r) => r.recipeId !== row.recipeId))}
+                          className={`${rowButton} whitespace-nowrap`}
+                        >
+                          {t("remove")}
+                        </button>
+                      </div>
                     </div>
                   </li>
                 );
