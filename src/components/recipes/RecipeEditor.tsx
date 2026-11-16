@@ -1053,7 +1053,7 @@ export function RecipeEditor(props: Props) {
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/15 bg-brand-base/95 px-4 py-3 backdrop-blur md:left-60 md:px-8">
+      <div className="fixed inset-x-0 bottom-[calc(3rem+env(safe-area-inset-bottom))] z-10 border-t border-black/15 bg-brand-base/95 px-4 py-3 backdrop-blur md:left-60 md:px-8">
         <div className="flex flex-wrap items-center gap-2">
           <p className="mr-auto text-sm" aria-live="polite">
             {saving === "saving" || saving === "submitting"

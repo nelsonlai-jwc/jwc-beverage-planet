@@ -1,8 +1,7 @@
 import { useTranslations } from "next-intl";
 import type { CurrentUser } from "@/lib/auth/currentUser";
-import { LocaleSwitch } from "./LocaleSwitch";
+import { BottomBar } from "./BottomBar";
 import { Logo } from "./Logo";
-import { LogoutButton } from "./LogoutButton";
 import { MobileNav } from "./MobileNav";
 import { NavLinks } from "./NavLinks";
 
@@ -33,7 +32,9 @@ export function AppShell({
           <dl className="order-last flex w-full flex-wrap gap-x-4 gap-y-1 text-sm md:order-none md:w-auto">
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("role")}</dt>
-              <dd className="font-semibold">{user ? t(`roles.${user.role}`) : "—"}</dd>
+              <dd className="font-semibold">
+                {user ? t(`roles.${user.role}`) : "—"}
+              </dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("outletScope")}</dt>
@@ -41,13 +42,14 @@ export function AppShell({
             </div>
           </dl>
           <div className="ml-auto flex items-center gap-2">
-            <LocaleSwitch />
-            <LogoutButton className="hidden rounded-full px-3 py-1.5 text-sm hover:bg-black/10 disabled:opacity-50 md:block" />
             <MobileNav role={user?.role ?? null} />
           </div>
         </header>
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main className="flex-1 px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:px-8 md:pt-8 md:pb-[calc(5rem+env(safe-area-inset-bottom))]">
+          {children}
+        </main>
       </div>
+      <BottomBar />
     </div>
   );
 }
