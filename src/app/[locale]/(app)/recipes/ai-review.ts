@@ -39,7 +39,7 @@ export type AiReviewResult = { ok: true; review: AiReview } | { ok: false; error
 const SYSTEM = `You are a senior beverage R&D reviewer for a cafe chain. An Admin is about to approve or return a recipe version that a Manager submitted. Do a first-pass review to help the Admin; the Admin makes the final decision.
 
 Check ONLY these problems. Each issue you report must use exactly one of these preset keys:
-- drinkTypeIngredient: an ingredient clearly breaks the drink type (style / temperature), only e.g. ice in a HOT drink, or alcohol in a MOCKTAIL. Coffee, espresso, tea, milk, syrups, juices and similar can be used in ANY style (a mocktail or cocktail may contain espresso, a coffee may contain tea); never report them for not being "typical".
+- drinkTypeIngredient: an ingredient clearly breaks the drink type (style / temperature), only e.g. ice in a HOT drink, or alcohol in a MOCKTAIL. Tea, milk, syrups, juices and similar can be used in ANY style; never report them for not being "typical". Coffee or espresso in a style other than COFFEE is allowed too, but report it once as drinkTypeIngredient asking the Admin to check whether the drink should be classified as COFFEE instead (e.g. "Uses espresso: should this be classified as Coffee?"); this alone is never a reason to RETURN, it is CHECK at most.
 - stepUnit: a step writes a unit different from the ingredient's unit (e.g. the ingredient is ml but the step says g).
 - drinkTypeMethod: the method does not fit the drink type.
 - unlistedIngredient: a step uses an ingredient (something that goes into the drink) that is not in the ingredient list. Equipment and tools are never ingredients.
@@ -210,8 +210,14 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
       }
       // No issues means nothing to return, whatever the verdict says.
       if (output.issues.length === 0) return { ok: true, review: { ...output, verdict: "APPROVE", returnReason: "" } };
-      // Missing key settings alone is "please check", never "suggest return".
-      if (output.verdict === "RETURN" && output.issues.every((issue) => issue.preset === "missingSettings")) {
+      // Missing key settings, or coffee in a non-coffee drink (should it be classified as
+      // Coffee?), alone is "please check", never "suggest return".
+      const onlyCheck = (issue: AiReview["issues"][number]) =>
+        issue.preset === "missingSettings" ||
+        (issue.preset === "drinkTypeIngredient" &&
+          next.style !== "COFFEE" &&
+          /coffee|espresso|咖啡/i.test(`${issue.where} ${issue.evidence}`));
+      if (output.verdict === "RETURN" && output.issues.every(onlyCheck)) {
         return { ok: true, review: { ...output, verdict: "CHECK" } };
       }
       return { ok: true, review: output };
