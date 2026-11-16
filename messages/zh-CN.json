@@ -282,8 +282,12 @@
       "aiAgain": "重新估价",
       "aiFailed": "AI 估价失败，请稍后再试。",
       "aiRange": "AI 估价 RM {low} – {high}",
-      "aiDisclaimer": "（AI 估计，非网络搜索结果，仅供参考）"
-    }
+      "aiDisclaimer": "（AI 估计，非网络搜索结果，仅供参考）",
+      "overShort": "成本 > 40%"
+    },
+    "dragFor": "拖动以调整 {name} 的顺序",
+    "showDetailsFor": "展开 {name} 的详情",
+    "hideDetailsFor": "收起 {name} 的详情"
   },
   "MenuCategories": {
     "title": "菜单分类",

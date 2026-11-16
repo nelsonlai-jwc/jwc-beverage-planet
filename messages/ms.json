@@ -268,7 +268,26 @@
     "uncategorized": "Tanpa kategori",
     "categoryFor": "Kategori untuk {name}",
     "addCategory": "Kategori untuk minuman baharu",
-    "noCategories": "Cawangan ini belum mempunyai kategori."
+    "noCategories": "Cawangan ini belum mempunyai kategori.",
+    "dragFor": "Seret untuk menyusun semula {name}",
+    "showDetailsFor": "Tunjukkan butiran {name}",
+    "hideDetailsFor": "Sembunyikan butiran {name}",
+    "pricing": {
+      "cost": "Kos RM {cost}",
+      "suggested": "Cadangan RM {price} (kos 40%)",
+      "ratio": "Nisbah kos {ratio}%",
+      "ratioOver": "Nisbah kos {ratio}% (melebihi 40%)",
+      "costIncomplete": "Kos tidak lengkap (sesetengah bahan tiada harga), tiada harga cadangan",
+      "costUnavailable": "Kos tidak tersedia",
+      "aiButton": "Anggaran harga AI",
+      "aiButtonFor": "Anggaran harga AI untuk {name}",
+      "aiRunning": "Menganggar…",
+      "aiAgain": "Anggar semula",
+      "aiFailed": "Anggaran AI gagal. Sila cuba lagi nanti.",
+      "aiRange": "Anggaran AI RM {low} – {high}",
+      "aiDisclaimer": "(Anggaran AI, bukan carian web; untuk rujukan sahaja)",
+      "overShort": "Kos > 40%"
+    }
   },
   "MenuCategories": {
     "title": "Kategori menu",

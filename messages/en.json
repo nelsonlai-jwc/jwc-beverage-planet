@@ -282,8 +282,12 @@
       "aiAgain": "Estimate again",
       "aiFailed": "AI estimate failed. Please try again later.",
       "aiRange": "AI estimate RM {low} – {high}",
-      "aiDisclaimer": "(AI estimate, not a web search; for reference only)"
-    }
+      "aiDisclaimer": "(AI estimate, not a web search; for reference only)",
+      "overShort": "Cost > 40%"
+    },
+    "dragFor": "Drag to reorder {name}",
+    "showDetailsFor": "Show details for {name}",
+    "hideDetailsFor": "Hide details for {name}"
   },
   "MenuCategories": {
     "title": "Menu categories",

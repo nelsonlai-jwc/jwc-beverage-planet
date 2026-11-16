@@ -53,7 +53,7 @@ export async function aiEstimatePrice(recipeId: string, locale: string): Promise
     cupType: version.cup_type,
     ingredients: version.ingredients.map((i) => `${i.name}${i.quantity != null ? ` ${i.quantity} ${i.unit ?? ""}` : ""}`.trim()),
   };
-  const language = locale === "en" ? "English" : "Simplified Chinese";
+  const language = locale === "en" ? "English" : locale === "ms" ? "Malay" : "Simplified Chinese";
 
   for (const model of MODELS) {
     try {
