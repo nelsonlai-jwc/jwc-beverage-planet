@@ -123,13 +123,17 @@ export async function loadFullVersion(supabase: Client, versionId: string): Prom
 
   return {
     ...version,
-    ingredients: (ingredients.data ?? []).map((i) => ({
-      ...i,
-      isPrep: Boolean(i.prep_recipe_id),
-      name: i.prep_recipe_id
-        ? (prepNames.get(i.prep_recipe_id) ?? "—")
-        : label((materials.data ?? []).find((m) => m.id === i.material_id)),
-    })),
+    ingredients: (ingredients.data ?? []).map((i) => {
+      const material = (materials.data ?? []).find((m) => m.id === i.material_id);
+      return {
+        ...i,
+        isPrep: Boolean(i.prep_recipe_id),
+        name: i.prep_recipe_id ? (prepNames.get(i.prep_recipe_id) ?? "—") : label(material),
+        // Name without the brand, and the brand: for showing the name in another language.
+        baseName: i.prep_recipe_id ? (prepNames.get(i.prep_recipe_id) ?? null) : (material?.name ?? null),
+        brand: i.prep_recipe_id ? null : (material?.brand ?? null),
+      };
+    }),
     packaging: (packaging.data ?? []).map((p) => ({
       ...p,
       name: label((packagingItems.data ?? []).find((m) => m.id === p.packaging_item_id)),

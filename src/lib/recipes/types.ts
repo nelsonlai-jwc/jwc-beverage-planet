@@ -49,7 +49,7 @@ export type StepMedia = { id: string; url: string | null; isVideo: boolean };
 
 // One version with everything needed to show or edit it.
 export type FullVersion = VersionRow & {
-  ingredients: (IngredientRow & { name: string; isPrep: boolean })[];
+  ingredients: (IngredientRow & { name: string; isPrep: boolean; baseName: string | null; brand: string | null })[];
   packaging: (PackagingRow & { name: string })[];
   steps: (StepRow & { media: StepMedia | null })[];
   photos: Photo[];

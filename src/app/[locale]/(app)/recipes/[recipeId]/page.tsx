@@ -5,6 +5,9 @@ import { getOutlets, getRecipeCost, getViewer, loadFullVersion } from "@/lib/rec
 import { canEditRecipeDraft, canManageRecipe, outletLabel } from "@/lib/recipes/outlets";
 import { formatDateTime, toSopData } from "@/lib/recipes/format";
 import { createClient } from "@/lib/supabase/server";
+import { localizeVersion, sopTexts } from "@/lib/content/recipes";
+import { getLocalizer } from "@/lib/content/translations";
+import { TranslationNote } from "@/components/content/TranslationNote";
 import { ReviewActions as ChangeReview } from "@/components/materials/ReviewActions";
 import { CostSummary } from "@/components/recipes/CostSummary";
 import { RecipeOutletsEditor } from "@/components/recipes/RecipeOutletsEditor";
@@ -84,7 +87,12 @@ export default async function RecipeDetailPage({
     open?.status === "RETURNED"
       ? (events?.data ?? []).find((e) => e.entity_id === open.id && e.action === "RETURN")?.reason
       : null;
-  const name = approved?.product_name ?? open?.product_name ?? t("untitled");
+  // User-entered texts in the viewer's language (AI translated; the original until ready).
+  const loc = await getLocalizer(
+    [...(approved ? sopTexts(approved) : [open?.product_name]), ...(menus?.data ?? []).map((m) => m.menus.name)],
+    locale,
+  );
+  const name = loc.t(approved?.product_name ?? open?.product_name) ?? t("untitled");
   const versionNo = (id: string) => (versions ?? []).find((v) => v.id === id)?.version_no;
 
   return (
@@ -100,6 +108,7 @@ export default async function RecipeDetailPage({
           <span>{recipe.is_prep ? t("prep") : t("drink")}</span>
           {approved && <PurposeBadge purpose={approved.purpose} />}
         </p>
+        <TranslationNote entries={loc.shown()} canEdit={viewer.role === "ADMIN"} />
         {archived && (
           <div role="status" className="flex flex-col gap-2 rounded-[20px] border-[1.5px] border-black bg-white p-5">
             <p className="text-sm font-semibold">{t("archive.archivedTitle")}</p>
@@ -120,7 +129,7 @@ export default async function RecipeDetailPage({
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
         <div className="flex flex-col gap-4">
           {approved ? (
-            <SopView data={toSopData(approved, formatDateTime(approvedMeta?.approved_at, locale))} />
+            <SopView data={toSopData(localizeVersion(approved, loc), formatDateTime(approvedMeta?.approved_at, locale))} />
           ) : (
             <p className={card}>{t("noApprovedYet")}</p>
           )}
@@ -229,7 +238,7 @@ export default async function RecipeDetailPage({
                 <ul className="flex flex-col gap-1 text-sm">
                   {(menus?.data ?? []).map((m) => (
                     <li key={m.menu_id}>
-                      {m.menus.name} · {t(`menuStatus.${m.menus.status}`)}
+                      {loc.t(m.menus.name)} · {t(`menuStatus.${m.menus.status}`)}
                     </li>
                   ))}
                 </ul>

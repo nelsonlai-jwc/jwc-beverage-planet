@@ -1294,5 +1294,20 @@
     "samePassword": "The new password must be different from the current one.",
     "networkError": "Can't reach the server. Check your connection and try again.",
     "failed": "Could not change the password. Please request a new link."
+  },
+  "Content": {
+    "aiTranslated": "AI translated",
+    "translated": "Translated",
+    "correct": "Correct translation",
+    "close": "Close",
+    "original": "Original",
+    "manual": "Corrected by Admin",
+    "save": "Save",
+    "saved": "Saved.",
+    "errors": {
+      "REQUIRED": "Fill in all three languages.",
+      "NOT_ALLOWED": "Only an Admin can correct translations.",
+      "UNKNOWN": "Could not save. Please try again."
+    }
   }
 }
