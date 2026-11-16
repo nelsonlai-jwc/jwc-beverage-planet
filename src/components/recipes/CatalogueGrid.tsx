@@ -7,7 +7,6 @@ import {
   CATALOGUE_FILTERS,
   CATALOGUE_PURPOSES,
   CATALOGUE_SORT_KEYS,
-  CATALOGUE_STYLES,
   CATALOGUE_TEMPS,
   CATALOGUE_TYPES,
   type CatalogueCard,
@@ -38,7 +37,7 @@ function matches(row: CatalogueCard, f: CatalogueFilters) {
 // Position in a fixed list; empty values go after every set one.
 const rank = <T,>(list: readonly T[], value: T | null) => (value == null ? list.length : list.indexOf(value));
 
-function compare(a: CatalogueCard, b: CatalogueCard, key: CatalogueSortKey) {
+function compare(a: CatalogueCard, b: CatalogueCard, key: CatalogueSortKey, styles: readonly string[]) {
   switch (key) {
     case "name":
       return a.name.localeCompare(b.name);
@@ -49,15 +48,15 @@ function compare(a: CatalogueCard, b: CatalogueCard, key: CatalogueSortKey) {
     case "purpose":
       return rank(CATALOGUE_PURPOSES, a.purpose) - rank(CATALOGUE_PURPOSES, b.purpose);
     case "style":
-      return rank(CATALOGUE_STYLES, a.style) - rank(CATALOGUE_STYLES, b.style);
+      return rank(styles, a.style) - rank(styles, b.style);
     case "temp":
       return rank(CATALOGUE_TEMPS, a.temperature) - rank(CATALOGUE_TEMPS, b.temperature);
   }
 }
 
-function sortRows(rows: CatalogueCard[], key: CatalogueSortKey, dir: CatalogueSortDir) {
+function sortRows(rows: CatalogueCard[], key: CatalogueSortKey, dir: CatalogueSortDir, styles: readonly string[]) {
   const sign = dir === "asc" ? 1 : -1;
-  return [...rows].sort((a, b) => sign * compare(a, b, key) || a.name.localeCompare(b.name));
+  return [...rows].sort((a, b) => sign * compare(a, b, key, styles) || a.name.localeCompare(b.name));
 }
 
 // Keeps the tab and name search already in the URL; replaces only filters and sort.
@@ -76,6 +75,7 @@ function writeUrl(filters: CatalogueFilters, sort: CatalogueSortKey, dir: Catalo
 export function CatalogueGrid({
   rows,
   outlets,
+  styles,
   search,
   initialFilters,
   initialSort,
@@ -83,6 +83,8 @@ export function CatalogueGrid({
 }: {
   rows: CatalogueCard[];
   outlets: { id: string; name: string }[];
+  // Built-in styles, then any the Admin added on the Settings page.
+  styles: string[];
   search: string;
   initialFilters: CatalogueFilters;
   initialSort: CatalogueSortKey;
@@ -95,8 +97,8 @@ export function CatalogueGrid({
   const [dir, setDir] = useState<CatalogueSortDir>(initialDir);
 
   const shown = useMemo(
-    () => sortRows(rows.filter((row) => matches(row, filters)), sort, dir),
-    [rows, filters, sort, dir],
+    () => sortRows(rows.filter((row) => matches(row, filters)), sort, dir, styles),
+    [rows, filters, sort, dir, styles],
   );
 
   const setFilter = (key: CatalogueFilterKey, value: string) => {
@@ -127,7 +129,7 @@ export function CatalogueGrid({
     outlet: outlets.map((o) => [o.id, o.name]),
     type: CATALOGUE_TYPES.map((v) => [v, typeLabel(v)]),
     purpose: CATALOGUE_PURPOSES.map((v) => [v, t(`purpose.${v}`)]),
-    style: CATALOGUE_STYLES.map((v) => [v, t(`style.${v}`)]),
+    style: styles.map((v) => [v, t(`style.${v}`)]),
     temp: CATALOGUE_TEMPS.map((v) => [v, t(`temp.${v}`)]),
   };
 

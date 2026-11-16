@@ -45,6 +45,20 @@ export function orderOf<T extends string>(labels: OptionLabel[], group: OptionGr
   return [...ordered.filter((v) => fallback.includes(v)), ...fallback.filter((v) => !ordered.includes(v))];
 }
 
+/**
+ * Every beverage style in the Admin's order, including styles the Admin added on the
+ * Settings page. Falls back to the built-in list when the names can't be read.
+ */
+export function styleValues<T extends string>(labels: OptionLabel[], fallback: readonly T[]): T[] {
+  const ordered = labels.filter((l) => l.group === "STYLE").map((l) => l.value as T);
+  return [...ordered, ...fallback.filter((v) => !ordered.includes(v))];
+}
+
+/** Styles the Admin added on the Settings page (not in the built-in list), in the Admin's order. */
+export function addedStyles<T extends string>(labels: OptionLabel[], builtIn: readonly T[]): T[] {
+  return labels.filter((l) => l.group === "STYLE" && !builtIn.includes(l.value as T)).map((l) => l.value as T);
+}
+
 type Messages = Record<string, Record<string, unknown>>;
 
 /** Puts the Admin's names over the built-in texts wherever these options are shown. */

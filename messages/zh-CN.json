@@ -52,7 +52,7 @@
       "beverageStyle": {
         "label": "饮料类别",
         "rule": "已被引用的选项只能停用。",
-        "adminRule": "类别固定。可以修改中英文名称和顺序。"
+        "adminRule": "可以新增类别、修改中英文名称和顺序。类别不能删除。"
       },
       "unit": {
         "label": "单位",
@@ -134,6 +134,9 @@
       "codePlaceholder": "代码，例如 PG-ABC",
       "codeHint": "分店代码建立后不能修改：大写字母、数字和横线。",
       "storedValue": "系统值：{value}",
+      "styleEnPlaceholder": "新类别（英文）",
+      "styleZhPlaceholder": "新类别（中文）",
+      "styleHint": "类别新增后不能删除，但可以改名。",
       "errors": {
         "NAME_REQUIRED": "请填写名称。",
         "CODE_INVALID": "代码需为 2–32 位大写字母、数字或横线。",

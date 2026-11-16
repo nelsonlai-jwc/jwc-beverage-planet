@@ -52,7 +52,7 @@
       "beverageStyle": {
         "label": "Beverage Style",
         "rule": "Values in use can only be deactivated.",
-        "adminRule": "The styles are fixed. You can rename them in both languages and change the order."
+        "adminRule": "You can add styles, rename them in both languages and change the order. Styles cannot be deleted."
       },
       "unit": {
         "label": "Unit",
@@ -134,6 +134,9 @@
       "codePlaceholder": "CODE e.g. PG-ABC",
       "codeHint": "The outlet code is fixed after creation: capital letters, numbers and dashes.",
       "storedValue": "Value: {value}",
+      "styleEnPlaceholder": "New style (English)",
+      "styleZhPlaceholder": "New style (Chinese)",
+      "styleHint": "A style cannot be deleted after it is added; you can still rename it.",
       "errors": {
         "NAME_REQUIRED": "Please enter a name.",
         "CODE_INVALID": "Code: 2–32 capital letters, numbers or dashes.",
