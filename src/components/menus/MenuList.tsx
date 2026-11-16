@@ -11,6 +11,7 @@ import {
   labelClass,
   mutedText,
   primaryButton,
+  secondaryButton,
 } from "@/components/ui/styles";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Outlet } from "@/lib/auth/currentUser";
@@ -62,6 +63,9 @@ export function MenuList({ outlets, menus }: { outlets: Outlet[]; menus: Menu[] 
 
   return (
     <div className="flex flex-col gap-6">
+      <Link href="/menus/categories" className={`${secondaryButton} self-start`}>
+        {t("manageCategories")}
+      </Link>
       <form onSubmit={handleCreate} className={`${cardClass} flex flex-col gap-4`}>
         <h2 className="text-base font-semibold">{t("newMenu")}</h2>
         <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">

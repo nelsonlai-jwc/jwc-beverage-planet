@@ -15,12 +15,14 @@ import {
   smallButton,
 } from "@/components/ui/styles";
 import { Link, useRouter } from "@/i18n/navigation";
+import { categoryLabel, groupByCategory, type FlatCategory } from "@/lib/menus/categories";
 import type { MenuRecipe } from "@/lib/menus/recipes";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 
-type Item = { recipeId: string; price: number | null };
-type Row = { recipeId: string; price: string };
+type Item = { recipeId: string; price: number | null; categoryId: string | null };
+// categoryId "" means Uncategorized.
+type Row = { recipeId: string; price: string; categoryId: string };
 type Problem = { recipe_id: string; code: string };
 
 const problemCodes = [
@@ -38,11 +40,13 @@ export function MenuEditor({
   draftItems,
   recipes,
   allRecipeNames,
+  categories,
 }: {
   menu: {
     id: string;
     name: string;
     status: Database["public"]["Enums"]["menu_status"];
+    outletId: string;
     outletName: string;
     publishedAt: string | null;
   };
@@ -51,15 +55,18 @@ export function MenuEditor({
   draftItems: Item[];
   recipes: MenuRecipe[];
   allRecipeNames: Record<string, string>;
+  // The outlet's categories in tree order.
+  categories: FlatCategory[];
 }) {
   const t = useTranslations("Menus");
   const format = useFormatter();
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>(() =>
-    draftItems.map((item) => ({ recipeId: item.recipeId, price: item.price?.toFixed(2) ?? "" })),
+    draftItems.map(toRow),
   );
   const [dirty, setDirty] = useState(false);
   const [addId, setAddId] = useState("");
+  const [addCategoryId, setAddCategoryId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -68,6 +75,13 @@ export function MenuEditor({
   const archived = menu.status === "ARCHIVED";
   const hasPending = revisionId !== null || dirty;
   const available = recipes.filter((r) => !rows.some((row) => row.recipeId === r.id));
+  // Drinks are shown and saved grouped by category (tree order, Uncategorized last).
+  const groups = groupByCategory(
+    rows.map((row) => ({ ...row, categoryId: row.categoryId || null })),
+    categories,
+  );
+  const ordered = groups.flatMap((group) => group.items);
+  const showGroups = categories.length > 0;
 
   function update(next: Row[]) {
     setRows(next);
@@ -75,11 +89,17 @@ export function MenuEditor({
     setNotice(null);
   }
 
-  function move(index: number, delta: number) {
+  // Swaps two drinks of the same category.
+  function swap(a: string, b: string) {
+    const ia = rows.findIndex((r) => r.recipeId === a);
+    const ib = rows.findIndex((r) => r.recipeId === b);
     const next = [...rows];
-    const [row] = next.splice(index, 1);
-    next.splice(index + delta, 0, row);
+    [next[ia], next[ib]] = [next[ib], next[ia]];
     update(next);
+  }
+
+  function setRow(recipeId: string, change: Partial<Row>) {
+    update(rows.map((r) => (r.recipeId === recipeId ? { ...r, ...change } : r)));
   }
 
   // Writes the rows as the menu's pending revision. Returns false on failure.
@@ -108,13 +128,14 @@ export function MenuEditor({
       .delete()
       .eq("menu_revision_id", id);
     if (deleteError) return false;
-    if (rows.length > 0) {
+    if (ordered.length > 0) {
       const { error: insertError } = await supabase.from("menu_revision_items").insert(
-        rows.map((row, index) => ({
+        ordered.map((row, index) => ({
           menu_revision_id: id,
           recipe_id: row.recipeId,
           price: row.price === "" ? null : Number(row.price),
           sort_order: index + 1,
+          category_id: row.categoryId,
         })),
       );
       if (insertError) return false;
@@ -201,7 +222,7 @@ export function MenuEditor({
           return false;
         }
       }
-      setRows(liveItems.map((item) => ({ recipeId: item.recipeId, price: item.price?.toFixed(2) ?? "" })));
+      setRows(liveItems.map(toRow));
       return true;
     });
   }
@@ -279,77 +300,103 @@ export function MenuEditor({
           {t("items")}
         </h2>
         {rows.length === 0 && <p className="text-sm">{t("noItems")}</p>}
-        <ol className="flex flex-col gap-3">
-          {rows.map((row, index) => {
-            const codes = problemsFor(row.recipeId);
-            const name = allRecipeNames[row.recipeId] ?? "—";
-            return (
-              <li
-                key={row.recipeId}
-                className={`flex flex-col gap-3 rounded-[14px] border-[1.5px] p-3 md:flex-row md:items-center ${
-                  codes.length ? "border-[#c4161c]" : "border-black/15"
-                }`}
-              >
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-semibold">
-                    {index + 1}. {name}
-                  </span>
-                  {codes.map((code) => (
-                    <span key={code} className="text-[13px] font-semibold text-[#c4161c]">
-                      {problemCodes.includes(code as (typeof problemCodes)[number])
-                        ? t(`problems.${code as (typeof problemCodes)[number]}`)
-                        : code}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="flex min-w-0 flex-1 items-center gap-2 text-sm md:flex-none">
-                    <span className="font-semibold">MYR</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min="0.01"
-                      step="0.01"
-                      disabled={archived}
-                      aria-label={t("priceFor", { name })}
-                      value={row.price}
-                      onChange={(event) =>
-                        update(rows.map((r, i) => (i === index ? { ...r, price: event.target.value } : r)))
-                      }
-                      className={`${inputClass} w-full md:w-28`}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    disabled={archived || index === 0}
-                    onClick={() => move(index, -1)}
-                    aria-label={t("moveUp", { name })}
-                    className={smallButton}
+        {groups.map((group) => (
+          <div key={group.category?.id ?? "none"} className="flex flex-col gap-3">
+            {showGroups && (
+              <h3 className="text-sm font-semibold">
+                {group.category ? categoryLabel(group.category) : t("uncategorized")}
+              </h3>
+            )}
+            <ol className="flex flex-col gap-3">
+              {group.items.map((row, index) => {
+                const codes = problemsFor(row.recipeId);
+                const name = allRecipeNames[row.recipeId] ?? "—";
+                const position = ordered.indexOf(row) + 1;
+                const prev = group.items[index - 1];
+                const next = group.items[index + 1];
+                return (
+                  <li
+                    key={row.recipeId}
+                    className={`flex flex-col gap-3 rounded-[14px] border-[1.5px] p-3 md:flex-row md:items-center ${
+                      codes.length ? "border-[#c4161c]" : "border-black/15"
+                    }`}
                   >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    disabled={archived || index === rows.length - 1}
-                    onClick={() => move(index, 1)}
-                    aria-label={t("moveDown", { name })}
-                    className={smallButton}
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    disabled={archived}
-                    onClick={() => update(rows.filter((_, i) => i !== index))}
-                    className={`${smallButton} shrink-0 whitespace-nowrap`}
-                  >
-                    {t("remove")}
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="font-semibold">
+                        {position}. {name}
+                      </span>
+                      {codes.map((code) => (
+                        <span key={code} className="text-[13px] font-semibold text-[#c4161c]">
+                          {problemCodes.includes(code as (typeof problemCodes)[number])
+                            ? t(`problems.${code as (typeof problemCodes)[number]}`)
+                            : code}
+                        </span>
+                      ))}
+                    </div>
+                    {showGroups && (
+                      <select
+                        disabled={archived}
+                        aria-label={t("categoryFor", { name })}
+                        value={row.categoryId ?? ""}
+                        onChange={(event) => setRow(row.recipeId, { categoryId: event.target.value })}
+                        className={`${inputClass} w-full md:w-64`}
+                      >
+                        <option value="">{t("uncategorized")}</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {categoryLabel(category)}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <label className="flex min-w-0 flex-1 items-center gap-2 text-sm md:flex-none">
+                        <span className="font-semibold">MYR</span>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0.01"
+                          step="0.01"
+                          disabled={archived}
+                          aria-label={t("priceFor", { name })}
+                          value={row.price}
+                          onChange={(event) => setRow(row.recipeId, { price: event.target.value })}
+                          className={`${inputClass} w-full md:w-28`}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        disabled={archived || !prev}
+                        onClick={() => prev && swap(row.recipeId, prev.recipeId)}
+                        aria-label={t("moveUp", { name })}
+                        className={smallButton}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        disabled={archived || !next}
+                        onClick={() => next && swap(row.recipeId, next.recipeId)}
+                        aria-label={t("moveDown", { name })}
+                        className={smallButton}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        disabled={archived}
+                        onClick={() => update(rows.filter((r) => r.recipeId !== row.recipeId))}
+                        className={`${smallButton} shrink-0 whitespace-nowrap`}
+                      >
+                        {t("remove")}
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        ))}
 
         {!archived && (
           <div className="flex flex-col gap-1.5">
@@ -370,11 +417,26 @@ export function MenuEditor({
                   </option>
                 ))}
               </select>
+              {showGroups && (
+                <select
+                  aria-label={t("addCategory")}
+                  value={addCategoryId}
+                  onChange={(event) => setAddCategoryId(event.target.value)}
+                  className={`${inputClass} w-full sm:w-56`}
+                >
+                  <option value="">{t("uncategorized")}</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {categoryLabel(category)}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button
                 type="button"
                 disabled={!addId}
                 onClick={() => {
-                  update([...rows, { recipeId: addId, price: "" }]);
+                  update([...rows, { recipeId: addId, price: "", categoryId: addCategoryId }]);
                   setAddId("");
                 }}
                 className={`${secondaryButton} shrink-0`}
@@ -383,6 +445,12 @@ export function MenuEditor({
               </button>
             </div>
             <p className={mutedText}>{t("addRecipeHint")}</p>
+            <p className={mutedText}>
+              {categories.length === 0 && `${t("noCategories")} `}
+              <Link href={`/menus/categories?outlet=${menu.outletId}`} className="underline">
+                {t("manageCategories")}
+              </Link>
+            </p>
           </div>
         )}
       </section>
@@ -434,4 +502,8 @@ export function MenuEditor({
       )}
     </div>
   );
+}
+
+function toRow(item: Item): Row {
+  return { recipeId: item.recipeId, price: item.price?.toFixed(2) ?? "", categoryId: item.categoryId ?? "" };
 }

@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { MenuEditor } from "@/components/menus/MenuEditor";
 import { getCurrentUser } from "@/lib/auth/currentUser";
+import { CATEGORY_SELECT, flattenCategories, toCategory } from "@/lib/menus/categories";
 import { loadRecipes } from "@/lib/menus/recipes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,8 +25,8 @@ export default async function MenuPage({
     .from("menus")
     .select(
       `id, name, status, outlet_id, published_at, outlets(name),
-       menu_items(recipe_id, price, sort_order),
-       menu_revisions(id, menu_revision_items(recipe_id, price, sort_order))`,
+       menu_items(recipe_id, price, sort_order, category_id),
+       menu_revisions(id, menu_revision_items(recipe_id, price, sort_order, category_id))`,
     )
     .eq("id", id)
     .maybeSingle();
@@ -42,6 +43,10 @@ export default async function MenuPage({
     recipeIds: [...live, ...draft].map((item) => item.recipe_id),
   });
   const names = new Map([...itemRecipes, ...recipes]);
+  const { data: categories } = await supabase
+    .from("menu_categories")
+    .select(CATEGORY_SELECT)
+    .eq("outlet_id", menu.outlet_id);
 
   return (
     <MenuEditor
@@ -49,16 +54,22 @@ export default async function MenuPage({
         id: menu.id,
         name: menu.name,
         status: menu.status,
+        outletId: menu.outlet_id,
         outletName: menu.outlets?.name ?? "",
         publishedAt: menu.published_at,
       }}
       revisionId={revision?.id ?? null}
-      liveItems={live.map((item) => ({ recipeId: item.recipe_id, price: item.price }))}
-      draftItems={draft.map((item) => ({ recipeId: item.recipe_id, price: item.price }))}
+      liveItems={live.map(toItem)}
+      draftItems={draft.map(toItem)}
+      categories={flattenCategories((categories ?? []).map(toCategory))}
       recipes={[...recipes.values()]
         .filter((recipe) => recipe.purpose === "OFFICIAL_RELEASE")
         .sort((a, b) => a.productName.localeCompare(b.productName))}
       allRecipeNames={Object.fromEntries([...names.values()].map((r) => [r.id, r.productName]))}
     />
   );
+}
+
+function toItem(item: { recipe_id: string; price: number | null; category_id: string | null }) {
+  return { recipeId: item.recipe_id, price: item.price, categoryId: item.category_id };
 }

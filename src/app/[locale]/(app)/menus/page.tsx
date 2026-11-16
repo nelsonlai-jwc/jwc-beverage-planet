@@ -3,6 +3,7 @@ import { BaristaMenus } from "@/components/menus/BaristaMenus";
 import { MenuList } from "@/components/menus/MenuList";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentUser } from "@/lib/auth/currentUser";
+import { CATEGORY_SELECT, flattenCategories, toCategory } from "@/lib/menus/categories";
 import { loadRecipes } from "@/lib/menus/recipes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,11 +23,16 @@ export default async function MenusPage({
     // RLS returns only published menus of the Barista's own outlet.
     const { data: menus } = await supabase
       .from("menus")
-      .select("id, name, menu_items(recipe_id, price, sort_order)")
+      .select("id, name, outlet_id, menu_items(recipe_id, price, sort_order, category_id)")
       .eq("status", "PUBLISHED")
       .order("name");
     const recipeIds = (menus ?? []).flatMap((m) => m.menu_items.map((i) => i.recipe_id));
     const recipes = await loadRecipes(supabase, { recipeIds });
+    const { data: categoryRows } = await supabase
+      .from("menu_categories")
+      .select(CATEGORY_SELECT)
+      .in("outlet_id", [...new Set((menus ?? []).map((m) => m.outlet_id))]);
+    const categories = (categoryRows ?? []).map(toCategory);
     return (
       <div className="flex flex-col gap-6">
         <PageHeader title={t("title")} note={t("baristaNote")} />
@@ -34,9 +40,14 @@ export default async function MenusPage({
           menus={(menus ?? []).map((menu) => ({
             id: menu.id,
             name: menu.name,
+            categories: flattenCategories(categories.filter((c) => c.outletId === menu.outlet_id)),
             items: [...menu.menu_items]
               .sort((a, b) => a.sort_order - b.sort_order)
-              .map((item) => ({ price: item.price, recipe: recipes.get(item.recipe_id) ?? null })),
+              .map((item) => ({
+                price: item.price,
+                categoryId: item.category_id,
+                recipe: recipes.get(item.recipe_id) ?? null,
+              })),
           }))}
         />
       </div>

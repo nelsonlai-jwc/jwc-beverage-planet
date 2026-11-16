@@ -1214,8 +1214,67 @@ export type Database = {
           },
         ]
       }
+      menu_categories: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          outlet_id: string
+          parent_id: string | null
+          revision: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name: string
+          outlet_id: string
+          parent_id?: string | null
+          revision?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          outlet_id?: string
+          parent_id?: string | null
+          revision?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_categories_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
+          category_id: string | null
           id: string
           menu_id: string
           price: number
@@ -1223,6 +1282,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          category_id?: string | null
           id?: string
           menu_id: string
           price: number
@@ -1230,6 +1290,7 @@ export type Database = {
           sort_order: number
         }
         Update: {
+          category_id?: string | null
           id?: string
           menu_id?: string
           price?: number
@@ -1237,6 +1298,13 @@ export type Database = {
           sort_order?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "menu_items_menu_id_fkey"
             columns: ["menu_id"]
@@ -1310,6 +1378,7 @@ export type Database = {
       }
       menu_revision_items: {
         Row: {
+          category_id: string | null
           id: string
           menu_revision_id: string
           price: number | null
@@ -1317,6 +1386,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          category_id?: string | null
           id?: string
           menu_revision_id: string
           price?: number | null
@@ -1324,6 +1394,7 @@ export type Database = {
           sort_order: number
         }
         Update: {
+          category_id?: string | null
           id?: string
           menu_revision_id?: string
           price?: number | null
@@ -1331,6 +1402,13 @@ export type Database = {
           sort_order?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "menu_revision_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "menu_revision_items_menu_revision_id_fkey"
             columns: ["menu_revision_id"]
