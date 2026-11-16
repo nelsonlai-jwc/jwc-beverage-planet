@@ -112,7 +112,6 @@ export default async function RecipesPage({
     return (
       <div className="flex flex-col gap-6">
         {header}
-      {translationNote}
         {translationNote}
         {searchBox()}
         {visible.length === 0 ? (
@@ -199,7 +198,6 @@ export default async function RecipesPage({
     return (
       <div className="flex flex-col gap-6">
         {header}
-      {translationNote}
         {translationNote}
         {tabBar}
         {searchBox(
@@ -288,7 +286,6 @@ export default async function RecipesPage({
     return (
       <div className="flex flex-col gap-6">
         {header}
-      {translationNote}
         {translationNote}
         {tabBar}
         <p className="text-sm text-[#3d3f3a]">{t("catalogueNote")}</p>
