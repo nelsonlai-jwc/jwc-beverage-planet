@@ -23,7 +23,7 @@ export function AppShell({
       <aside className="sticky top-0 hidden h-dvh print:hidden w-60 shrink-0 flex-col gap-6 border-r border-black/15 px-4 py-6 md:flex">
         <Logo className="px-3.5" />
         <nav aria-label={t("mainNav")}>
-          <NavLinks role={user?.role ?? null} />
+          <NavLinks role={user?.displayRole ?? null} />
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -33,7 +33,7 @@ export function AppShell({
             <div className="flex gap-1.5">
               <dt className="text-[#3d3f3a]">{t("role")}</dt>
               <dd className="font-semibold">
-                {user ? t(`roles.${user.role}`) : "—"}
+                {user ? t(`roles.${user.displayRole}`) : "—"}
               </dd>
             </div>
             <div className="flex gap-1.5">
@@ -42,7 +42,7 @@ export function AppShell({
             </div>
           </dl>
           <div className="ml-auto flex items-center gap-2">
-            <MobileNav role={user?.role ?? null} />
+            <MobileNav role={user?.displayRole ?? null} />
           </div>
         </header>
         <main className="flex-1 px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:px-8 md:pt-8 md:pb-[calc(5rem+env(safe-area-inset-bottom))]">

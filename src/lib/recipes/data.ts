@@ -13,20 +13,24 @@ export async function getViewer(supabase: Client): Promise<Viewer | null> {
   if (!user) return null;
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, status")
+    .select("role, status, is_super_admin")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile || profile.status !== "ACTIVE") return null;
 
+  // Only the Super Admin keeps the global ADMIN role here; an outlet Admin works as a
+  // Manager of their outlets.
+  const outletAdmin = profile.role === "ADMIN" && !profile.is_super_admin;
+  const role = outletAdmin ? "MANAGER" : profile.role;
   let managedOutletIds: string[] = [];
-  if (profile.role === "ADMIN") {
+  if (role === "ADMIN") {
     const { data } = await supabase.from("outlets").select("id").eq("is_active", true);
     managedOutletIds = (data ?? []).map((o) => o.id);
-  } else if (profile.role === "MANAGER") {
+  } else if (role === "MANAGER") {
     const { data } = await supabase.from("user_outlets").select("outlet_id").eq("user_id", user.id);
     managedOutletIds = (data ?? []).map((o) => o.outlet_id);
   }
-  return { id: user.id, role: profile.role, managedOutletIds };
+  return { id: user.id, role, managedOutletIds, outletAdmin };
 }
 
 export async function getOutlets(supabase: Client): Promise<Outlet[]> {

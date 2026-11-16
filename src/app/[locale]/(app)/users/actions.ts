@@ -10,7 +10,7 @@ export type InviteResult =
   | { ok: true; email: string; expiresAt: string; emailed: true }
   // The email failed: the link is returned once so the Admin can send it by hand.
   | { ok: true; email: string; expiresAt: string; emailed: false; url: string }
-  | { ok: false; error: "EMAIL_HAS_ACCOUNT" | "OUTLET_RULE" | "UNKNOWN" };
+  | { ok: false; error: "EMAIL_HAS_ACCOUNT" | "OUTLET_RULE" | "NOT_ALLOWED" | "UNKNOWN" };
 
 export async function inviteUser(target: {
   email: string;
@@ -27,6 +27,7 @@ export async function inviteUser(target: {
   if (error || !data?.[0]) {
     if (error?.code === "23505") return { ok: false, error: "EMAIL_HAS_ACCOUNT" };
     if (error?.code === "23514") return { ok: false, error: "OUTLET_RULE" };
+    if (error?.code === "42501") return { ok: false, error: "NOT_ALLOWED" };
     return { ok: false, error: "UNKNOWN" };
   }
   revalidatePath("/", "layout");

@@ -20,6 +20,12 @@ export function canManageRecipe(viewer: Viewer, recipe: RecipeOutlets) {
   );
 }
 
+// Same rule as private.can_approve_recipe: Super Admin, or an outlet Admin of every
+// outlet of the recipe (never an all-outlet recipe).
+export function canApproveRecipe(viewer: Viewer, recipe: RecipeOutlets) {
+  return viewer.role === "ADMIN" || (viewer.outletAdmin && canManageRecipe(viewer, recipe));
+}
+
 // Same rule as private.can_edit_recipe_draft: Admin, or a Manager of any outlet of the
 // recipe, edits and submits its draft (never an all-outlet recipe).
 export function canEditRecipeDraft(viewer: Viewer, recipe: RecipeOutlets) {

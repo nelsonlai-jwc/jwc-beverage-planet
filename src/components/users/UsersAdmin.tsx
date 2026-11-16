@@ -30,6 +30,7 @@ type User = {
   role: UserRole;
   status: UserStatus;
   revision: number;
+  superAdmin: boolean;
   outletIds: string[];
   documentType: Database["public"]["Enums"]["id_document_type"] | null;
   documentLast4: string | null;
@@ -58,9 +59,8 @@ const statusTone = {
   REVOKED: "grey",
 } as const;
 
-// Outlet list fits the role: Admin none, Barista at most one.
+// Outlet list fits the role: Barista at most one.
 function fitOutlets(role: UserRole, ids: string[]): string[] {
-  if (role === "ADMIN") return [];
   if (role === "BARISTA") return ids.slice(0, 1);
   return ids;
 }
@@ -113,7 +113,9 @@ export function UsersAdmin({
           ? t("emailHasAccount")
           : result?.error === "OUTLET_RULE"
             ? t("outletRule")
-            : t("inviteFailed"),
+            : result?.error === "NOT_ALLOWED"
+              ? t("notAllowed")
+              : t("inviteFailed"),
       );
       return false;
     }
@@ -200,7 +202,9 @@ export function UsersAdmin({
             ? t("lastAdmin")
             : error.code === "23514"
               ? t("outletRule")
-              : t("actionFailed"),
+              : error.code === "42501"
+                ? t("notAllowed")
+                : t("actionFailed"),
       );
       router.refresh();
       return;
@@ -386,9 +390,10 @@ export function UsersAdmin({
               </div>
               <p className="text-sm break-all">{user.email}</p>
               <p className="text-sm">
-                {t(`roles.${user.role}`)}
-                {user.role !== "ADMIN" && ` · ${outletNames(user.outletIds)}`}
+                {user.superAdmin ? t("superAdmin") : t(`roles.${user.role}`)}
+                {!user.superAdmin && ` · ${outletNames(user.outletIds)}`}
               </p>
+              {user.superAdmin && <p className={mutedText}>{t("superAdminNote")}</p>}
               {user.documentType && (
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <span>
@@ -403,7 +408,7 @@ export function UsersAdmin({
                 </div>
               )}
 
-              {editing === user.id ? (
+              {user.superAdmin ? null : editing === user.id ? (
                 <form onSubmit={(event) => saveUser(event, user)} className="flex flex-col gap-3 pt-2">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">

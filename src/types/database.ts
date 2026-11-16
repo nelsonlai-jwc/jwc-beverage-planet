@@ -1770,6 +1770,7 @@ export type Database = {
           deactivated_at: string | null
           email: string
           email_normalized: string | null
+          is_super_admin: boolean
           full_name: string
           id: string
           locale: Database["public"]["Enums"]["app_locale"]
@@ -1784,6 +1785,7 @@ export type Database = {
           deactivated_at?: string | null
           email: string
           email_normalized?: string | null
+          is_super_admin?: boolean
           full_name: string
           id: string
           locale?: Database["public"]["Enums"]["app_locale"]
@@ -1798,6 +1800,7 @@ export type Database = {
           deactivated_at?: string | null
           email?: string
           email_normalized?: string | null
+          is_super_admin?: boolean
           full_name?: string
           id?: string
           locale?: Database["public"]["Enums"]["app_locale"]
@@ -2421,6 +2424,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      approvable_requester_ids: { Args: never; Returns: string[] }
       approve_material: { Args: { p_material_id: string }; Returns: undefined }
       approve_material_pack: { Args: { p_pack_id: string }; Returns: undefined }
       approve_material_price: {

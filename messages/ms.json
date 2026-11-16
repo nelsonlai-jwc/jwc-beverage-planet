@@ -384,7 +384,6 @@
       "NRIC": "NRIC",
       "PASSPORT": "Pasport"
     },
-    "adminAllOutlets": "Admin mempunyai akses kepada semua cawangan.",
     "outletOne": "Cawangan (pilih satu)",
     "outletMany": "Cawangan (satu atau lebih)",
     "inviteHint": "Sistem akan menghantar pautan jemputan melalui e-mel kepada orang tersebut. Pautan sah selama 72 jam dan hanya boleh digunakan sekali.",
@@ -398,10 +397,10 @@
     "copied": "Disalin",
     "linkNote": "Sah sehingga {date}. Pautan ini hanya dipaparkan sekali; cipta pautan baharu jika anda kehilangannya.",
     "emailHasAccount": "E-mel ini sudah mempunyai akaun. Sunting pengguna tersebut.",
-    "outletRule": "Barista memerlukan tepat satu cawangan, Pengurus sekurang-kurangnya satu, Admin tiada.",
+    "outletRule": "Barista memerlukan tepat satu cawangan; Pengurus dan Admin sekurang-kurangnya satu.",
     "inviteFailed": "Jemputan tidak dapat dicipta. Sila cuba lagi.",
     "actionFailed": "Berlaku ralat. Sila cuba lagi.",
-    "adminConfirm": "Beri orang ini akses Admin kepada semua cawangan dan tetapan?",
+    "adminConfirm": "Jadikan orang ini Admin bagi cawangan yang dipilih? Mereka boleh mengurus pengguna serta meluluskan resipi dan permintaan bahan mentah untuk cawangan tersebut.",
     "invitations": "Jemputan",
     "expires": "Tamat tempoh {date}",
     "newLink": "Hantar semula jemputan",
@@ -420,7 +419,10 @@
     "resetConfirm": "Hantar e-mel tetapan semula kata laluan kepada {email}?",
     "resetSent": "E-mel tetapan semula telah dihantar ke {email}.",
     "resetRateLimited": "Terlalu banyak e-mel dihantar. Sila tunggu sebentar dan cuba lagi.",
-    "resetFailed": "E-mel tetapan semula tidak dapat dihantar. Sila cuba lagi."
+    "resetFailed": "E-mel tetapan semula tidak dapat dihantar. Sila cuba lagi.",
+    "superAdmin": "Super Admin",
+    "superAdminNote": "Akaun dilindungi: tidak boleh diubah, digantung atau dibuang.",
+    "notAllowed": "Anda hanya boleh mengurus pengguna dan cawangan yang anda uruskan."
   },
   "RawMaterials": {
     "title": "Bahan Mentah",
