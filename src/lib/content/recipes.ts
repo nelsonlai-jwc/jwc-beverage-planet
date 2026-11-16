@@ -6,6 +6,8 @@ export function sopTexts(version: FullVersion): (string | null)[] {
   return [
     version.product_name,
     version.appearance_notes,
+    version.introduction,
+    ...(version.tags ?? []),
     ...version.steps.map((s) => s.instruction),
     ...version.ingredients.map((i) => i.baseName),
   ];
@@ -17,6 +19,8 @@ export function localizeVersion(version: FullVersion, loc: Localizer): FullVersi
     ...version,
     product_name: loc.t(version.product_name),
     appearance_notes: loc.t(version.appearance_notes),
+    introduction: loc.t(version.introduction),
+    tags: (version.tags ?? []).map((tag) => loc.t(tag)),
     steps: version.steps.map((s) => ({ ...s, instruction: loc.t(s.instruction) })),
     ingredients: version.ingredients.map((i) =>
       i.baseName ? { ...i, name: i.brand ? `${loc.t(i.baseName)} (${i.brand})` : loc.t(i.baseName) } : i,

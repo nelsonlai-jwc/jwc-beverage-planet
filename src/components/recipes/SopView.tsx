@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { letterFor, splitReferences } from "@/lib/recipes/letters";
 import type { BeverageStyle, BeverageTemp, MeasureUnit, Photo, StepMedia } from "@/lib/recipes/types";
 import { StepMediaView } from "./StepMediaView";
+import { TagList } from "./ui";
 
 export type SopData = {
   productName: string | null;
@@ -12,6 +13,8 @@ export type SopData = {
   yieldQuantity?: number | null;
   yieldUnit?: MeasureUnit | null;
   appearanceNotes: string | null;
+  introduction?: string | null;
+  tags?: string[];
   ingredients: { key: string; name: string; isPrep: boolean; quantity: number | null; unit: MeasureUnit | null }[];
   steps: { key: string; instruction: string; media?: StepMedia | null }[];
   photos: Photo[];
@@ -55,7 +58,15 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
         {data.yieldQuantity != null && (
           <p className="text-sm">{t("yieldLine", { quantity: data.yieldQuantity, unit: data.yieldUnit ?? "" })}</p>
         )}
+        <TagList tags={data.tags ?? []} className="pt-1" />
       </header>
+
+      {data.introduction && (
+        <section className="flex flex-col gap-2">
+          <h3 className="text-base font-semibold">{t("sections.introduction")}</h3>
+          <p className="whitespace-pre-wrap text-sm">{data.introduction}</p>
+        </section>
+      )}
 
       <section className="flex flex-col gap-2">
         <h3 className="text-base font-semibold">{t("sections.ingredients")}</h3>

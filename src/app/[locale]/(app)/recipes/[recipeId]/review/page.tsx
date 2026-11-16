@@ -286,6 +286,8 @@ function diffFields(t: T, before: FullVersion | null, after: FullVersion) {
   const show = (v: FullVersion | null, f: (v: FullVersion) => string | null | undefined) => (v ? (f(v) ?? "") : "");
   const specs: [string, (v: FullVersion) => string | null | undefined][] = [
     [t("fields.productName"), (v) => v.product_name],
+    [t("fields.introduction"), (v) => v.introduction],
+    [t("fields.tags"), (v) => (v.tags ?? []).join(", ")],
     [t("fields.purpose"), (v) => t(`purpose.${v.purpose}`)],
     [t("fields.style"), (v) => (v.style ? t(`style.${v.style}`) : "")],
     [t("fields.temperature"), (v) => (v.temperature ? t(`temp.${v.temperature}`) : "")],

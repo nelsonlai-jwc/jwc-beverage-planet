@@ -15,7 +15,7 @@ import {
   type CatalogueSortDir,
   type CatalogueSortKey,
 } from "@/lib/recipes/catalogue";
-import { PurposeBadge, card, inputClass, primaryButton, secondaryButton } from "./ui";
+import { PurposeBadge, TagList, card, inputClass, primaryButton, secondaryButton } from "./ui";
 import { FilterSortBar, writeFilterSortUrl } from "./FilterSortBar";
 
 const typeOf = (row: CatalogueCard) => (row.isPrep ? "PREP" : "DRINK");
@@ -174,6 +174,7 @@ export function CatalogueGrid({
                     .join(" · ")}
                 </span>
               </div>
+              <TagList tags={r.tags} />
               <div className="flex flex-wrap items-center gap-2">
                 <PurposeBadge purpose={r.purpose} />
                 {r.isPrep && <span className="text-xs font-semibold">{t("prep")}</span>}
