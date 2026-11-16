@@ -124,44 +124,43 @@ export function DrinkRow({
 
       {open && (
         <div className="flex flex-col gap-2 pl-10">
+          {/* Category right under the name, stretching to the price box's right edge. */}
+          {showCategory && (
+            <select
+              disabled={archived}
+              aria-label={t("categoryFor", { name })}
+              value={categoryId}
+              onChange={(event) => onCategory(event.target.value)}
+              className="h-8 w-full rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40"
+            >
+              <option value="">{t("uncategorized")}</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {categoryLabel(category)}
+                </option>
+              ))}
+            </select>
+          )}
           {!archived && <PriceHint cost={cost} price={price} estimate={estimate} />}
-          {/* Category (left) and the row's buttons, small, in one bar at the bottom. */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {showCategory && (
-              <select
-                disabled={archived}
-                aria-label={t("categoryFor", { name })}
-                value={categoryId}
-                onChange={(event) => onCategory(event.target.value)}
-                className="h-8 w-56 max-w-full rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40"
-              >
-                <option value="">{t("uncategorized")}</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {categoryLabel(category)}
-                  </option>
-                ))}
-              </select>
+          {/* The row's buttons, small, in one bar at the bottom. */}
+          <div className="flex items-center justify-end gap-1.5">
+            {!archived && (
+              <EstimateButton
+                recipeId={recipeId}
+                name={name}
+                state={estimate}
+                onChange={onEstimate}
+                className={rowButton}
+              />
             )}
-            <div className="ml-auto flex items-center gap-1.5">
-              {!archived && (
-                <EstimateButton
-                  recipeId={recipeId}
-                  name={name}
-                  state={estimate}
-                  onChange={onEstimate}
-                  className={rowButton}
-                />
-              )}
-              <button
-                type="button"
-                disabled={archived}
-                onClick={onRemove}
-                className={`${rowButton} whitespace-nowrap`}
-              >
-                {t("remove")}
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={archived}
+              onClick={onRemove}
+              className={`${rowButton} whitespace-nowrap`}
+            >
+              {t("remove")}
+            </button>
           </div>
         </div>
       )}
