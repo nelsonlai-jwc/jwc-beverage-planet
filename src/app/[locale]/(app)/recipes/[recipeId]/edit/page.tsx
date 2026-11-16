@@ -35,7 +35,10 @@ export default async function EditRecipePage({
   const [version, outlets, materials, preps, packaging, events, cost, materialUnits] = await Promise.all([
     loadFullVersion(supabase, open.id),
     getOutlets(supabase),
-    supabase.from("materials").select("id, name, brand, status").neq("status", "ARCHIVED").order("name"),
+    supabase
+      .from("materials")
+      .select("id, name, brand, status, material_types(name, sort_order)")
+      .neq("status", "ARCHIVED").order("name"),
     supabase
       .from("recipes")
       .select(`id, current_approved_version_id, ${RECIPE_OUTLETS}`)
@@ -90,6 +93,10 @@ export default async function EditRecipePage({
         name: m.brand ? `${m.name} (${m.brand})` : m.name,
         approved: m.status === "APPROVED",
         unit: costUnits.get(m.id) ?? null,
+        title: m.name,
+        brand: m.brand,
+        type: m.material_types?.name ?? null,
+        typeOrder: m.material_types?.sort_order ?? null,
       }))}
       preps={usablePreps.map((p) => ({ id: p.id, name: prepNames.get(p.id) ?? "—", unit: yieldUnits.get(p.id) ?? null }))}
       packagingItems={(packaging.data ?? []).map((p) => ({

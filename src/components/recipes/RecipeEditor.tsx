@@ -24,6 +24,7 @@ import {
 } from "@/lib/recipes/types";
 import type { Json } from "@/types/database";
 import { CostSummary } from "./CostSummary";
+import { IngredientPicker, type IngredientOption } from "./IngredientPicker";
 import { explainApprovalError } from "./ReviewActions";
 import { SopView } from "./SopView";
 import { StepMediaView } from "./StepMediaView";
@@ -39,7 +40,17 @@ import {
 } from "./ui";
 import { useDragSort } from "./useDragSort";
 
-type Option = { id: string; name: string; approved?: boolean; unit?: MeasureUnit | null };
+type Option = {
+  id: string;
+  name: string;
+  approved?: boolean;
+  unit?: MeasureUnit | null;
+  // Ingredient picker: name without brand, brand, and material type with its Settings order.
+  title?: string;
+  brand?: string | null;
+  type?: string | null;
+  typeOrder?: number | null;
+};
 type IngredientLine = {
   key: string;
   ref: string; // "m:<material id>" or "p:<prep recipe id>"
@@ -212,6 +223,24 @@ export function RecipeEditor(props: Props) {
     ref.startsWith("p:")
       ? (preps.find((p) => `p:${p.id}` === ref)?.name ?? "—")
       : (materials.find((m) => `m:${m.id}` === ref)?.name ?? "—");
+
+  const materialOptions = useMemo<IngredientOption[]>(
+    () =>
+      materials.map((m) => ({
+        ref: `m:${m.id}`,
+        name: m.title ?? m.name,
+        brand: m.brand,
+        type: m.type,
+        typeOrder: m.typeOrder,
+        approved: m.approved,
+        unit: m.unit,
+      })),
+    [materials],
+  );
+  const prepOptions = useMemo<IngredientOption[]>(
+    () => preps.map((p) => ({ ref: `p:${p.id}`, name: p.name, unit: p.unit })),
+    [preps],
+  );
 
   // Costing unit of the picked material, or the yield unit of a Prep; empty if it has none.
   const unitFor = (ref: string): MeasureUnit | "" =>
@@ -695,37 +724,18 @@ export function RecipeEditor(props: Props) {
                     >
                       {letterFor(index)}
                     </span>
-                    <select
+                    <IngredientPicker
                       value={line.ref}
-                      aria-label={t("fields.ingredient")}
-                      onChange={(e) =>
+                      label={t("fields.ingredient")}
+                      letter={letterFor(index)}
+                      materials={materialOptions}
+                      preps={prepOptions}
+                      onChange={(ref) =>
                         updateIngredients(
-                          ingredients.map((l) =>
-                            l.key === line.key ? { ...l, ref: e.target.value, unit: unitFor(e.target.value) } : l,
-                          ),
+                          ingredients.map((l) => (l.key === line.key ? { ...l, ref, unit: unitFor(ref) } : l)),
                         )
                       }
-                      className={inputClass}
-                    >
-                      <option value="">{t("chooseIngredient")}</option>
-                      <optgroup label={t("sharedMaterials")}>
-                        {materials.map((m) => (
-                          <option key={m.id} value={`m:${m.id}`}>
-                            {m.name}
-                            {m.approved ? "" : ` (${t("notApproved")})`}
-                          </option>
-                        ))}
-                      </optgroup>
-                      {preps.length > 0 && (
-                        <optgroup label={t("outletPreps")}>
-                          {preps.map((p) => (
-                            <option key={p.id} value={`p:${p.id}`}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                    </select>
+                    />
                   </div>
                   <div className="flex flex-wrap items-center gap-2 pl-[3.25rem]">
                     <input
