@@ -34,7 +34,7 @@ export function BottomBar() {
               onChange={(e) =>
                 router.replace(pathname, { locale: e.target.value })
               }
-              className="h-8 rounded-full border border-white/40 bg-black px-3 text-sm text-white"
+              className="h-[23px] rounded-full border-[1.5px] border-white/40 bg-black py-0 pr-1.5 pl-2.5 text-xs leading-none font-semibold text-white"
             >
               {routing.locales.map((code) => (
                 <option key={code} value={code}>
