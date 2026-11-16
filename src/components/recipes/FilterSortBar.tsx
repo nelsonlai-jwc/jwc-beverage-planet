@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { rememberRecipeList } from "@/lib/recipes/listMemory";
 
 // Filter chips + "Sort by" menu shared by the recipe list tabs (Approved catalogue, My outlets).
 
@@ -31,6 +32,7 @@ export function writeFilterSortUrl(
   }
   const query = params.toString();
   window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  rememberRecipeList();
 }
 
 export function FilterSortBar<F extends string, S extends string>({

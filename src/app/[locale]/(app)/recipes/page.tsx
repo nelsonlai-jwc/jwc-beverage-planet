@@ -10,6 +10,7 @@ import { getLocalizer } from "@/lib/content/translations";
 import { CATALOGUE_STYLES, catalogueStateFromSearch, type CatalogueCard } from "@/lib/recipes/catalogue";
 import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import { MineList } from "@/components/recipes/MineList";
+import { RememberListFilters } from "@/components/recipes/RememberListFilters";
 import { MINE_STATUSES, mineStateFromSearch, type MineCard } from "@/lib/recipes/mine";
 import { card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 
@@ -95,7 +96,8 @@ export default async function RecipesPage({
   );
 
   const searchBox = (extra?: React.ReactNode) => (
-    <form className="flex flex-wrap gap-2" action="">
+    // Keyed by the URL so remembered filters put back by RememberListFilters show in the inputs.
+    <form key={JSON.stringify(query)} className="flex flex-wrap gap-2" action="">
       {tab !== "mine" && <input type="hidden" name="tab" value={tab} />}
       <label className="min-w-0 flex-1 basis-56">
         <span className="sr-only">{t("search")}</span>
@@ -155,6 +157,7 @@ export default async function RecipesPage({
 
   const tabBar = (
     <nav aria-label={t("tabsLabel")} className="flex flex-wrap gap-1">
+      <RememberListFilters tab={tab} />
       {tabs.map((key) => (
         <Link
           key={key}
@@ -291,6 +294,7 @@ export default async function RecipesPage({
         {tabBar}
         <p className="text-sm text-[#3d3f3a]">{t("catalogueNote")}</p>
         <CatalogueGrid
+          key={JSON.stringify(state)}
           rows={cards}
           outlets={outletOptions}
           styles={[...CATALOGUE_STYLES, ...addedStyles(await getOptionLabels(), CATALOGUE_STYLES)]}
@@ -351,6 +355,7 @@ export default async function RecipesPage({
       {translationNote}
       {tabBar}
       <MineList
+        key={JSON.stringify(mineState)}
         rows={mineCards}
         outlets={outlets.filter((o) => viewer.managedOutletIds.includes(o.id))}
         styles={[...CATALOGUE_STYLES, ...addedStyles(await getOptionLabels(), CATALOGUE_STYLES)]}
