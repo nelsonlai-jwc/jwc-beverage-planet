@@ -11,7 +11,6 @@ import {
   type DrinkCost,
   type EstimateState,
 } from "@/components/menus/PriceHint";
-import { inputClass } from "@/components/ui/styles";
 import { categoryLabel, type FlatCategory } from "@/lib/menus/categories";
 
 // Small buttons for the bar at the bottom of an open drink row.
@@ -112,7 +111,7 @@ export function DrinkRow({
             value={price}
             onChange={(event) => onPrice(event.target.value)}
             placeholder="MYR"
-            className={`${inputClass} w-20 sm:w-28 sm:placeholder:text-transparent`}
+            className="h-8 w-20 min-w-0 rounded-[8px] border-[1.5px] border-black bg-white px-2 text-base disabled:bg-[#eceee8] sm:w-28 sm:placeholder:text-transparent"
           />
         </label>
       </div>
