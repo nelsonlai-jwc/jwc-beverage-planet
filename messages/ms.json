@@ -775,7 +775,8 @@
     "tabs": {
       "mine": "Cawangan saya",
       "pending": "Menunggu kelulusan",
-      "catalogue": "Katalog diluluskan"
+      "catalogue": "Katalog diluluskan",
+      "sync": "Selaras nama sama"
     },
     "search": "Cari mengikut nama",
     "apply": "Guna",
@@ -1180,6 +1181,45 @@
       "forget": "Buang “{name}” daripada tag saya",
       "remove": "Buang tag {name}",
       "limit": "Maksimum {max} tag"
+    },
+    "sync": {
+      "intro": "Resipi yang mempunyai nama sama (huruf besar dan ruang diabaikan). Tandakan resipi untuk dibandingkan, kemudian biar AI menulis satu versi terbaik dan selaraskan kepada semuanya.",
+      "empty": "Tiada resipi yang mempunyai nama sama.",
+      "count": "{count} resipi",
+      "hasOpen": "Ada versi draf atau menunggu kelulusan; uruskannya dahulu.",
+      "compare": "Bandingkan",
+      "done": "{count} resipi telah diselaraskan. Setiap satu kini menggunakan versi baharu.",
+      "back": "Kembali ke resipi nama sama",
+      "cannotCompare": "Resipi ini tidak boleh dibandingkan. Pilih sekurang-kurangnya dua resipi aktif yang diluluskan, dengan nama sama dan tiada versi draf atau menunggu kelulusan.",
+      "title": "Bandingkan: {name}",
+      "compareIntro": "Resipi yang dipilih diletakkan bersebelahan. Baris berwarna berbeza antara resipi.",
+      "compareTitle": "Perbezaan",
+      "legendDiffers": "Berbeza antara resipi",
+      "notUsed": "Tidak digunakan",
+      "settings": "Tetapan utama",
+      "steps": "Langkah",
+      "aiTitle": "Versi terbaik AI",
+      "aiIntro": "AI membaca semua resipi yang dipilih dan menulis satu versi terbaik, hanya menggunakan bahan yang sudah digunakan. Anda boleh menyuntingnya sebelum menyelaraskan.",
+      "aiRun": "AI: tulis versi terbaik",
+      "aiRunning": "AI sedang menulis…",
+      "aiAgain": "Tulis semula",
+      "aiFailed": "AI tidak dapat menulis versi. Sila cuba lagi nanti.",
+      "reason": "Sebab (disimpan sebagai ringkasan perubahan)",
+      "notes": "Nota",
+      "stepsNote": "Rujuk bahan sebagai [A], [B] … mengikut huruf di atas.",
+      "keeps": "Setiap resipi mengekalkan nama, outlet, foto, pengenalan, tag, rasa, nota dan pembungkusan sendiri. Foto dan video langkah tidak dikekalkan. Versi lama kekal dalam sejarah dan boleh dipulihkan dengan Batal kelulusan.",
+      "syncButton": "Selaraskan kepada {count} resipi",
+      "incomplete": "Setiap bahan perlu kuantiti dan unit, dan sekurang-kurangnya satu langkah diperlukan.",
+      "confirm": "{count} resipi ini akan bertukar kepada versi ini sekarang, tanpa kelulusan:",
+      "confirmButton": "Selaraskan sekarang",
+      "syncing": "Sedang menyelaraskan…",
+      "cancel": "Batal",
+      "failedFor": "Tiada apa-apa diubah. Masalah pada {recipe}:",
+      "errors": {
+        "SYNC_NEED_TWO": "Pilih sekurang-kurangnya dua resipi.",
+        "SYNC_NOT_SAME_NAME": "Resipi ini tidak lagi mempunyai nama sama atau tidak lagi aktif. Kembali dan pilih semula.",
+        "SYNC_OPEN_VERSION": "Salah satu resipi kini mempunyai versi draf atau menunggu kelulusan. Uruskannya dahulu."
+      }
     }
   },
   "Reports": {

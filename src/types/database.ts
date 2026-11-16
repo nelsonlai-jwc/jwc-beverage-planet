@@ -2654,6 +2654,10 @@ export type Database = {
         Args: { p_all_outlets: boolean; p_outlet_ids: string[]; p_recipe_id: string }
         Returns: undefined
       }
+      sync_recipes: {
+        Args: { p_content: Json; p_recipe_ids: string[] }
+        Returns: Json
+      }
       submit_material: { Args: { p_material_id: string }; Returns: undefined }
       submit_material_pack: { Args: { p_pack_id: string }; Returns: undefined }
       submit_material_price: {

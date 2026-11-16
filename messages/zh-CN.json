@@ -775,7 +775,8 @@
     "tabs": {
       "mine": "本店配方",
       "pending": "待审批",
-      "catalogue": "跨店正式目录"
+      "catalogue": "跨店正式目录",
+      "sync": "同名同步"
     },
     "search": "按名称搜索",
     "apply": "筛选",
@@ -1180,6 +1181,45 @@
       "forget": "从我的标签中清除「{name}」",
       "remove": "删除标签 {name}",
       "limit": "最多 {max} 个标签"
+    },
+    "sync": {
+      "intro": "名字相同的配方（不分大小写和空格）。勾选要比较的配方，再让 AI 写出一份最佳版本，同步到这几份配方。",
+      "empty": "没有名字相同的配方。",
+      "count": "{count} 份配方",
+      "hasOpen": "有草稿或待审批的版本，请先处理。",
+      "compare": "比较",
+      "done": "已同步 {count} 份配方，都已换成新版本。",
+      "back": "返回同名配方",
+      "cannotCompare": "这些配方不能比较。请至少选两份名字相同、已批准、没有草稿或待审批版本的配方。",
+      "title": "比较：{name}",
+      "compareIntro": "选中的配方并排显示，有颜色的行表示它们之间不同。",
+      "compareTitle": "差异",
+      "legendDiffers": "配方之间不同",
+      "notUsed": "没有用",
+      "settings": "主要设定",
+      "steps": "步骤",
+      "aiTitle": "AI 最佳版本",
+      "aiIntro": "AI 会参考选中的所有配方，写出一份最佳版本，只用这些配方已有的材料。同步前你可以修改。",
+      "aiRun": "AI 写出最佳版本",
+      "aiRunning": "AI 正在写…",
+      "aiAgain": "重新写",
+      "aiFailed": "AI 没能写出版本，请稍后再试。",
+      "reason": "理由（保存为修改说明）",
+      "notes": "备注",
+      "stepsNote": "步骤里用上面的字母 [A]、[B] … 代表材料。",
+      "keeps": "每份配方保留自己的名称、分店、照片、介绍、标签、风味、备注和包装。步骤的照片和视频不会保留。旧版本留在版本记录里，可以用「撤销批准」恢复。",
+      "syncButton": "同步到 {count} 份配方",
+      "incomplete": "每个材料都要有用量和单位，并至少要有一个步骤。",
+      "confirm": "这 {count} 份配方会立刻换成这个版本，不用审批：",
+      "confirmButton": "立即同步",
+      "syncing": "正在同步…",
+      "cancel": "取消",
+      "failedFor": "没有任何改动。问题出在 {recipe}：",
+      "errors": {
+        "SYNC_NEED_TWO": "请至少选两份配方。",
+        "SYNC_NOT_SAME_NAME": "这些配方的名字已不相同或已不是使用中，请返回重新选择。",
+        "SYNC_OPEN_VERSION": "其中一份配方现在有草稿或待审批的版本，请先处理。"
+      }
     }
   },
   "Reports": {
