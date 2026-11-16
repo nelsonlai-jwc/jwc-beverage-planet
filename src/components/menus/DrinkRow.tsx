@@ -133,7 +133,7 @@ export function DrinkRow({
                 aria-label={t("categoryFor", { name })}
                 value={categoryId}
                 onChange={(event) => onCategory(event.target.value)}
-                className="h-8 max-w-full rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40"
+                className="h-8 w-56 max-w-full rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40"
               >
                 <option value="">{t("uncategorized")}</option>
                 {categories.map((category) => (
