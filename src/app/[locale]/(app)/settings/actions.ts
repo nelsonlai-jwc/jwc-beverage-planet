@@ -98,6 +98,19 @@ export async function reorderValues(group: ListGroup | OptionGroup, ids: string[
   return error ? fail(error) : { ok: true };
 }
 
+/** Admin adds a beverage style at the end of the list (it cannot be deleted later). */
+export async function addBeverageStyle(labels: { en: string; zh: string }): Promise<SettingResult> {
+  const en = labels.en.trim();
+  const zh = labels.zh.trim();
+  if (!en || !zh) return { ok: false, error: "NAME_REQUIRED" };
+  if (en.length > 40 || zh.length > 40) return { ok: false, error: "INVALID" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("add_beverage_style", { p_en: en, p_zh: zh });
+  revalidateTag(OPTION_LABELS_TAG);
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
 export async function saveOptionLabel(
   group: OptionGroup,
   value: string,

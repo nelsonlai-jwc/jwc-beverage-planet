@@ -11,10 +11,11 @@ import { fromLiveLines, fromSnapshotLines } from "@/lib/reports/costTree";
 import { toCsv } from "@/lib/reports/csv";
 import { loadApprovalSnapshots, loadCurrentCosts, loadSellingPrices } from "@/lib/reports/data";
 import { createClient } from "@/lib/supabase/server";
+import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import type { Database } from "@/types/database";
 
 type Style = Database["public"]["Enums"]["beverage_style"];
-const styles: Style[] = ["COFFEE", "TEA", "COCKTAIL", "MOCKTAIL", "PREP_MATERIAL"];
+const builtInStyles: Style[] = ["COFFEE", "TEA", "COCKTAIL", "MOCKTAIL", "PREP_MATERIAL"];
 
 export default async function CostReportPage({
   params,
@@ -33,6 +34,8 @@ export default async function CostReportPage({
   if (user.role === "BARISTA") return <p className={`${cardClass} text-sm`}>{t("noAccess")}</p>;
 
   const query = await searchParams;
+  // Built-in styles, then any the Admin added on the Settings page.
+  const styles = [...builtInStyles, ...addedStyles(await getOptionLabels(), builtInStyles)];
   const outlet = user.outlets.find((o) => o.id === query.outlet);
   const style = styles.find((s) => s === query.style);
   const basis = query.basis === "snapshot" ? "snapshot" : "current";

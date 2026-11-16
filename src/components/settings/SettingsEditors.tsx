@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import {
+  addBeverageStyle,
   removeListValue,
   reorderValues,
   saveListValue,
@@ -229,6 +230,7 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
   const [items, setItems] = useState(initial);
   const [edits, setEdits] = useState<Record<string, { en: string; zh: string }>>({});
   const [openValue, setOpenValue] = useState<string | null>(null);
+  const [newStyle, setNewStyle] = useState({ en: "", zh: "" });
   const [source, setSource] = useState(initial);
   if (source !== initial) {
     setSource(initial);
@@ -305,6 +307,48 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
           );
         })}
       </ul>
+      {group === "STYLE" && (
+        <>
+          <form
+            className="flex flex-wrap items-center gap-2 border-t border-black/10 pt-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(
+                () => addBeverageStyle(newStyle),
+                () => {
+                  setNewStyle({ en: "", zh: "" });
+                  setNotice(t("added"));
+                },
+              );
+            }}
+          >
+            <input
+              value={newStyle.en}
+              maxLength={40}
+              onChange={(e) => setNewStyle({ ...newStyle, en: e.target.value })}
+              placeholder={t("styleEnPlaceholder")}
+              aria-label="English"
+              className={`${inputClass} min-w-0 flex-1 basis-40`}
+            />
+            <input
+              value={newStyle.zh}
+              maxLength={40}
+              onChange={(e) => setNewStyle({ ...newStyle, zh: e.target.value })}
+              placeholder={t("styleZhPlaceholder")}
+              aria-label="简体中文"
+              className={`${inputClass} min-w-0 flex-1 basis-40`}
+            />
+            <button
+              type="submit"
+              className={secondaryButton}
+              disabled={pending || !newStyle.en.trim() || !newStyle.zh.trim()}
+            >
+              {t("add")}
+            </button>
+          </form>
+          <p className="text-[13px] text-[#3d3f3a]">{t("styleHint")}</p>
+        </>
+      )}
       {notice && (
         <p role="status" className="text-sm font-semibold">
           {notice}

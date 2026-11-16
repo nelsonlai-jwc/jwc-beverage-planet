@@ -5,7 +5,8 @@ import { RECIPE_OUTLETS, canManageRecipe, coversOutlet, outletLabel, type Recipe
 import type { ApprovalStatus } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 import { CatalogueGrid } from "@/components/recipes/CatalogueGrid";
-import { catalogueStateFromSearch, type CatalogueCard } from "@/lib/recipes/catalogue";
+import { CATALOGUE_STYLES, catalogueStateFromSearch, type CatalogueCard } from "@/lib/recipes/catalogue";
+import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
 import { StatusBadge, card, inputClass, primaryButton, secondaryButton, smallButton } from "@/components/recipes/ui";
 
@@ -279,6 +280,7 @@ export default async function RecipesPage({
         <CatalogueGrid
           rows={cards}
           outlets={outletOptions}
+          styles={[...CATALOGUE_STYLES, ...addedStyles(await getOptionLabels(), CATALOGUE_STYLES)]}
           search={query.q ?? ""}
           initialFilters={state.filters}
           initialSort={state.sort}

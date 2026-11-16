@@ -10,10 +10,11 @@ import { isIsoDate } from "@/lib/calibration/dates";
 import { toCsv } from "@/lib/reports/csv";
 import { loadApprovalSnapshots } from "@/lib/reports/data";
 import { createClient } from "@/lib/supabase/server";
+import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import type { Database } from "@/types/database";
 
 type Enums = Database["public"]["Enums"];
-const styles: Enums["beverage_style"][] = ["COFFEE", "TEA", "COCKTAIL", "MOCKTAIL", "PREP_MATERIAL"];
+const builtInStyles: Enums["beverage_style"][] = ["COFFEE", "TEA", "COCKTAIL", "MOCKTAIL", "PREP_MATERIAL"];
 const purposes: Enums["recipe_purpose"][] = ["RND", "OFFICIAL_RELEASE"];
 const statuses: Enums["approval_status"][] = ["DRAFT", "PENDING", "APPROVED", "RETURNED", "SUPERSEDED", "ARCHIVED"];
 const tastes = [
@@ -49,6 +50,8 @@ export default async function RndReportPage({
   if (user.role === "BARISTA") return <p className={`${cardClass} text-sm`}>{t("noAccess")}</p>;
 
   const query = await searchParams;
+  // Built-in styles, then any the Admin added on the Settings page.
+  const styles = [...builtInStyles, ...addedStyles(await getOptionLabels(), builtInStyles)];
   const outlet = user.outlets.find((o) => o.id === query.outlet);
   const style = styles.find((s) => s === query.style);
   const purpose = purposes.find((p) => p === query.purpose);

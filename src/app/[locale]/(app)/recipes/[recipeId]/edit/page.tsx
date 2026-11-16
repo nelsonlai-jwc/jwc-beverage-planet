@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOutlets, getRecipeCost, getRecipeNames, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { RECIPE_OUTLETS, canEditRecipeDraft, outletLabel } from "@/lib/recipes/outlets";
 import { STYLES, TEMPS } from "@/lib/recipes/types";
-import { getOptionLabels, orderOf } from "@/lib/settings/options";
+import { getOptionLabels, orderOf, styleValues } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 import { RecipeEditor } from "@/components/recipes/RecipeEditor";
 
@@ -99,7 +99,7 @@ export default async function EditRecipePage({
       }))}
       initialCost={cost}
       adminDirect={viewer.role === "ADMIN" && Boolean(recipe.current_approved_version_id)}
-      styles={orderOf(labels, "STYLE", STYLES)}
+      styles={styleValues(labels, STYLES).filter((s) => s !== "PREP_MATERIAL")}
       temps={orderOf(labels, "TEMP", TEMPS)}
     />
   );

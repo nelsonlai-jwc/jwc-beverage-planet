@@ -2418,6 +2418,7 @@ export type Database = {
         Args: { p_approve: boolean; p_reason?: string | null; p_request_id: string }
         Returns: undefined
       }
+      add_beverage_style: { Args: { p_en: string; p_zh: string }; Returns: string }
       remove_setting_value: { Args: { p_group: string; p_id: string }; Returns: string }
       reorder_setting_values: { Args: { p_group: string; p_ids: string[] }; Returns: undefined }
       publish_recipe_version: {
