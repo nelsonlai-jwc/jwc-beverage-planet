@@ -37,5 +37,5 @@ export const settingGroups = [
     ],
   },
   { key: "currency", values: ["MYR"] },
-  { key: "language", values: ["en", "zh-CN"] },
+  { key: "language", values: ["en", "zh-CN", "ms"] },
 ] as const;

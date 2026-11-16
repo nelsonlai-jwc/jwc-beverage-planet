@@ -2,6 +2,7 @@
 
 import type { PostgrestError } from "@supabase/supabase-js";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { translateTexts } from "@/lib/ai/translate";
 import { OPTION_LABELS_TAG, type OptionGroup } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -98,14 +99,27 @@ export async function reorderValues(group: ListGroup | OptionGroup, ids: string[
   return error ? fail(error) : { ok: true };
 }
 
+/** Malay name as typed, or translated from the English name by AI when left blank. */
+async function malayName(en: string, ms: string | undefined): Promise<string | null> {
+  const typed = (ms ?? "").trim();
+  if (typed) return typed.slice(0, 40);
+  if (/^\d+$/.test(en)) return en;
+  const translated = await translateTexts([en]);
+  return translated?.[0]?.ms.slice(0, 40) || null;
+}
+
 /** Admin adds a beverage style at the end of the list (it cannot be deleted later). */
-export async function addBeverageStyle(labels: { en: string; zh: string }): Promise<SettingResult> {
+export async function addBeverageStyle(labels: { en: string; zh: string; ms?: string }): Promise<SettingResult> {
   const en = labels.en.trim();
   const zh = labels.zh.trim();
   if (!en || !zh) return { ok: false, error: "NAME_REQUIRED" };
-  if (en.length > 40 || zh.length > 40) return { ok: false, error: "INVALID" };
+  if (en.length > 40 || zh.length > 40 || (labels.ms ?? "").trim().length > 40) return { ok: false, error: "INVALID" };
   const supabase = await createClient();
-  const { error } = await supabase.rpc("add_beverage_style", { p_en: en, p_zh: zh });
+  const { data: value, error } = await supabase.rpc("add_beverage_style", { p_en: en, p_zh: zh });
+  if (!error && value) {
+    const ms = await malayName(en, labels.ms);
+    if (ms) await supabase.from("option_labels").update({ label_ms: ms }).eq("option_group", "STYLE").eq("value", value);
+  }
   revalidateTag(OPTION_LABELS_TAG);
   refresh();
   return error ? fail(error) : { ok: true };
@@ -114,16 +128,17 @@ export async function addBeverageStyle(labels: { en: string; zh: string }): Prom
 export async function saveOptionLabel(
   group: OptionGroup,
   value: string,
-  labels: { en: string; zh: string },
+  labels: { en: string; zh: string; ms?: string | null },
 ): Promise<SettingResult> {
   const en = labels.en.trim();
   const zh = labels.zh.trim();
   if (!en || !zh) return { ok: false, error: "NAME_REQUIRED" };
-  if (en.length > 40 || zh.length > 40) return { ok: false, error: "INVALID" };
+  if (en.length > 40 || zh.length > 40 || (labels.ms ?? "").trim().length > 40) return { ok: false, error: "INVALID" };
+  const ms = await malayName(en, labels.ms ?? "");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("option_labels")
-    .update({ label_en: en, label_zh: zh })
+    .update({ label_en: en, label_zh: zh, label_ms: ms })
     .eq("option_group", group)
     .eq("value", value)
     .select("value");

@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 const localeLabels: Record<string, string> = {
   en: "EN",
   "zh-CN": "简体中文",
+  ms: "Bahasa Melayu",
 };
 
 export function LocaleSwitch() {
