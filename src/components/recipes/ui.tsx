@@ -46,3 +46,17 @@ export function PurposeBadge({ purpose }: { purpose: RecipePurpose }) {
 }
 
 export const alertClass = "rounded-[10px] bg-brand-red/20 px-3 py-2 text-sm";
+
+// Tags of a beverage, shown on the SOP and the list cards.
+export function TagList({ tags, className = "" }: { tags: string[]; className?: string }) {
+  if (!tags.length) return null;
+  return (
+    <ul className={`flex flex-wrap gap-1.5 ${className}`}>
+      {tags.map((tag) => (
+        <li key={tag} className="inline-flex rounded-full bg-[#eceee8] px-2.5 py-0.5 text-xs font-semibold">
+          {tag}
+        </li>
+      ))}
+    </ul>
+  );
+}

@@ -12,7 +12,7 @@ import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import { MineList } from "@/components/recipes/MineList";
 import { RememberListFilters } from "@/components/recipes/RememberListFilters";
 import { MINE_STATUSES, mineStateFromSearch, type MineCard } from "@/lib/recipes/mine";
-import { card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
+import { TagList, card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 
 type Tab = "mine" | "pending" | "catalogue";
 const OPEN: ApprovalStatus[] = ["DRAFT", "PENDING", "RETURNED"];
@@ -54,7 +54,7 @@ export default async function RecipesPage({
   const { data: versions } = recipeIds.length
     ? await supabase
         .from("recipe_versions")
-        .select("id, recipe_id, version_no, status, product_name, purpose, style, temperature, submitted_at, updated_at")
+        .select("id, recipe_id, version_no, status, product_name, purpose, style, temperature, tags, submitted_at, updated_at")
         .in("recipe_id", recipeIds)
         .order("version_no", { ascending: false })
     : { data: [] };
@@ -68,10 +68,11 @@ export default async function RecipesPage({
   });
   // Names in the viewer's language (AI translated); search still matches the original names.
   const loc = await getLocalizer(
-    base.map((r) => r.sourceName),
+    [...base.map((r) => r.sourceName), ...base.flatMap((r) => [...(r.approved?.tags ?? []), ...(r.open?.tags ?? [])])],
     locale,
   );
   const rows = base.map((r) => ({ ...r, name: loc.t(r.sourceName) ?? t("untitled") }));
+  const tagsOf = (v: { tags: string[] } | null | undefined) => (v?.tags ?? []).map((tag) => loc.t(tag));
   const matches = (r: { sourceName: string | null }) => !search || (r.sourceName ?? "").toLowerCase().includes(search);
   const translationNote = <TranslationNote entries={loc.shown()} canEdit={viewer.role === "ADMIN"} />;
 
@@ -128,6 +129,7 @@ export default async function RecipesPage({
                 <Link href={`/recipes/${r.id}`} className={`${card} h-full hover:ring-2 hover:ring-black`}>
                   <Thumb url={photos.get(r.approved!.id)} alt={r.name} />
                   <span className="text-base font-semibold">{r.name}</span>
+                  <TagList tags={tagsOf(r.approved)} />
                   <span className="text-sm text-[#3d3f3a]">
                     {[r.approved!.style && t(`style.${r.approved!.style}`), r.approved!.temperature && t(`temp.${r.approved!.temperature}`)]
                       .filter(Boolean)
@@ -290,6 +292,7 @@ export default async function RecipesPage({
       style: r.approved!.style,
       temperature: r.approved!.temperature,
       photo: photos.get(r.approved!.id) ?? null,
+      tags: tagsOf(r.approved),
     }));
     // Outlet chip: only outlets that at least one catalogue recipe covers.
     const outletOptions = outlets.filter((o) => catalogue.some((r) => coversOutlet(r, o.id)));
@@ -334,6 +337,7 @@ export default async function RecipesPage({
     return {
       id: r.id,
       name: r.name,
+      tags: tagsOf(shownVersion),
       archived: r.status === "ARCHIVED",
       isPrep: r.is_prep,
       allOutlets: r.all_outlets,

@@ -2096,6 +2096,24 @@ export type Database = {
           },
         ]
       }
+      recipe_tag_history: {
+        Row: {
+          last_used_at: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          last_used_at?: string
+          name: string
+          user_id?: string
+        }
+        Update: {
+          last_used_at?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recipe_versions: {
         Row: {
           appearance_notes: string | null
@@ -2131,6 +2149,8 @@ export type Database = {
           taste_umami: number | null
           taste_zesty: number | null
           tasting_notes: string | null
+          introduction: string | null
+          tags: string[]
           temperature: Database["public"]["Enums"]["beverage_temp"] | null
           updated_at: string
           updated_by: string | null
@@ -2172,6 +2192,8 @@ export type Database = {
           taste_umami?: number | null
           taste_zesty?: number | null
           tasting_notes?: string | null
+          introduction?: string | null
+          tags?: string[]
           temperature?: Database["public"]["Enums"]["beverage_temp"] | null
           updated_at?: string
           updated_by?: string | null
@@ -2213,6 +2235,8 @@ export type Database = {
           taste_umami?: number | null
           taste_zesty?: number | null
           tasting_notes?: string | null
+          introduction?: string | null
+          tags?: string[]
           temperature?: Database["public"]["Enums"]["beverage_temp"] | null
           updated_at?: string
           updated_by?: string | null

@@ -27,6 +27,7 @@ import { CostSummary } from "./CostSummary";
 import { IngredientPicker, type IngredientOption } from "./IngredientPicker";
 import { explainApprovalError } from "./ReviewActions";
 import { SopView } from "./SopView";
+import { TagInput } from "./TagInput";
 import { StepMediaView } from "./StepMediaView";
 import {
   StatusBadge,
@@ -110,6 +111,7 @@ export function RecipeEditor(props: Props) {
     yield_quantity: version.yield_quantity?.toString() ?? "",
     yield_unit: version.yield_unit ?? "",
     appearance_notes: version.appearance_notes ?? "",
+    introduction: version.introduction ?? "",
     change_summary: version.change_summary ?? "",
     ...Object.fromEntries(TEXT_FIELDS.map((f) => [f, version[f] ?? ""])),
   } as Record<string, string>);
@@ -135,6 +137,7 @@ export function RecipeEditor(props: Props) {
   );
   const [removedStep, setRemovedStep] = useState<{ step: StepLine; index: number } | null>(null);
   const [photos, setPhotos] = useState<Photo[]>(version.photos);
+  const [tags, setTags] = useState<string[]>(version.tags ?? []);
   const [revision, setRevision] = useState(version.revision);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState<"idle" | "saving" | "submitting" | "uploading">("idle");
@@ -189,6 +192,7 @@ export function RecipeEditor(props: Props) {
   const updatePackaging = change(setPackaging);
   const updateSteps = change(setSteps);
   const updatePhotos = change(setPhotos);
+  const updateTags = change(setTags);
   const ingredientDrag = useDragSort(ingredients, (next) => updateIngredients(next));
   const stepDrag = useDragSort(steps, (next) => updateSteps(next));
 
@@ -280,6 +284,7 @@ export function RecipeEditor(props: Props) {
         .map((p) => ({ packaging_item_id: p.itemId, pieces: Number(p.pieces) })),
       steps: steps.map((s, index) => ({ instruction: instructions[index], media_asset_id: s.media?.id ?? null })),
       photos: photos.map((p) => p.id),
+      tags,
     };
   }
 
@@ -504,6 +509,8 @@ export function RecipeEditor(props: Props) {
     yieldQuantity: isPrep ? numberOrNull(fields.yield_quantity) : null,
     yieldUnit: (fields.yield_unit || null) as MeasureUnit | null,
     appearanceNotes: fields.appearance_notes || null,
+    introduction: fields.introduction || null,
+    tags,
     ingredients: ingredients
       .filter((i) => i.ref)
       .map((i) => ({
@@ -611,6 +618,19 @@ export function RecipeEditor(props: Props) {
                 className={`${inputClass} ${fieldError("product_name")}`}
               />
             </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">{t("fields.introduction")}</span>
+              <textarea
+                value={fields.introduction}
+                maxLength={2000}
+                onChange={(e) => setField("introduction", e.target.value)}
+                className={textareaClass}
+              />
+            </label>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">{t("fields.tags")}</span>
+              <TagInput tags={tags} onChange={updateTags} />
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
                 <span className="text-sm font-semibold">{t("fields.purpose")}</span>

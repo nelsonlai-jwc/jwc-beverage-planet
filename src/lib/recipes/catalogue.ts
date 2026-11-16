@@ -13,6 +13,7 @@ export type CatalogueCard = {
   style: BeverageStyle | null;
   temperature: BeverageTemp | null;
   photo: string | null;
+  tags: string[];
 };
 
 export const CATALOGUE_TYPES = ["DRINK", "PREP"] as const;

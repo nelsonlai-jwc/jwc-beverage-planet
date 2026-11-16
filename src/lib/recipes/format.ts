@@ -21,6 +21,8 @@ export function toSopData(version: FullVersion, updatedAt?: string): SopData {
     yieldQuantity: version.yield_quantity,
     yieldUnit: version.yield_unit,
     appearanceNotes: version.appearance_notes,
+    introduction: version.introduction,
+    tags: version.tags ?? [],
     ingredients: version.ingredients.map((i) => ({
       key: i.id,
       name: i.name,

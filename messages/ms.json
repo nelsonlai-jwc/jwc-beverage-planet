@@ -873,7 +873,8 @@
       "ingredients": "Bahan",
       "method": "Kaedah Penyediaan",
       "appearance": "Rupa",
-      "more": "Butiran lanjut"
+      "more": "Butiran lanjut",
+      "introduction": "Pengenalan"
     },
     "fields": {
       "outlet": "Cawangan",
@@ -895,7 +896,9 @@
       "storage_method": "Penyimpanan",
       "shelf_life": "Jangka hayat",
       "tasting_notes": "Nota rasa",
-      "outlets": "Cawangan"
+      "outlets": "Cawangan",
+      "introduction": "Pengenalan",
+      "tags": "Tag"
     },
     "chooseOutlet": "Pilih cawangan",
     "outletFixed": "Hanya Admin boleh mengubah cawangan kemudian.",
@@ -1169,6 +1172,14 @@
       "reason": "Sebab",
       "confirm": "Batalkan kelulusan",
       "cancel": "Batal"
+    },
+    "tagInput": {
+      "placeholder": "Tambah tag",
+      "create": "Tambah tag",
+      "history": "Tag saya",
+      "forget": "Buang “{name}” daripada tag saya",
+      "remove": "Buang tag {name}",
+      "limit": "Maksimum {max} tag"
     }
   },
   "Reports": {

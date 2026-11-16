@@ -4,6 +4,7 @@ import type { ApprovalStatus, BeverageStyle, BeverageTemp, RecipePurpose } from 
 export type MineCard = {
   id: string;
   name: string;
+  tags: string[];
   archived: boolean;
   isPrep: boolean;
   allOutlets: boolean;
