@@ -871,7 +871,8 @@
       "ingredients": "Ingredients",
       "method": "Processing Method",
       "appearance": "Appearance",
-      "more": "More details"
+      "more": "More details",
+      "introduction": "Introduction"
     },
     "fields": {
       "outlet": "Outlet",
@@ -893,7 +894,9 @@
       "storage_method": "Storage",
       "shelf_life": "Shelf life",
       "tasting_notes": "Tasting notes",
-      "outlets": "Outlets"
+      "outlets": "Outlets",
+      "introduction": "Introduction",
+      "tags": "Tags"
     },
     "chooseOutlet": "Choose an outlet",
     "outletFixed": "Only an Admin can change the outlets later.",
@@ -1167,6 +1170,14 @@
       "reason": "Reason",
       "confirm": "Undo approval",
       "cancel": "Cancel"
+    },
+    "tagInput": {
+      "placeholder": "Add a tag",
+      "create": "Add tag",
+      "history": "My tags",
+      "forget": "Remove “{name}” from my tags",
+      "remove": "Remove tag {name}",
+      "limit": "Up to {max} tags"
     }
   },
   "Reports": {

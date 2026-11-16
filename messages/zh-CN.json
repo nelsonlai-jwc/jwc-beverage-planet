@@ -871,7 +871,8 @@
       "ingredients": "原料",
       "method": "制作步骤",
       "appearance": "成品外观",
-      "more": "更多资料"
+      "more": "更多资料",
+      "introduction": "简介"
     },
     "fields": {
       "outlet": "分店",
@@ -893,7 +894,9 @@
       "storage_method": "保存方式",
       "shelf_life": "有效期",
       "tasting_notes": "试饮备注",
-      "outlets": "分店（可多选）"
+      "outlets": "分店（可多选）",
+      "introduction": "简介",
+      "tags": "标签"
     },
     "chooseOutlet": "选择分店",
     "outletFixed": "之后只有 Admin 能修改分店。",
@@ -1167,6 +1170,14 @@
       "reason": "原因",
       "confirm": "撤回审批",
       "cancel": "取消"
+    },
+    "tagInput": {
+      "placeholder": "添加标签",
+      "create": "新增标签",
+      "history": "我的标签",
+      "forget": "从我的标签中清除「{name}」",
+      "remove": "删除标签 {name}",
+      "limit": "最多 {max} 个标签"
     }
   },
   "Reports": {

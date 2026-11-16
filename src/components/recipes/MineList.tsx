@@ -16,7 +16,7 @@ import {
 } from "@/lib/recipes/mine";
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "./RecipeRemove";
 import { FilterSortBar, writeFilterSortUrl, type SortDir } from "./FilterSortBar";
-import { StatusBadge, card, inputClass, secondaryButton, smallButton } from "./ui";
+import { StatusBadge, TagList, card, inputClass, secondaryButton, smallButton } from "./ui";
 
 const typeOf = (row: MineCard) => (row.isPrep ? "PREP" : "DRINK");
 
@@ -180,6 +180,7 @@ export function MineList({
                   {r.open && <StatusBadge status={r.open.status} />}
                 </span>
               </span>
+              <TagList tags={r.tags} />
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm text-[#3d3f3a]">
                   {r.outlets} · {r.isPrep ? t("prep") : t("drink")}
