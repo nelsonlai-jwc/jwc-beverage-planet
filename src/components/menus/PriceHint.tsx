@@ -15,6 +15,13 @@ export function suggestedPrice(cost: number): number {
   return Math.ceil(Number((cost / MAX_COST_RATIO / 0.1).toFixed(6))) / 10;
 }
 
+// True when the drink's cost is more than 40% of the typed price.
+export function isOverCostLimit(cost: DrinkCost | undefined, price: string): boolean {
+  const total = cost?.complete && cost.total != null ? cost.total : null;
+  const value = Number(price);
+  return total != null && price !== "" && value > 0 && total / value > MAX_COST_RATIO;
+}
+
 // Cost, 40% suggested price, cost ratio of the typed price, and the AI estimate below them.
 export function PriceHint({
   cost,

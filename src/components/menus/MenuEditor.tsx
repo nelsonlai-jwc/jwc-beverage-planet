@@ -3,7 +3,10 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { MenuStatus } from "@/components/menus/MenuStatus";
-import { EstimateButton, PriceHint, type DrinkCost, type EstimateState } from "@/components/menus/PriceHint";
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { DrinkRow } from "@/components/menus/DrinkRow";
+import type { DrinkCost, EstimateState } from "@/components/menus/PriceHint";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   cardClass,
@@ -24,10 +27,6 @@ type Item = { recipeId: string; price: number | null; categoryId: string | null 
 // categoryId "" means Uncategorized.
 type Row = { recipeId: string; price: string; categoryId: string };
 type Problem = { recipe_id: string; code: string };
-
-// Small buttons for the bar at the bottom of each drink row.
-const rowButton =
-  "inline-flex h-8 min-w-8 items-center justify-center rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40";
 
 const problemCodes = [
   "PRICE_MISSING",
@@ -80,6 +79,11 @@ export function MenuEditor({
   const [problems, setProblems] = useState<Problem[]>([]);
   // AI price estimate per drink, keyed by recipe id.
   const [estimates, setEstimates] = useState<Record<string, EstimateState>>({});
+  // Drag starts after a small move, so taps on the handle don't reorder.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const archived = menu.status === "ARCHIVED";
   const hasPending = revisionId !== null || dirty;
@@ -98,13 +102,14 @@ export function MenuEditor({
     setNotice(null);
   }
 
-  // Swaps two drinks of the same category.
-  function swap(a: string, b: string) {
-    const ia = rows.findIndex((r) => r.recipeId === a);
-    const ib = rows.findIndex((r) => r.recipeId === b);
-    const next = [...rows];
-    [next[ia], next[ib]] = [next[ib], next[ia]];
-    update(next);
+  // Moves a dragged drink to where it was dropped (always within its own category).
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = rows.findIndex((r) => r.recipeId === active.id);
+    const to = rows.findIndex((r) => r.recipeId === over.id);
+    if (from < 0 || to < 0) return;
+    update(arrayMove(rows, from, to));
   }
 
   function setRow(recipeId: string, change: Partial<Row>) {
@@ -316,119 +321,42 @@ export function MenuEditor({
                 {group.category ? categoryLabel(group.category) : t("uncategorized")}
               </h3>
             )}
-            <ol className="flex flex-col gap-3">
-              {group.items.map((row, index) => {
-                const codes = problemsFor(row.recipeId);
-                const name = allRecipeNames[row.recipeId] ?? "—";
-                const position = ordered.indexOf(row) + 1;
-                const prev = group.items[index - 1];
-                const next = group.items[index + 1];
-                return (
-                  <li
-                    key={row.recipeId}
-                    className={`flex flex-col gap-2 rounded-[14px] border-[1.5px] p-3 ${
-                      codes.length ? "border-[#c4161c]" : "border-black/15"
-                    }`}
-                  >
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="font-semibold">
-                          {position}. {name}
-                        </span>
-                        {codes.map((code) => (
-                          <span key={code} className="text-[13px] font-semibold text-[#c4161c]">
-                            {problemCodes.includes(code as (typeof problemCodes)[number])
-                              ? t(`problems.${code as (typeof problemCodes)[number]}`)
-                              : code}
-                          </span>
-                        ))}
-                        {!archived && (
-                          <div className="mt-1">
-                            <PriceHint
-                              cost={costs[row.recipeId]}
-                              price={row.price}
-                              estimate={estimates[row.recipeId]}
-                            />
-                          </div>
+            <DndContext
+              // Fixed id: generated ids differ between server and browser.
+              id={`menu-drinks-${group.category?.id ?? "none"}`}
+              sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={group.items.map((row) => row.recipeId)} strategy={verticalListSortingStrategy}>
+                <ol className="flex flex-col gap-2">
+                  {group.items.map((row) => {
+                    const name = allRecipeNames[row.recipeId] ?? "—";
+                    return (
+                      <DrinkRow
+                        key={row.recipeId}
+                        recipeId={row.recipeId}
+                        name={name}
+                        position={ordered.indexOf(row) + 1}
+                        price={row.price}
+                        categoryId={row.categoryId ?? ""}
+                        categories={categories}
+                        showCategory={showGroups}
+                        problems={problemsFor(row.recipeId).map((code) =>
+                          problemCodes.includes(code as (typeof problemCodes)[number])
+                            ? t(`problems.${code as (typeof problemCodes)[number]}`)
+                            : code,
                         )}
-                      </div>
-                      <label className="flex items-center gap-2 text-sm">
-                        <span className="font-semibold">MYR</span>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min="0.01"
-                          step="0.01"
-                          disabled={archived}
-                          aria-label={t("priceFor", { name })}
-                          value={row.price}
-                          onChange={(event) => setRow(row.recipeId, { price: event.target.value })}
-                          className={`${inputClass} w-full md:w-28`}
-                        />
-                      </label>
-                    </div>
-                    {/* Category (left) and all of the row's buttons, small, in one bar at the bottom. */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {showGroups && (
-                        <select
-                          disabled={archived}
-                          aria-label={t("categoryFor", { name })}
-                          value={row.categoryId ?? ""}
-                          onChange={(event) => setRow(row.recipeId, { categoryId: event.target.value })}
-                          className="h-8 max-w-full rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40"
-                        >
-                          <option value="">{t("uncategorized")}</option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {categoryLabel(category)}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <div className="ml-auto flex items-center gap-1.5">
-                        {!archived && (
-                          <EstimateButton
-                            recipeId={row.recipeId}
-                            name={name}
-                            state={estimates[row.recipeId]}
-                            onChange={(state) =>
-                              setEstimates((current) => ({ ...current, [row.recipeId]: state }))
-                            }
-                            className={rowButton}
-                          />
-                        )}
-                        <button
-                          type="button"
-                          disabled={archived || !prev}
-                          onClick={() => prev && swap(row.recipeId, prev.recipeId)}
-                          aria-label={t("moveUp", { name })}
-                          className={rowButton}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          disabled={archived || !next}
-                          onClick={() => next && swap(row.recipeId, next.recipeId)}
-                          aria-label={t("moveDown", { name })}
-                          className={rowButton}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          disabled={archived}
-                          onClick={() => update(rows.filter((r) => r.recipeId !== row.recipeId))}
-                          className={`${rowButton} whitespace-nowrap`}
-                        >
-                          {t("remove")}
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
+                        archived={archived}
+                        cost={costs[row.recipeId]}
+                        estimate={estimates[row.recipeId]}
+                        onPrice={(price) => setRow(row.recipeId, { price })}
+                        onCategory={(categoryId) => setRow(row.recipeId, { categoryId })}
+                        onEstimate={(state) => setEstimates((current) => ({ ...current, [row.recipeId]: state }))}
+                        onRemove={() => update(rows.filter((r) => r.recipeId !== row.recipeId))}
+                      />
+                    );
+                  })}
+                </ol>
+              </SortableContext>
+            </DndContext>
           </div>
         ))}
 
