@@ -9,8 +9,9 @@ import { TranslationNote } from "@/components/content/TranslationNote";
 import { getLocalizer } from "@/lib/content/translations";
 import { CATALOGUE_STYLES, catalogueStateFromSearch, type CatalogueCard } from "@/lib/recipes/catalogue";
 import { addedStyles, getOptionLabels } from "@/lib/settings/options";
-import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "@/components/recipes/RecipeRemove";
-import { StatusBadge, card, inputClass, primaryButton, secondaryButton, smallButton } from "@/components/recipes/ui";
+import { MineList } from "@/components/recipes/MineList";
+import { MINE_STATUSES, mineStateFromSearch, type MineCard } from "@/lib/recipes/mine";
+import { card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 
 type Tab = "mine" | "pending" | "catalogue";
 const OPEN: ApprovalStatus[] = ["DRAFT", "PENDING", "RETURNED"];
@@ -302,21 +303,8 @@ export default async function RecipesPage({
     );
   }
 
-  // Recipes of the viewer's outlets (RLS leaves out the others).
-  const outletFilter = viewer.managedOutletIds.includes(query.outlet ?? "") ? query.outlet : undefined;
-  const statusFilter = ["DRAFT", "PENDING", "RETURNED", "APPROVED", "ARCHIVED"].includes(query.status ?? "")
-    ? query.status
-    : undefined;
-  // Archived recipes show only when that filter is chosen.
-  const mine = rows.filter(
-    (r) =>
-      matches(r) &&
-      (!outletFilter || coversOutlet(r, outletFilter)) &&
-      (statusFilter === "ARCHIVED"
-        ? r.status === "ARCHIVED"
-        : r.status === "ACTIVE" &&
-          (!statusFilter || (statusFilter === "APPROVED" ? !r.open && r.approved : r.open?.status === statusFilter))),
-  );
+  // Recipes of the viewer's outlets (RLS leaves out the others); filters and sort run in MineList.
+  const mine = rows.filter(matches);
 
   // Recipes whose deletion already waits for Admin show no delete button.
   const { data: pendingArchives } = mine.length
@@ -330,92 +318,47 @@ export default async function RecipesPage({
     : { data: [] };
   const archivePending = new Set((pendingArchives ?? []).map((c) => c.entity_id));
 
+  const mineCards: MineCard[] = mine.map((r) => {
+    const shownVersion = r.open ?? r.approved;
+    return {
+      id: r.id,
+      name: r.name,
+      archived: r.status === "ARCHIVED",
+      isPrep: r.is_prep,
+      allOutlets: r.all_outlets,
+      outletIds: r.recipe_outlets.map((o) => o.outlet_id),
+      outlets: outletName(r),
+      updatedAt: r.updated_at,
+      approvedNo: r.approved?.version_no ?? null,
+      open: r.open ? { id: r.open.id, status: r.open.status, versionNo: r.open.version_no } : null,
+      purpose: shownVersion?.purpose ?? null,
+      style: shownVersion?.style ?? null,
+      temperature: shownVersion?.temperature ?? null,
+      neverSubmitted: r.neverSubmitted,
+      canManage: canManageRecipe(viewer, r),
+      archivePending: archivePending.has(r.id),
+      archiveMode: viewer.role === "ADMIN" || !r.approved ? "archive" : "request",
+    };
+  });
+  const mineState = mineStateFromSearch(query);
+  // A saved outlet filter only counts for an outlet the viewer still manages.
+  if (!viewer.managedOutletIds.includes(mineState.filters.outlet)) mineState.filters.outlet = "";
+  if (!(MINE_STATUSES as readonly string[]).includes(mineState.filters.status)) mineState.filters.status = "";
+
   return (
     <div className="flex flex-col gap-6">
       {header}
       {translationNote}
       {tabBar}
-      {searchBox(
-        <>
-          <label className="basis-48">
-            <span className="sr-only">{t("outlet")}</span>
-            <select name="outlet" defaultValue={outletFilter ?? ""} className={inputClass}>
-              <option value="">{t("allOutlets")}</option>
-              {outlets
-                .filter((o) => viewer.managedOutletIds.includes(o.id))
-                .map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label className="basis-40">
-            <span className="sr-only">{t("statusLabel")}</span>
-            <select name="status" defaultValue={statusFilter ?? ""} className={inputClass}>
-              <option value="">{t("allStatuses")}</option>
-              {(["DRAFT", "PENDING", "RETURNED", "APPROVED", "ARCHIVED"] as const).map((s) => (
-                <option key={s} value={s}>
-                  {t(`status.${s}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </>,
-      )}
-      {mine.length === 0 ? (
-        <p className={card}>{t("mineEmpty")}</p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {mine.map((r) => (
-            <li key={r.id} className={`${card} relative gap-2 hover:ring-2 hover:ring-black`}>
-              <span className="flex flex-wrap items-center justify-between gap-2">
-                {/* The link covers the whole card; the delete control sits above it. */}
-                <Link href={`/recipes/${r.id}`} className="text-base font-semibold after:absolute after:inset-0 after:rounded-[20px]">
-                  {r.name}
-                </Link>
-                <span className="flex flex-wrap gap-1.5">
-                  {r.status === "ARCHIVED" && <StatusBadge status="ARCHIVED" />}
-                  {r.approved && r.status === "ACTIVE" && <StatusBadge status="APPROVED" />}
-                  {r.open && <StatusBadge status={r.open.status} />}
-                </span>
-              </span>
-              <span className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-[#3d3f3a]">
-                  {outletName(r)} · {r.is_prep ? t("prep") : t("drink")}
-                  {r.approved && ` · ${t("approvedVersion", { no: r.approved.version_no })}`}
-                  {r.open && ` · ${t("openVersion", { no: r.open.version_no })}`}
-                </span>
-                {r.status === "ACTIVE" && (
-                  <span className="relative z-10 flex flex-wrap items-center gap-2 has-[[role=dialog]]:basis-full">
-                    {archivePending.has(r.id) && (
-                      <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>
-                    )}
-                    {/* Copies the version this card shows: the one in progress, else the approved one. */}
-                    <Link
-                      href={r.open ? `/recipes/${r.id}/copy?version=${r.open.id}` : `/recipes/${r.id}/copy`}
-                      className={smallButton}
-                    >
-                      {t("copy")}
-                    </Link>
-                    {!archivePending.has(r.id) &&
-                      canManageRecipe(viewer, r) &&
-                      (r.neverSubmitted ? (
-                        <DeleteDraftRecipeButton recipeId={r.id} />
-                      ) : (
-                        <ArchiveRecipeButton
-                          recipeId={r.id}
-                          mode={viewer.role === "ADMIN" || !r.approved ? "archive" : "request"}
-                          compact
-                        />
-                      ))}
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <MineList
+        rows={mineCards}
+        outlets={outlets.filter((o) => viewer.managedOutletIds.includes(o.id))}
+        styles={[...CATALOGUE_STYLES, ...addedStyles(await getOptionLabels(), CATALOGUE_STYLES)]}
+        search={query.q ?? ""}
+        initialFilters={mineState.filters}
+        initialSort={mineState.sort}
+        initialDir={mineState.dir}
+      />
     </div>
   );
 }

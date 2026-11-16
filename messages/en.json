@@ -1126,6 +1126,7 @@
       "note": "Applies at once, without approval. Staff of removed outlets stop seeing this recipe."
     },
     "catalogueFilter": {
+      "updated": "Last updated",
       "name": "Name",
       "outlets": "Outlets",
       "type": "Type",
