@@ -3,7 +3,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { MenuStatus } from "@/components/menus/MenuStatus";
-import { PriceHint, type DrinkCost } from "@/components/menus/PriceHint";
+import { EstimateButton, PriceHint, type DrinkCost, type EstimateState } from "@/components/menus/PriceHint";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   cardClass,
@@ -13,7 +13,6 @@ import {
   mutedText,
   primaryButton,
   secondaryButton,
-  smallButton,
 } from "@/components/ui/styles";
 import { Link, useRouter } from "@/i18n/navigation";
 import { categoryLabel, groupByCategory, type FlatCategory } from "@/lib/menus/categories";
@@ -25,6 +24,10 @@ type Item = { recipeId: string; price: number | null; categoryId: string | null 
 // categoryId "" means Uncategorized.
 type Row = { recipeId: string; price: string; categoryId: string };
 type Problem = { recipe_id: string; code: string };
+
+// Small buttons for the bar at the bottom of each drink row.
+const rowButton =
+  "inline-flex h-8 min-w-8 items-center justify-center rounded-[8px] border-[1.5px] border-black bg-white px-2 text-xs disabled:opacity-40";
 
 const problemCodes = [
   "PRICE_MISSING",
@@ -75,6 +78,8 @@ export function MenuEditor({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [problems, setProblems] = useState<Problem[]>([]);
+  // AI price estimate per drink, keyed by recipe id.
+  const [estimates, setEstimates] = useState<Record<string, EstimateState>>({});
 
   const archived = menu.status === "ARCHIVED";
   const hasPending = revisionId !== null || dirty;
@@ -321,50 +326,49 @@ export function MenuEditor({
                 return (
                   <li
                     key={row.recipeId}
-                    className={`flex flex-col gap-3 rounded-[14px] border-[1.5px] p-3 md:flex-row md:items-center ${
+                    className={`flex flex-col gap-2 rounded-[14px] border-[1.5px] p-3 ${
                       codes.length ? "border-[#c4161c]" : "border-black/15"
                     }`}
                   >
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="font-semibold">
-                        {position}. {name}
-                      </span>
-                      {codes.map((code) => (
-                        <span key={code} className="text-[13px] font-semibold text-[#c4161c]">
-                          {problemCodes.includes(code as (typeof problemCodes)[number])
-                            ? t(`problems.${code as (typeof problemCodes)[number]}`)
-                            : code}
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="font-semibold">
+                          {position}. {name}
                         </span>
-                      ))}
-                      {!archived && (
-                        <div className="mt-1">
-                          <PriceHint
-                            recipeId={row.recipeId}
-                            name={name}
-                            cost={costs[row.recipeId]}
-                            price={row.price}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    {showGroups && (
-                      <select
-                        disabled={archived}
-                        aria-label={t("categoryFor", { name })}
-                        value={row.categoryId ?? ""}
-                        onChange={(event) => setRow(row.recipeId, { categoryId: event.target.value })}
-                        className={`${inputClass} w-full md:w-64`}
-                      >
-                        <option value="">{t("uncategorized")}</option>
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {categoryLabel(category)}
-                          </option>
+                        {codes.map((code) => (
+                          <span key={code} className="text-[13px] font-semibold text-[#c4161c]">
+                            {problemCodes.includes(code as (typeof problemCodes)[number])
+                              ? t(`problems.${code as (typeof problemCodes)[number]}`)
+                              : code}
+                          </span>
                         ))}
-                      </select>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <label className="flex min-w-0 flex-1 items-center gap-2 text-sm md:flex-none">
+                        {!archived && (
+                          <div className="mt-1">
+                            <PriceHint
+                              cost={costs[row.recipeId]}
+                              price={row.price}
+                              estimate={estimates[row.recipeId]}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {showGroups && (
+                        <select
+                          disabled={archived}
+                          aria-label={t("categoryFor", { name })}
+                          value={row.categoryId ?? ""}
+                          onChange={(event) => setRow(row.recipeId, { categoryId: event.target.value })}
+                          className={`${inputClass} w-full md:w-64`}
+                        >
+                          <option value="">{t("uncategorized")}</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {categoryLabel(category)}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <label className="flex items-center gap-2 text-sm">
                         <span className="font-semibold">MYR</span>
                         <input
                           type="number"
@@ -378,12 +382,26 @@ export function MenuEditor({
                           className={`${inputClass} w-full md:w-28`}
                         />
                       </label>
+                    </div>
+                    {/* All of the row's buttons, small, in one bar at the bottom. */}
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                      {!archived && (
+                        <EstimateButton
+                          recipeId={row.recipeId}
+                          name={name}
+                          state={estimates[row.recipeId]}
+                          onChange={(state) =>
+                            setEstimates((current) => ({ ...current, [row.recipeId]: state }))
+                          }
+                          className={rowButton}
+                        />
+                      )}
                       <button
                         type="button"
                         disabled={archived || !prev}
                         onClick={() => prev && swap(row.recipeId, prev.recipeId)}
                         aria-label={t("moveUp", { name })}
-                        className={smallButton}
+                        className={rowButton}
                       >
                         ↑
                       </button>
@@ -392,7 +410,7 @@ export function MenuEditor({
                         disabled={archived || !next}
                         onClick={() => next && swap(row.recipeId, next.recipeId)}
                         aria-label={t("moveDown", { name })}
-                        className={smallButton}
+                        className={rowButton}
                       >
                         ↓
                       </button>
@@ -400,7 +418,7 @@ export function MenuEditor({
                         type="button"
                         disabled={archived}
                         onClick={() => update(rows.filter((r) => r.recipeId !== row.recipeId))}
-                        className={`${smallButton} shrink-0 whitespace-nowrap`}
+                        className={`${rowButton} whitespace-nowrap`}
                       >
                         {t("remove")}
                       </button>
