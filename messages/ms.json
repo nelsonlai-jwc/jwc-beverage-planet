@@ -33,6 +33,7 @@
     "role": "Peranan",
     "outletScope": "Cawangan",
     "allOutlets": "Semua cawangan",
+    "language": "Bahasa",
     "logout": "Log keluar",
     "roles": {
       "ADMIN": "Admin",

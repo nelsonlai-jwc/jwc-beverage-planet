@@ -33,6 +33,7 @@
     "role": "Role",
     "outletScope": "Outlets",
     "allOutlets": "All outlets",
+    "language": "Language",
     "logout": "Log out",
     "roles": {
       "ADMIN": "Admin",

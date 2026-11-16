@@ -33,6 +33,7 @@
     "role": "角色",
     "outletScope": "分店",
     "allOutlets": "全部分店",
+    "language": "语言",
     "logout": "退出登录",
     "roles": {
       "ADMIN": "管理员",
