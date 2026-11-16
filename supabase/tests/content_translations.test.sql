@@ -13,6 +13,9 @@ insert into public.profiles (id, email, full_name, role) values
 insert into public.menu_categories (outlet_id, name, created_by)
   select id, '咖啡', '00000000-0000-0000-0000-00000000000a' from public.outlets where code = 'JB-BROOOS';
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', true);
 do $$

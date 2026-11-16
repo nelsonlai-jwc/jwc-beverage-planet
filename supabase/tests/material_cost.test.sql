@@ -15,6 +15,9 @@ insert into public.user_outlets (user_id, outlet_id)
   select '00000000-0000-0000-0000-00000000000b', id from public.outlets where code = 'JB-BROOOS';
 
 -- Manager registers milk, matcha, sugar and a lid ---------------------------
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', true);
 

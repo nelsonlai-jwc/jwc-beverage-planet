@@ -14,6 +14,9 @@ insert into public.profiles (id, email, full_name, role) values
 insert into public.user_outlets (user_id, outlet_id)
   select '00000000-0000-0000-0000-0000000000b1', id from public.outlets where code = 'JB-BROOOS';
 
+-- The test Admin is the Super Admin (global Admin rights).
+update public.profiles set is_super_admin = true where role = 'ADMIN';
+
 set local role authenticated;
 
 -- M1 drafts a Prep and a drink that uses it; neither is approved -------------------------
