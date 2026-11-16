@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import type { Database } from "@/types/database";
 
 export type OptionGroup = "STYLE" | "TEMP" | "STRENGTH";
-export type OptionLabel = { group: OptionGroup; value: string; en: string; zh: string; sortOrder: number };
+export type OptionLabel = { group: OptionGroup; value: string; en: string; zh: string; ms: string | null; sortOrder: number };
 
 export const OPTION_LABELS_TAG = "option-labels";
 
@@ -22,13 +22,14 @@ export const getOptionLabels = unstable_cache(
       );
       const { data } = await supabase
         .from("option_labels")
-        .select("option_group, value, label_en, label_zh, sort_order")
+        .select("option_group, value, label_en, label_zh, label_ms, sort_order")
         .order("sort_order");
       return (data ?? []).map((row) => ({
         group: row.option_group as OptionGroup,
         value: row.value,
         en: row.label_en,
         zh: row.label_zh,
+        ms: row.label_ms,
         sortOrder: row.sort_order,
       }));
     } catch {
@@ -59,12 +60,19 @@ export function addedStyles<T extends string>(labels: OptionLabel[], builtIn: re
   return labels.filter((l) => l.group === "STYLE" && !builtIn.includes(l.value as T)).map((l) => l.value as T);
 }
 
+/** The option's name in this language; Malay falls back to English when not set. */
+export function optionName(l: { en: string; zh: string; ms: string | null }, locale: string): string {
+  if (locale === "zh-CN") return l.zh;
+  if (locale === "ms") return l.ms || l.en;
+  return l.en;
+}
+
 type Messages = Record<string, Record<string, unknown>>;
 
 /** Puts the Admin's names over the built-in texts wherever these options are shown. */
 export function applyOptionLabels(messages: Messages, labels: OptionLabel[], locale: string): Messages {
   if (!labels.length) return messages;
-  const name = (l: OptionLabel) => (locale === "zh-CN" ? l.zh : l.en);
+  const name = (l: OptionLabel) => optionName(l, locale);
   const pick = (group: OptionGroup) =>
     Object.fromEntries(labels.filter((l) => l.group === group).map((l) => [l.value, name(l)]));
   const styles = pick("STYLE");

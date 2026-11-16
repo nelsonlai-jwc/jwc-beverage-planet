@@ -52,7 +52,7 @@
       "beverageStyle": {
         "label": "Beverage Style",
         "rule": "Values in use can only be deactivated.",
-        "adminRule": "You can add styles, rename them in both languages and change the order. Styles cannot be deleted."
+        "adminRule": "You can add styles, rename them in each language and change the order. Styles cannot be deleted."
       },
       "unit": {
         "label": "Unit",
@@ -62,7 +62,7 @@
       "temp": {
         "label": "Temp",
         "rule": "Fixed system values.",
-        "adminRule": "The options are fixed. You can rename them in both languages and change the order."
+        "adminRule": "The options are fixed. You can rename them in each language and change the order."
       },
       "materialType": {
         "label": "Material Type",
@@ -81,8 +81,8 @@
       },
       "language": {
         "label": "Language",
-        "rule": "English and Simplified Chinese enabled. Malay later.",
-        "adminRule": "Fixed: English and Simplified Chinese."
+        "rule": "English, Simplified Chinese and Malay enabled.",
+        "adminRule": "Fixed: English, Simplified Chinese and Malay."
       }
     },
     "values": {
@@ -134,9 +134,11 @@
       "codePlaceholder": "CODE e.g. PG-ABC",
       "codeHint": "The outlet code is fixed after creation: capital letters, numbers and dashes.",
       "storedValue": "Value: {value}",
-      "styleEnPlaceholder": "New style (English)",
-      "styleZhPlaceholder": "New style (Chinese)",
-      "styleHint": "A style cannot be deleted after it is added; you can still rename it.",
+      "styleEnPlaceholder": "English name",
+      "styleZhPlaceholder": "Chinese name",
+      "styleMsPlaceholder": "Malay (optional)",
+      "msAutoPlaceholder": "Blank: AI translates",
+      "styleHint": "A style cannot be deleted after it is added; you can still rename it. If the Malay name is left blank, AI translates it from the English name.",
       "errors": {
         "NAME_REQUIRED": "Please enter a name.",
         "CODE_INVALID": "Code: 2–32 capital letters, numbers or dashes.",

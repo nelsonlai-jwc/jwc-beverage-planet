@@ -1531,6 +1531,7 @@ export type Database = {
       option_labels: {
         Row: {
           label_en: string
+          label_ms: string | null
           label_zh: string
           option_group: string
           revision: number
@@ -1540,6 +1541,7 @@ export type Database = {
         }
         Insert: {
           label_en: string
+          label_ms?: string | null
           label_zh: string
           option_group: string
           revision?: number
@@ -1549,6 +1551,7 @@ export type Database = {
         }
         Update: {
           label_en?: string
+          label_ms?: string | null
           label_zh?: string
           option_group?: string
           revision?: number
@@ -2607,7 +2610,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_locale: "en" | "zh-CN"
+      app_locale: "en" | "zh-CN" | "ms"
       approval_status:
         | "DRAFT"
         | "PENDING"
@@ -2757,7 +2760,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_locale: ["en", "zh-CN"],
+      app_locale: ["en", "zh-CN", "ms"],
       approval_status: [
         "DRAFT",
         "PENDING",

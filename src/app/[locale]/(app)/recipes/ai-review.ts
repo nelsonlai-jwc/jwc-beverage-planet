@@ -2,21 +2,13 @@
 
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import { AI_MODELS } from "@/lib/ai/models";
 import { getRecipeCost, getViewer, loadFullVersion } from "@/lib/recipes/data";
 import { letterFor } from "@/lib/recipes/letters";
 import { RETURN_PRESETS } from "@/lib/recipes/return-presets";
 import type { CostResult, FullVersion } from "@/lib/recipes/types";
 import { createClient } from "@/lib/supabase/server";
 
-// Models allowed on AI Gateway's free tier, tried in order; on Vercel the gateway
-// signs in with the project's OIDC token. Any failure (free tier refuses the model,
-// unparsable answer, ...) moves on to the next one.
-const MODELS = [
-  "anthropic/claude-haiku-5.5",
-  "anthropic/claude-haiku-4.5",
-  "google/gemini-2.5-flash",
-  "deepseek/deepseek-v4-flash",
-];
 
 // Issues come first so the verdict follows from them; each issue quotes its evidence.
 const reviewSchema = z.object({
@@ -162,9 +154,9 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
     },
     currentlyApproved: current ? { ...describe(current, materialUnits), cost: describeCost(currentCost) } : null,
   };
-  const language = locale === "en" ? "English" : "Simplified Chinese";
+  const language = locale === "zh-CN" ? "Simplified Chinese" : locale === "ms" ? "Malay" : "English";
 
-  for (const model of MODELS) {
+  for (const model of AI_MODELS) {
     try {
       const { output } = await generateText({
         model,
@@ -184,15 +176,20 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
         .filter(({ letter }) => !next.steps.some((step) => step.instruction?.includes(`[${letter}]`)));
       if (unused.length) {
         const lines = unused.map(({ letter, name }) =>
-          locale === "en"
-            ? `Ingredient ${letter}: ${name} is not used as [${letter}] in any step; write [${letter}] in the step that uses it`
-            : `原料 ${letter}：${name} 没有在任何步骤中以 [${letter}] 使用，请在使用它的步骤写上 [${letter}]`,
+          locale === "zh-CN"
+            ? `原料 ${letter}：${name} 没有在任何步骤中以 [${letter}] 使用，请在使用它的步骤写上 [${letter}]`
+            : locale === "ms"
+              ? `Bahan ${letter}: ${name} tidak digunakan sebagai [${letter}] dalam mana-mana langkah; tulis [${letter}] dalam langkah yang menggunakannya`
+              : `Ingredient ${letter}: ${name} is not used as [${letter}] in any step; write [${letter}] in the step that uses it`,
         );
         const issues = [
           ...output.issues.filter((issue) => issue.preset !== "unusedIngredient"),
           ...unused.map(({ letter, name }, index) => ({
             preset: "unusedIngredient",
-            where: locale === "en" ? `Ingredient ${letter}: ${name}` : `原料 ${letter}：${name}`,
+            where:
+              locale === "zh-CN"
+                ? `原料 ${letter}：${name}`
+                : `${locale === "ms" ? "Bahan" : "Ingredient"} ${letter}: ${name}`,
             evidence: `[${letter}]`,
             problem: lines[index],
           })),
@@ -216,7 +213,7 @@ export async function aiReviewRecipeVersion(versionId: string, locale: string): 
         issue.preset === "missingSettings" ||
         (issue.preset === "drinkTypeIngredient" &&
           next.style !== "COFFEE" &&
-          /coffee|espresso|咖啡/i.test(`${issue.where} ${issue.evidence}`));
+          /coffee|espresso|咖啡|kopi/i.test(`${issue.where} ${issue.evidence}`));
       if (output.verdict === "RETURN" && output.issues.every(onlyCheck)) {
         return { ok: true, review: { ...output, verdict: "CHECK" } };
       }

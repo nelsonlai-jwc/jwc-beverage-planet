@@ -3,7 +3,7 @@ import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { Chevron, ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { settingGroups } from "@/lib/settings/defaults";
-import { getOptionLabels, type OptionGroup } from "@/lib/settings/options";
+import { getOptionLabels, optionName, type OptionGroup } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 
 // Groups the Admin edits, and how (decided with Nelson 2026-10-28). The rest are fixed.
@@ -27,14 +27,14 @@ export default async function SettingsPage({
   const isAdmin = user?.role === "ADMIN";
 
   const optionItems = (group: OptionGroup) =>
-    labels.filter((l) => l.group === group).map((l) => ({ value: l.value, en: l.en, zh: l.zh }));
+    labels.filter((l) => l.group === group).map((l) => ({ value: l.value, en: l.en, zh: l.zh, ms: l.ms }));
   // Read-only view: the current names in the viewer's language.
   const shownValues = (key: string, fallback: readonly string[]): string[] => {
     if (key === "materialType" && types) return types.filter((x) => x.is_active).map((x) => x.name);
     if (key === "outlet" && outlets) return outlets.filter((x) => x.is_active).map((x) => x.name);
     const group = OPTION_GROUP[key];
     const items = group ? optionItems(group) : [];
-    if (items.length) return items.map((i) => (locale === "zh-CN" ? i.zh : i.en));
+    if (items.length) return items.map((i) => optionName(i, locale));
     return fallback.map((value) => (t.has(`values.${value}`) ? t(`values.${value}`) : value));
   };
 

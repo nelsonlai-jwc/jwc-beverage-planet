@@ -221,16 +221,16 @@ export function ListValuesEditor({ group, items: initial }: { group: ListGroup; 
   );
 }
 
-export type OptionItem = { value: string; en: string; zh: string };
+export type OptionItem = { value: string; en: string; zh: string; ms: string | null };
 
-/** Style, temperature and strength: English and Chinese names, and the order. */
+/** Style, temperature and strength: English, Chinese and Malay names, and the order. */
 export function OptionLabelsEditor({ group, items: initial }: { group: OptionGroup; items: OptionItem[] }) {
   const t = useTranslations("Settings.edit");
   const { error, notice, setNotice, pending, run } = useSettingAction();
   const [items, setItems] = useState(initial);
-  const [edits, setEdits] = useState<Record<string, { en: string; zh: string }>>({});
+  const [edits, setEdits] = useState<Record<string, { en: string; zh: string; ms: string }>>({});
   const [openValue, setOpenValue] = useState<string | null>(null);
-  const [newStyle, setNewStyle] = useState({ en: "", zh: "" });
+  const [newStyle, setNewStyle] = useState({ en: "", zh: "", ms: "" });
   const [source, setSource] = useState(initial);
   if (source !== initial) {
     setSource(initial);
@@ -248,8 +248,8 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
     <div className="flex flex-col gap-3">
       <ul className="flex flex-col gap-3">
         {items.map((item, index) => {
-          const edit = edits[item.value] ?? { en: item.en, zh: item.zh };
-          const changed = edit.en.trim() !== item.en || edit.zh.trim() !== item.zh;
+          const edit = edits[item.value] ?? { en: item.en, zh: item.zh, ms: item.ms ?? "" };
+          const changed = edit.en.trim() !== item.en || edit.zh.trim() !== item.zh || edit.ms.trim() !== (item.ms ?? "");
           const open = openValue === item.value;
           return (
             <li key={item.value} className="flex flex-col gap-2 rounded-[12px] border border-black/15 p-2.5">
@@ -265,13 +265,14 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
                 <ItemToggle open={open} onToggle={() => setOpenValue(open ? null : item.value)}>
                   <span className="font-semibold">
                     {item.en} / {item.zh}
+                    {item.ms && item.ms !== item.en ? ` / ${item.ms}` : ""}
                   </span>
                 </ItemToggle>
               </div>
               {open && (
                 <>
                   <span className="text-[13px] text-[#3d3f3a]">{t("storedValue", { value: item.value })}</span>
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-2 sm:grid-cols-3">
                     <label className="flex flex-col gap-1">
                       <span className="text-[13px] font-semibold">English</span>
                       <input
@@ -287,6 +288,16 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
                         value={edit.zh}
                         maxLength={40}
                         onChange={(e) => setEdits({ ...edits, [item.value]: { ...edit, zh: e.target.value } })}
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[13px] font-semibold">Bahasa Melayu</span>
+                      <input
+                        value={edit.ms}
+                        maxLength={40}
+                        placeholder={t("msAutoPlaceholder")}
+                        onChange={(e) => setEdits({ ...edits, [item.value]: { ...edit, ms: e.target.value } })}
                         className={inputClass}
                       />
                     </label>
@@ -316,7 +327,7 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
               run(
                 () => addBeverageStyle(newStyle),
                 () => {
-                  setNewStyle({ en: "", zh: "" });
+                  setNewStyle({ en: "", zh: "", ms: "" });
                   setNotice(t("added"));
                 },
               );
@@ -336,6 +347,14 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
               onChange={(e) => setNewStyle({ ...newStyle, zh: e.target.value })}
               placeholder={t("styleZhPlaceholder")}
               aria-label="简体中文"
+              className={`${inputClass} min-w-0 flex-1 basis-40`}
+            />
+            <input
+              value={newStyle.ms}
+              maxLength={40}
+              onChange={(e) => setNewStyle({ ...newStyle, ms: e.target.value })}
+              placeholder={t("styleMsPlaceholder")}
+              aria-label="Bahasa Melayu"
               className={`${inputClass} min-w-0 flex-1 basis-40`}
             />
             <button
