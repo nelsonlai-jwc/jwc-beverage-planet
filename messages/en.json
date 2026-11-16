@@ -266,7 +266,22 @@
     "uncategorized": "Uncategorized",
     "categoryFor": "Category for {name}",
     "addCategory": "Category for the new drink",
-    "noCategories": "This outlet has no categories yet."
+    "noCategories": "This outlet has no categories yet.",
+    "pricing": {
+      "cost": "Cost RM {cost}",
+      "suggested": "Suggested RM {price} (cost 40%)",
+      "ratio": "Cost ratio {ratio}%",
+      "ratioOver": "Cost ratio {ratio}% (over 40%)",
+      "costIncomplete": "Cost incomplete (some ingredients have no price), no suggested price",
+      "costUnavailable": "Cost not available",
+      "aiButton": "AI price estimate",
+      "aiButtonFor": "AI price estimate for {name}",
+      "aiRunning": "Estimating…",
+      "aiAgain": "Estimate again",
+      "aiFailed": "AI estimate failed. Please try again later.",
+      "aiRange": "AI estimate RM {low} – {high}",
+      "aiDisclaimer": "(AI estimate, not a web search; for reference only)"
+    }
   },
   "MenuCategories": {
     "title": "Menu categories",

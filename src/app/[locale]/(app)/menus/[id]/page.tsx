@@ -4,6 +4,7 @@ import { MenuEditor } from "@/components/menus/MenuEditor";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { CATEGORY_SELECT, flattenCategories, toCategory } from "@/lib/menus/categories";
 import { loadRecipes } from "@/lib/menus/recipes";
+import { loadCurrentCosts } from "@/lib/reports/data";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MenuPage({
@@ -47,6 +48,8 @@ export default async function MenuPage({
     .from("menu_categories")
     .select(CATEGORY_SELECT)
     .eq("outlet_id", menu.outlet_id);
+  // Current cost of each drink (its current approved version).
+  const costs = await loadCurrentCosts(supabase, menu.outlet_id);
 
   return (
     <MenuEditor
@@ -65,6 +68,12 @@ export default async function MenuPage({
       recipes={[...recipes.values()]
         .filter((recipe) => recipe.purpose === "OFFICIAL_RELEASE")
         .sort((a, b) => a.productName.localeCompare(b.productName))}
+      costs={Object.fromEntries(
+        [...costs].map(([recipeId, { cost }]) => [
+          recipeId,
+          { total: cost.total_cost, complete: cost.is_complete },
+        ]),
+      )}
       allRecipeNames={Object.fromEntries([...names.values()].map((r) => [r.id, r.productName]))}
     />
   );
