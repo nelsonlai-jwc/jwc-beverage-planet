@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Plus } from "lucide-react";
 import { Link, redirect } from "@/i18n/navigation";
 import { getOutlets, getViewer, signPhotos } from "@/lib/recipes/data";
 import { RECIPE_OUTLETS, canApproveRecipe, canManageRecipe, coversOutlet, outletLabel, type RecipeOutlets } from "@/lib/recipes/outlets";
@@ -102,6 +103,7 @@ export default async function RecipesPage({
             {t("copyApproved")}
           </Link>
           <Link href="/recipes/new" className={primaryButton}>
+            <Plus size={16} strokeWidth={2} aria-hidden />
             {t("create")}
           </Link>
         </div>

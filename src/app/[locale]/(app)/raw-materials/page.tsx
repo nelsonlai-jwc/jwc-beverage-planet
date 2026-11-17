@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Plus } from "lucide-react";
 import {
   SectionTabs,
   StatusBadge,
@@ -140,6 +141,7 @@ export default async function RawMaterialsPage({
             href={tab === "packaging" ? "/raw-materials/packaging/new" : "/raw-materials/new"}
             className={primaryButtonClass}
           >
+            <Plus size={16} strokeWidth={2} aria-hidden />
             {tab === "packaging" ? t("newPackaging") : t("newMaterial")}
           </Link>
         </div>

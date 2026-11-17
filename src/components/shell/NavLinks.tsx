@@ -10,7 +10,7 @@ export function NavLinks({ role, onNavigate }: { role: UserRole | null; onNaviga
   const pathname = usePathname();
 
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-0.5">
       {navItems.filter((item) => role && (item.roles as readonly UserRole[]).includes(role)).map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -22,10 +22,11 @@ export function NavLinks({ role, onNavigate }: { role: UserRole | null; onNaviga
               aria-current={active ? "page" : undefined}
               className={
                 active
-                  ? "flex min-h-11 items-center rounded-xl bg-black px-3.5 text-sm font-semibold text-white"
-                  : "flex min-h-11 items-center rounded-xl px-3.5 text-sm hover:bg-black/10"
+                  ? "flex h-10 items-center gap-2.5 rounded-lg bg-white px-3 text-sm font-semibold text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                  : "flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm text-black/75 hover:bg-white/50 hover:text-black"
               }
             >
+              <item.icon size={16} strokeWidth={1.75} aria-hidden className="shrink-0" />
               {t(item.key)}
             </Link>
           </li>
