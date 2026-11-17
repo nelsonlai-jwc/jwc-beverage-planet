@@ -42,6 +42,7 @@ type Invitation = {
   role: UserRole;
   status: InvitationStatus;
   expiresAt: string;
+  createdAt: string;
   outletIds: string[];
 };
 
@@ -152,6 +153,38 @@ export function UsersAdmin({
     } catch {
       setCopied(false);
     }
+  }
+
+  // Pending invites past their expiry show as Expired.
+  const shownStatus = (invitation: Invitation): InvitationStatus =>
+    invitation.status === "PENDING" && new Date(invitation.expiresAt) <= new Date()
+      ? "EXPIRED"
+      : invitation.status;
+
+  // Each Resend adds a record, so show one card per email: the latest send, plus its history.
+  const invitationGroups: Invitation[][] = [];
+  const groupByEmail = new Map<string, Invitation[]>();
+  for (const invitation of invitations) {
+    const key = invitation.email.trim().toLowerCase();
+    const group = groupByEmail.get(key);
+    if (group) group.push(invitation);
+    else {
+      const created = [invitation];
+      groupByEmail.set(key, created);
+      invitationGroups.push(created);
+    }
+  }
+  for (const group of invitationGroups) {
+    group.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+  invitationGroups.sort((a, b) => b[0].createdAt.localeCompare(a[0].createdAt));
+
+  async function deleteInvitations(email: string) {
+    if (!window.confirm(t("deleteInvitesConfirm", { email }))) return;
+    setInviteError(null);
+    const { error } = await createClient().rpc("delete_invitations", { p_email: email });
+    if (error) setInviteError(t("actionFailed"));
+    router.refresh();
   }
 
   async function revoke(invitation: Invitation) {
@@ -331,11 +364,9 @@ export function UsersAdmin({
             {t("invitations")}
           </h2>
           <ul className="grid gap-3 lg:grid-cols-2">
-            {invitations.map((invitation) => {
-              const status: InvitationStatus =
-                invitation.status === "PENDING" && new Date(invitation.expiresAt) <= new Date()
-                  ? "EXPIRED"
-                  : invitation.status;
+            {invitationGroups.map((group) => {
+              const invitation = group[0];
+              const status = shownStatus(invitation);
               return (
                 <li key={invitation.id} className={`${cardClass} flex flex-col gap-2`}>
                   <div className="flex flex-wrap items-center gap-2">
@@ -346,8 +377,30 @@ export function UsersAdmin({
                     {t(`roles.${invitation.role}`)}
                     {invitation.outletIds.length > 0 && ` · ${outletNames(invitation.outletIds)}`}
                   </p>
+                  <p className={mutedText}>
+                    {t("lastSent", { date: dateTime(invitation.createdAt) })}
+                    {group.length > 1 && ` · ${t("sentCount", { count: group.length })}`}
+                  </p>
                   {status === "PENDING" && (
                     <p className={mutedText}>{t("expires", { date: dateTime(invitation.expiresAt) })}</p>
+                  )}
+                  {group.length > 1 && (
+                    <details className="text-sm">
+                      <summary className="cursor-pointer font-medium">{t("sendHistory")}</summary>
+                      <ol className="mt-2 flex flex-col gap-1">
+                        {group.map((sentInvite) => {
+                          const sentStatus = shownStatus(sentInvite);
+                          return (
+                            <li key={sentInvite.id} className="flex flex-wrap items-center gap-2">
+                              <span>{dateTime(sentInvite.createdAt)}</span>
+                              <StatusBadge tone={statusTone[sentStatus]}>
+                                {t(`invitationStatus.${sentStatus}`)}
+                              </StatusBadge>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </details>
                   )}
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -367,6 +420,15 @@ export function UsersAdmin({
                     {status === "PENDING" && (
                       <button type="button" onClick={() => revoke(invitation)} className={secondaryButton}>
                         {t("revoke")}
+                      </button>
+                    )}
+                    {(status === "REVOKED" || status === "EXPIRED") && (
+                      <button
+                        type="button"
+                        onClick={() => deleteInvitations(invitation.email)}
+                        className={secondaryButton}
+                      >
+                        {t("deleteInvites")}
                       </button>
                     )}
                   </div>
