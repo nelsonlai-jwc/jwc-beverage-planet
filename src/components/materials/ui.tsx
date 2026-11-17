@@ -35,18 +35,26 @@ export function StatusBadge({ status }: { status: ApprovalStatus }) {
   );
 }
 
+/**
+ * Materials | Packaging | Pending approval tabs. The approval tab shows only when `pending`
+ * is given (reviewers), with a red count like the recipe "Pending approval" tab.
+ */
 export function SectionTabs({
   active,
   basePath = "/raw-materials",
+  pending,
 }: {
-  active: "materials" | "packaging";
+  active: "materials" | "packaging" | "approvals";
   basePath?: string;
+  pending?: number;
 }) {
   const t = useTranslations("RawMaterials");
-  const tabs = [
+  const tRecipes = useTranslations("Recipes");
+  const tabs: { key: typeof active; href: string; label: string }[] = [
     { key: "materials", href: basePath, label: t("tabMaterials") },
     { key: "packaging", href: `${basePath}?tab=packaging`, label: t("tabPackaging") },
-  ] as const;
+  ];
+  if (pending !== undefined) tabs.push({ key: "approvals", href: "/raw-materials/approvals", label: t("approvals") });
   return (
     <nav aria-label={t("sections")} className="flex flex-wrap gap-1">
       {tabs.map((tab) => (
@@ -61,6 +69,14 @@ export function SectionTabs({
           }
         >
           {tab.label}
+          {tab.key === "approvals" && pending !== undefined && pending > 0 && (
+            <span
+              aria-label={tRecipes("pendingCount", { count: pending })}
+              className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff6062] px-1.5 align-middle text-xs font-semibold leading-none text-white"
+            >
+              {pending}
+            </span>
+          )}
         </Link>
       ))}
     </nav>
