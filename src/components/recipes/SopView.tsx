@@ -49,7 +49,7 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
         </div>
       )}
       <header className="flex flex-col gap-1">
-        <h2 className="font-serif text-[26px] font-normal">
+        <h2 className="text-xl font-semibold leading-tight tracking-[-0.02em] md:text-2xl">
           <RecipeName
             name={data.productName || t("untitled")}
             temperature={data.style === "PREP_MATERIAL" ? null : data.temperature}

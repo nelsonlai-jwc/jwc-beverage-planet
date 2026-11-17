@@ -2,17 +2,17 @@ import { useTranslations } from "next-intl";
 import type { ApprovalStatus, RecipePurpose } from "@/lib/recipes/types";
 
 // Shared Tailwind classes for recipe screens, matching the app shell cards.
-export const card = "flex flex-col gap-4 rounded-[20px] bg-white p-5 sm:p-6";
+export const card = "flex flex-col gap-4 rounded-[20px] bg-white p-4 sm:p-5";
 export const inputClass =
-  "h-11 w-full rounded-[10px] border-[1.5px] border-black bg-white px-3 text-base disabled:bg-[#eceee8]";
+  "h-10 w-full min-w-0 rounded-xl border border-black/35 bg-white px-3 text-base focus:border-black focus:outline-none disabled:bg-[#eceee8]";
 export const textareaClass =
-  "min-h-20 w-full rounded-[10px] border-[1.5px] border-black bg-white px-3 py-2 text-base";
+  "min-h-20 w-full rounded-xl border border-black/35 bg-white px-3 py-2 text-base focus:border-black focus:outline-none";
 export const primaryButton =
-  "inline-flex min-h-11 items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white disabled:opacity-50";
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-black px-5 text-sm font-medium text-white hover:bg-black/85 disabled:opacity-50";
 export const secondaryButton =
-  "inline-flex min-h-11 items-center justify-center rounded-full border-[1.5px] border-black px-5 text-sm font-semibold disabled:opacity-50";
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-black bg-white px-4 text-sm font-medium hover:bg-black/5 disabled:opacity-50";
 export const smallButton =
-  "inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border-[1.5px] border-black px-3 text-sm disabled:opacity-40";
+  "inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-black/70 bg-white px-3 text-[13px] font-medium hover:bg-black/5 disabled:opacity-40";
 
 const statusColors: Record<ApprovalStatus, string> = {
   DRAFT: "bg-[#eceee8]",

@@ -104,7 +104,7 @@ export default async function RecipeDetailPage({
         <Link href="/recipes" className="text-sm underline">
           {t("backToList")}
         </Link>
-        <h1 className="font-serif text-[32px] font-normal">
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">
           <RecipeName name={name} temperature={recipe.is_prep ? null : (approved?.temperature ?? open?.temperature)} />
         </h1>
         <p className="flex flex-wrap items-center gap-2 text-sm text-[#3d3f3a]">
@@ -169,6 +169,7 @@ export default async function RecipeDetailPage({
               ) : (
                 <p className="text-sm text-[#3d3f3a]">{t("noOpenVersion")}</p>
               )}
+              <div className="flex flex-wrap items-center gap-2">
               {!archived && (
                 <VersionActions
                   recipeId={recipe.id}
@@ -193,6 +194,7 @@ export default async function RecipeDetailPage({
                   {t("changeLog.open")}
                 </Link>
               )}
+              </div>
             </section>
           )}
 

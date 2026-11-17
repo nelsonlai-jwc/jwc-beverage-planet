@@ -101,7 +101,7 @@ export default async function ReviewRecipePage({
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="font-serif text-[32px] font-normal">
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">
           {fillNameSlot(
             t("reviewTitle", { name: NAME_SLOT }),
             <RecipeName name={next.product_name ?? t("untitled")} temperature={recipe.is_prep ? null : next.temperature} />,

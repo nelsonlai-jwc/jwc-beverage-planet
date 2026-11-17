@@ -7,7 +7,7 @@ export function PlaceholderPage({ navKey }: { navKey: NavKey }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-serif text-[32px] font-normal">{nav(navKey)}</h1>
+      <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{nav(navKey)}</h1>
       <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">
         {t("comingSoon")}
       </p>
