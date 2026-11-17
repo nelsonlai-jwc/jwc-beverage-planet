@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import {
@@ -164,6 +165,7 @@ export function MaterialForm({
         setError(t.has(`errors.${result.error}`) ? t(`errors.${result.error}`) : t("errors.UNKNOWN"));
         return;
       }
+      toast("outcome" in result && result.outcome === "REQUESTED" ? "changeRequested" : submit ? "submitted" : "saved");
       router.push(`/raw-materials/${values.id ?? ("id" in result ? result.id : "")}`);
       router.refresh();
     });

@@ -26,7 +26,25 @@
     "reports": "报表",
     "settings": "设置"
   },
+  "Toast": {
+    "saved": "已保存",
+    "created": "已创建",
+    "submitted": "已提交审批",
+    "approved": "已批准",
+    "returned": "已退回",
+    "deleted": "已删除",
+    "deleteRequested": "已提交删除申请",
+    "changeRequested": "修改已提交审批",
+    "restored": "已恢复",
+    "imported": "已导入",
+    "published": "已发布",
+    "copied": "已复制为草稿",
+    "invited": "邀请已发送",
+    "undone": "已撤销批准",
+    "withdrawn": "已撤回"
+  },
   "Shell": {
+    "loading": "加载中…",
     "toggleSection": "展开或收起{name}",
     "collapseSidebar": "收起侧边栏",
     "expandSidebar": "展开侧边栏",

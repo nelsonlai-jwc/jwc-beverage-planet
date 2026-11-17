@@ -1,5 +1,6 @@
 "use client";
 
+import { toast, type ToastKey } from "@/components/ui/toast";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { MenuStatus } from "@/components/menus/MenuStatus";
@@ -171,7 +172,7 @@ export function MenuEditor({
     return false;
   }
 
-  async function run(action: () => Promise<boolean>) {
+  async function run(action: () => Promise<boolean>, done?: ToastKey) {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -180,6 +181,7 @@ export function MenuEditor({
     setBusy(false);
     if (ok) {
       setDirty(false);
+      if (done) toast(done);
       router.refresh();
     }
   }
@@ -277,6 +279,7 @@ export function MenuEditor({
       setBusy(false);
       return;
     }
+    toast("deleted");
     router.push("/menus");
     router.refresh();
   }

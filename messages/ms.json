@@ -26,7 +26,25 @@
     "reports": "Laporan",
     "settings": "Tetapan"
   },
+  "Toast": {
+    "saved": "Disimpan",
+    "created": "Dicipta",
+    "submitted": "Dihantar untuk kelulusan",
+    "approved": "Diluluskan",
+    "returned": "Dipulangkan",
+    "deleted": "Dipadam",
+    "deleteRequested": "Permohonan padam dihantar",
+    "changeRequested": "Perubahan dihantar untuk kelulusan",
+    "restored": "Dipulihkan",
+    "imported": "Diimport",
+    "published": "Diterbitkan",
+    "copied": "Disalin sebagai draf",
+    "invited": "Jemputan dihantar",
+    "undone": "Kelulusan dibatalkan",
+    "withdrawn": "Ditarik balik"
+  },
   "Shell": {
+    "loading": "Memuatkan…",
     "toggleSection": "Tunjuk atau sembunyi halaman {name}",
     "collapseSidebar": "Kecilkan bar sisi",
     "expandSidebar": "Kembangkan bar sisi",

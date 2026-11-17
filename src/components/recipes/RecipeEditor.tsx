@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { publishRecipeVersion } from "@/app/[locale]/(app)/recipes/actions";
@@ -331,8 +332,9 @@ export function RecipeEditor(props: Props) {
   async function handleSave() {
     setSaving("saving");
     setMessage(null);
-    await save();
+    const saved = await save();
     setSaving("idle");
+    if (saved != null) toast("saved");
   }
 
   async function handleSubmit() {
@@ -372,6 +374,7 @@ export function RecipeEditor(props: Props) {
       document.getElementById("submit-errors")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    toast("submitted");
     router.push(`/recipes/${recipeId}`);
   }
 
@@ -389,6 +392,7 @@ export function RecipeEditor(props: Props) {
     const result = await publishRecipeVersion(version.id, saved, idempotencyKey);
     setSaving("idle");
     if (result.ok) {
+      toast("published");
       router.push(`/recipes/${recipeId}`);
       return;
     }

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -65,6 +66,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       setError(explainApprovalError(t, result.message ?? result.error, result.details));
       return;
     }
+    toast("approved");
     router.push(backHref);
   }
 
@@ -92,6 +94,7 @@ export function ReviewActions({ versionId, menuNames, drinkNames }: Props) {
       setError([`${t("actionFailed")} ${result.message ?? result.error}`]);
       return;
     }
+    toast("returned");
     router.push(backHref);
   }
 

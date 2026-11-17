@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import { importItems } from "@/app/[locale]/(app)/raw-materials/actions";
@@ -65,6 +66,7 @@ export function ImportForm({
         setError(te.has(result.error) ? te(result.error) : te("UNKNOWN"));
         return;
       }
+      toast("imported");
       router.push(kind === "packaging" ? "/raw-materials?tab=packaging" : "/raw-materials");
       router.refresh();
     });

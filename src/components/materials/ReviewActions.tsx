@@ -1,5 +1,6 @@
 "use client";
 
+import { toast, type ToastKey } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import {
@@ -17,7 +18,7 @@ export function useAction() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function run(action: () => Promise<ActionResult>, onDone?: () => void) {
+  function run(action: () => Promise<ActionResult>, onDone?: () => void, done?: ToastKey) {
     setError(null);
     startTransition(async () => {
       const result = await action();
@@ -26,6 +27,7 @@ export function useAction() {
         return;
       }
       onDone?.();
+      if (done) toast(done);
       router.refresh();
     });
   }
@@ -59,7 +61,7 @@ export function ReviewActions({ kind, id }: { kind: ReviewKind | "change"; id: s
             <button
               type="button"
               disabled={pending || !reason.trim()}
-              onClick={() => run(() => decide("return", reason), () => setReturning(false))}
+              onClick={() => run(() => decide("return", reason), () => setReturning(false), "returned")}
               className={primaryButtonClass}
             >
               {t("confirmReturn")}
@@ -74,7 +76,7 @@ export function ReviewActions({ kind, id }: { kind: ReviewKind | "change"; id: s
           <button
             type="button"
             disabled={pending}
-            onClick={() => run(() => decide("approve"))}
+            onClick={() => run(() => decide("approve"), undefined, "approved")}
             className={primaryButtonClass}
           >
             {t("approve")}
@@ -113,7 +115,7 @@ export function SubmitButton({
       <button
         type="button"
         disabled={pending}
-        onClick={() => run(() => action(id))}
+        onClick={() => run(() => action(id), undefined, "submitted")}
         className={primaryButtonClass}
       >
         {pending ? t("saving") : t("submit")}
@@ -214,7 +216,7 @@ export function PriceChangeForm({
         <button
           type="button"
           disabled={pending || newPrice === null}
-          onClick={() => run(() => submit(id, amount, freeReason), () => setOpen(false))}
+          onClick={() => run(() => submit(id, amount, freeReason), () => setOpen(false), "submitted")}
           className={primaryButtonClass}
         >
           {t("submit")}

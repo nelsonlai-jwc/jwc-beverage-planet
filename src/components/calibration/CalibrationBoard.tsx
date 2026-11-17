@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -153,6 +154,7 @@ export function CalibrationBoard({
     }
     setBusy(false);
     setOpenBean(null);
+    toast("saved");
     router.refresh();
   }
 
@@ -180,6 +182,7 @@ export function CalibrationBoard({
     } else {
       setDeleteFor(null);
       setReason("");
+      toast(deleted ? "deleted" : "restored");
     }
     router.refresh();
   }

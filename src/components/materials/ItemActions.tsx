@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import {
@@ -48,9 +49,11 @@ export function DeleteButton({
       if ("outcome" in result && result.outcome === "REQUESTED") {
         setOpen(false);
         setNotice(t("requested"));
+        toast("deleteRequested");
         router.refresh();
         return;
       }
+      toast("deleted");
       router.push(listHref);
       router.refresh();
     });
@@ -128,6 +131,7 @@ export function RestoreButton({ entity, id }: { entity: Entity; id: string }) {
               setError(te.has(result.error) ? te(result.error) : te("UNKNOWN"));
               return;
             }
+            toast("restored");
             router.refresh();
           })
         }
@@ -197,6 +201,7 @@ export function UndoApprovalButton({
               }
               setOpen(false);
               setReason("");
+              toast("undone");
               router.refresh();
             })
           }

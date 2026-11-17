@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import {
@@ -56,6 +57,7 @@ export function MenuCategories({
       setError(errorMessage(err));
       return false;
     }
+    toast("saved");
     router.refresh();
     return true;
   }
