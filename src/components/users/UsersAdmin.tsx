@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -122,6 +123,7 @@ export function UsersAdmin({
     }
     if (result.emailed) {
       setSent({ email: result.email, expiresAt: result.expiresAt });
+      toast("invited");
     } else {
       // Only shown now: the database keeps a hash of the token, not the token.
       setLink({ email: result.email, url: result.url, expiresAt: result.expiresAt });
@@ -184,6 +186,7 @@ export function UsersAdmin({
     setInviteError(null);
     const { error } = await createClient().rpc("delete_invitations", { p_email: email });
     if (error) setInviteError(t("actionFailed"));
+    else toast("deleted");
     router.refresh();
   }
 
@@ -243,6 +246,7 @@ export function UsersAdmin({
       return;
     }
     setEditing(null);
+    toast("saved");
     router.refresh();
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { archiveRecipe, restoreRecipe, undoRecipeApproval, type RecipeActionResult } from "@/app/[locale]/(app)/recipes/actions";
@@ -79,10 +80,13 @@ export function ArchiveRecipeButton({
               (result) => {
                 if (result.ok && result.outcome === "REQUESTED") {
                   setNotice(t("requested"));
+                  toast("deleteRequested");
                   router.refresh();
                 } else if (compact) {
+                  toast("deleted");
                   router.refresh();
                 } else {
+                  toast("deleted");
                   router.push("/recipes");
                 }
               },
@@ -122,7 +126,10 @@ export function DeleteDraftRecipeButton({ recipeId }: { recipeId: string }) {
           startTransition(async () => {
             const { error: deleteError } = await createClient().from("recipes").delete().eq("id", recipeId);
             if (deleteError) setError(`${t("actionFailed")} ${deleteError.message}`);
-            else router.refresh();
+            else {
+              toast("deleted");
+              router.refresh();
+            }
           });
         }}
       >
@@ -147,7 +154,10 @@ export function RestoreRecipeButton({ recipeId }: { recipeId: string }) {
         type="button"
         className={`${primaryButton} self-start`}
         disabled={pending}
-        onClick={() => run(() => restoreRecipe(recipeId), () => router.refresh())}
+        onClick={() => run(() => restoreRecipe(recipeId), () => {
+          toast("restored");
+          router.refresh();
+        })}
       >
         {t("restore")}
       </button>
@@ -194,6 +204,7 @@ export function UndoRecipeApprovalButton({ versionId, versionNo }: { versionId: 
               () => {
                 setOpen(false);
                 setReason("");
+                toast("undone");
                 router.refresh();
               },
             )

@@ -26,7 +26,25 @@
     "reports": "Report",
     "settings": "Setting"
   },
+  "Toast": {
+    "saved": "Saved",
+    "created": "Created",
+    "submitted": "Submitted for approval",
+    "approved": "Approved",
+    "returned": "Returned",
+    "deleted": "Deleted",
+    "deleteRequested": "Delete request sent",
+    "changeRequested": "Change sent for approval",
+    "restored": "Restored",
+    "imported": "Imported",
+    "published": "Published",
+    "copied": "Copied as a draft",
+    "invited": "Invitation sent",
+    "undone": "Approval undone",
+    "withdrawn": "Withdrawn"
+  },
   "Shell": {
+    "loading": "Loading…",
     "toggleSection": "Show or hide {name} pages",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",

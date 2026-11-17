@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { MenuStatus } from "@/components/menus/MenuStatus";
@@ -53,6 +54,7 @@ export function MenuList({ outlets, menus }: { outlets: Outlet[]; menus: Menu[] 
       setPending(false);
       return;
     }
+    toast("created");
     router.push(`/menus/${data.id}`);
   }
 

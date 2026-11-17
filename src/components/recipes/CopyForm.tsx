@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -82,6 +83,7 @@ export function CopyForm({ sourceRecipeId, sourceVersionId, sourceName, targets,
       setError(`${t("actionFailed")} ${rpcError?.message ?? ""}`);
       return;
     }
+    toast("copied");
     router.push(`/recipes/${(data as { recipe_id: string }).recipe_id}/edit`);
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { proposeMaterialPack } from "@/app/[locale]/(app)/raw-materials/actions";
@@ -39,6 +40,7 @@ export function AddPackForm({ materialId }: { materialId: string }) {
         return;
       }
       setOpen(false);
+      toast("submitted");
       router.refresh();
     });
   }

@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import type { CurrentUser } from "@/lib/auth/currentUser";
+import { Toaster } from "@/components/ui/toast";
 import { BottomBar } from "./BottomBar";
 import { Logo } from "./Logo";
 import { MobileNav } from "./MobileNav";
@@ -48,6 +49,7 @@ export function AppShell({
           <div className="mx-auto w-full max-w-[1280px]">{children}</div>
         </main>
       </div>
+      <Toaster />
       <BottomBar />
     </div>
   );

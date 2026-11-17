@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { setRecipeOutlets } from "@/app/[locale]/(app)/recipes/actions";
@@ -47,6 +48,7 @@ export function RecipeOutletsEditor({
         return;
       }
       setOpen(false);
+      toast("saved");
       router.refresh();
     });
   }

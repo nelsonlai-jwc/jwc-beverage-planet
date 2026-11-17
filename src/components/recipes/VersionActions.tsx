@@ -1,5 +1,6 @@
 "use client";
 
+import { toast, type ToastKey } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -22,7 +23,11 @@ export function VersionActions({ recipeId, open, hasApproved, canReview, canMana
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function run(action: () => PromiseLike<{ error: { message: string } | null }>, after?: () => void) {
+  async function run(
+    action: () => PromiseLike<{ error: { message: string } | null }>,
+    after?: () => void,
+    done?: ToastKey,
+  ) {
     setPending(true);
     setError(null);
     const { error: rpcError } = await action();
@@ -31,6 +36,7 @@ export function VersionActions({ recipeId, open, hasApproved, canReview, canMana
       setError(rpcError.message);
       return;
     }
+    if (done) toast(done);
     if (after) after();
     else router.refresh();
   }
@@ -50,7 +56,7 @@ export function VersionActions({ recipeId, open, hasApproved, canReview, canMana
             type="button"
             disabled={pending}
             className={secondaryButton}
-            onClick={() => run(() => supabase.rpc("withdraw_recipe_version", { p_version_id: open.id }))}
+            onClick={() => run(() => supabase.rpc("withdraw_recipe_version", { p_version_id: open.id }), undefined, "withdrawn")}
           >
             {t("withdraw")}
           </button>
@@ -89,6 +95,7 @@ export function VersionActions({ recipeId, open, hasApproved, canReview, canMana
                     ? supabase.from("recipe_versions").delete().eq("id", open.id)
                     : supabase.from("recipes").delete().eq("id", recipeId),
                 () => (hasApproved ? router.refresh() : router.push("/recipes")),
+                "deleted",
               );
             }}
           >

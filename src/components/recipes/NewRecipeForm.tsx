@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/toast";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -43,6 +44,7 @@ export function NewRecipeForm({ outlets, allowAll }: { outlets: Outlet[]; allowA
       setError(`${t("actionFailed")} ${rpcError?.message ?? ""}`);
       return;
     }
+    toast("created");
     router.push(`/recipes/${version.recipe_id}/edit`);
   }
 
