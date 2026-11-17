@@ -222,10 +222,6 @@ export function MenuCategories({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/menus" className="self-start text-sm underline">
-        {t("backToMenus")}
-      </Link>
-
       <section className={`${cardClass} flex flex-col gap-4`}>
         {outlets.length > 1 && (
           <div className="flex flex-col gap-1.5">

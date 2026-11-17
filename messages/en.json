@@ -431,6 +431,8 @@
   },
   "RawMaterials": {
     "title": "Raw Material",
+    "backToList": "All raw materials",
+    "backToPackaging": "All packaging",
     "intro": "Shared purchased materials and packaging. Prices count toward drink cost only after Admin approval.",
     "noAccess": "Only Managers and Admins can view raw materials and prices.",
     "approvals": "Waiting for approval",

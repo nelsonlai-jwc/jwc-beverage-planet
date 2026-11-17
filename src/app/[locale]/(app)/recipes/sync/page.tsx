@@ -86,7 +86,7 @@ export default async function SyncRecipesPage({
     <div className="flex flex-col gap-6">
       {back}
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{fillNameSlot(
+        <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{fillNameSlot(
             t("sync.title", { name: NAME_SLOT }),
             <RecipeName name={sources[0].version.product_name ?? ""} temperature={isPrep ? null : sources[0].version.temperature} />,
           )}</h1>

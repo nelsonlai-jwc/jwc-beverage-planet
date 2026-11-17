@@ -431,6 +431,8 @@
   },
   "RawMaterials": {
     "title": "Bahan Mentah",
+    "backToList": "Semua bahan mentah",
+    "backToPackaging": "Semua pembungkusan",
     "intro": "Bahan belian dan pembungkusan yang dikongsi. Harga hanya dikira dalam kos minuman selepas kelulusan Admin.",
     "noAccess": "Hanya Pengurus dan Admin boleh melihat bahan mentah dan harga.",
     "approvals": "Menunggu kelulusan",

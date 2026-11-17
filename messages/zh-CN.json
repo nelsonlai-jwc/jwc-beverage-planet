@@ -431,6 +431,8 @@
   },
   "RawMaterials": {
     "title": "原料",
+    "backToList": "全部原料",
+    "backToPackaging": "全部包装",
     "intro": "全公司共用的采购原料与包装。价格经 Admin 批准后才计入饮料成本。",
     "noAccess": "只有 Manager 和 Admin 可以查看原料与价格。",
     "approvals": "待审批",
