@@ -11,10 +11,11 @@ import { CATALOGUE_STYLES, catalogueStateFromSearch, type CatalogueCard } from "
 import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import { MineList } from "@/components/recipes/MineList";
 import { RememberListFilters } from "@/components/recipes/RememberListFilters";
+import { recipeNameKey } from "@/lib/recipes/sync";
 import { MINE_STATUSES, mineStateFromSearch, type MineCard } from "@/lib/recipes/mine";
 import { TagList, card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 
-type Tab = "mine" | "pending" | "catalogue";
+type Tab = "mine" | "pending" | "catalogue" | "sync";
 const OPEN: ApprovalStatus[] = ["DRAFT", "PENDING", "RETURNED"];
 
 export default async function RecipesPage({
@@ -41,7 +42,13 @@ export default async function RecipesPage({
   const isStaff = viewer.role === "BARISTA";
   // Super Admin, or an outlet Admin (who reviews only recipes of their outlets).
   const reviewer = viewer.role === "ADMIN" || viewer.outletAdmin;
-  const tabs: Tab[] = isStaff ? [] : reviewer ? ["mine", "pending", "catalogue"] : ["mine", "catalogue"];
+  const tabs: Tab[] = isStaff
+    ? []
+    : viewer.role === "ADMIN"
+      ? ["mine", "pending", "catalogue", "sync"]
+      : reviewer
+        ? ["mine", "pending", "catalogue"]
+        : ["mine", "catalogue"];
   const tab: Tab = tabs.includes(query.tab as Tab) ? (query.tab as Tab) : "mine";
   const search = (query.q ?? "").trim().toLowerCase();
 
@@ -271,6 +278,82 @@ export default async function RecipesPage({
                 </Link>
               </li>
             ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  // Super Admin: recipes whose approved versions share a name, to compare and sync.
+  if (tab === "sync") {
+    const groups = new Map<string, typeof rows>();
+    for (const r of rows) {
+      if (!r.approved || r.status !== "ACTIVE") continue;
+      const key = `${r.is_prep ? "p" : "d"}:${recipeNameKey(r.approved.product_name)}`;
+      groups.set(key, [...(groups.get(key) ?? []), r]);
+    }
+    const same = [...groups.values()]
+      .filter((g) => g.length > 1 && g.some(matches))
+      .sort((a, b) => a[0].name.localeCompare(b[0].name));
+    const synced = Number(query.synced) || 0;
+    return (
+      <div className="flex flex-col gap-6">
+        {header}
+        {translationNote}
+        {tabBar}
+        <p className="text-sm text-[#3d3f3a]">{t("sync.intro")}</p>
+        {synced > 0 && (
+          <p role="status" className="rounded-[10px] bg-brand-green/40 px-3 py-2 text-sm font-semibold">
+            {t("sync.done", { count: synced })}
+          </p>
+        )}
+        {searchBox()}
+        {same.length === 0 ? (
+          <p className={card}>{t("sync.empty")}</p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {same.map((group) => {
+              const free = group.filter((r) => !r.open);
+              return (
+                <li key={group[0].id}>
+                  <form action={`/${locale}/recipes/sync`} className={card}>
+                    <h2 className="flex flex-wrap items-baseline gap-2 text-base font-semibold">
+                      {group[0].name}
+                      <span className="text-sm font-normal text-[#3d3f3a]">
+                        {group[0].is_prep ? t("prep") : t("drink")} · {t("sync.count", { count: group.length })}
+                      </span>
+                    </h2>
+                    <ul className="flex flex-col gap-2">
+                      {group.map((r) => (
+                        <li key={r.id}>
+                          <label className={`flex min-h-11 items-center gap-3 ${r.open ? "text-[#3d3f3a]" : ""}`}>
+                            <input
+                              type="checkbox"
+                              name="ids"
+                              value={r.id}
+                              defaultChecked={!r.open}
+                              disabled={Boolean(r.open)}
+                              className="h-5 w-5 accent-black"
+                            />
+                            <span className="flex flex-col">
+                              <span className="text-sm font-semibold">
+                                {outletName(r)} · V{r.approved!.version_no}
+                              </span>
+                              {r.open && <span className="text-xs">{t("sync.hasOpen")}</span>}
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                    <div>
+                      <button className={primaryButton} disabled={free.length < 2}>
+                        {t("sync.compare")}
+                      </button>
+                    </div>
+                  </form>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
