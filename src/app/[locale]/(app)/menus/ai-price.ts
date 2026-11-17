@@ -3,15 +3,8 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { getViewer, loadFullVersion } from "@/lib/recipes/data";
+import { AI_MODELS as MODELS } from "@/lib/ai/models";
 import { createClient } from "@/lib/supabase/server";
-
-// Same free-tier model list as the recipe AI review, tried in order.
-const MODELS = [
-  "anthropic/claude-haiku-5.5",
-  "anthropic/claude-haiku-4.5",
-  "google/gemini-2.5-flash",
-  "deepseek/deepseek-v4-flash",
-];
 
 const estimateSchema = z.object({
   low: z.number(),
