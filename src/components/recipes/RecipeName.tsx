@@ -22,3 +22,18 @@ export function RecipeName({ name, temperature }: { name: ReactNode; temperature
 export function recipeNameText(name: string, tempLabel: string | null | undefined) {
   return tempLabel ? `${name} (${tempLabel})` : name;
 }
+
+/** Placeholder for a translated sentence around a name, e.g. t("reviewTitle", { name: NAME_SLOT }). */
+export const NAME_SLOT = "\u0000";
+
+/** Puts a node (e.g. a RecipeName) where NAME_SLOT sits in an already translated sentence. */
+export function fillNameSlot(text: string, node: ReactNode) {
+  const [before, after = ""] = text.split(NAME_SLOT);
+  return (
+    <>
+      {before}
+      {node}
+      {after}
+    </>
+  );
+}

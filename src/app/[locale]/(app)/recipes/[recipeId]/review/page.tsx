@@ -10,7 +10,7 @@ import { CostSummary, formatMoney } from "@/components/recipes/CostSummary";
 import { ReviewActions } from "@/components/recipes/ReviewActions";
 import { StepMediaView } from "@/components/recipes/StepMediaView";
 import { PurposeBadge, card } from "@/components/recipes/ui";
-import { RecipeName } from "@/components/recipes/RecipeName";
+import { NAME_SLOT, RecipeName, fillNameSlot } from "@/components/recipes/RecipeName";
 
 type Change = "added" | "removed" | "changed" | "same";
 
@@ -102,11 +102,10 @@ export default async function ReviewRecipePage({
           {t("backToRecipe")}
         </Link>
         <h1 className="font-serif text-[32px] font-normal">
-          {t.rich("reviewTitle", {
-            name: () => (
-              <RecipeName name={next.product_name ?? t("untitled")} temperature={recipe.is_prep ? null : next.temperature} />
-            ),
-          })}
+          {fillNameSlot(
+            t("reviewTitle", { name: NAME_SLOT }),
+            <RecipeName name={next.product_name ?? t("untitled")} temperature={recipe.is_prep ? null : next.temperature} />,
+          )}
         </h1>
         <p className="flex flex-wrap items-center gap-2 text-sm text-[#3d3f3a]">
           <span>{outletName}</span>

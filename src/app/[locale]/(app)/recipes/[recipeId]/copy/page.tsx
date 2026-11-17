@@ -7,7 +7,7 @@ import { RECIPE_OUTLETS, coversOutlet, outletLabel } from "@/lib/recipes/outlets
 import { createClient } from "@/lib/supabase/server";
 import { CopyForm } from "@/components/recipes/CopyForm";
 import { SopView } from "@/components/recipes/SopView";
-import { RecipeName } from "@/components/recipes/RecipeName";
+import { NAME_SLOT, RecipeName, fillNameSlot } from "@/components/recipes/RecipeName";
 
 export default async function CopyRecipePage({
   params,
@@ -93,11 +93,10 @@ export default async function CopyRecipePage({
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="font-serif text-[32px] font-normal">{t.rich("copyTitle", {
-            name: () => (
-              <RecipeName name={source.product_name ?? ""} temperature={recipe.is_prep ? null : source.temperature} />
-            ),
-          })}</h1>
+        <h1 className="font-serif text-[32px] font-normal">{fillNameSlot(
+            t("copyTitle", { name: NAME_SLOT }),
+            <RecipeName name={source.product_name ?? ""} temperature={recipe.is_prep ? null : source.temperature} />,
+          )}</h1>
         <p className="text-sm text-[#3d3f3a]">
           {isApproved
             ? t("copySource", {
