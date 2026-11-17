@@ -45,7 +45,7 @@ export default async function RecipeHistoryPage({
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("changeLog.title")}</h1>
+        <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{t("changeLog.title")}</h1>
         <p className="text-sm text-[#3d3f3a]">{names.get(recipeId)}</p>
       </div>
       {(rows ?? []).length === 0 ? (

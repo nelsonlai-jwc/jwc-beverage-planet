@@ -93,7 +93,7 @@ export default async function CopyRecipePage({
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{fillNameSlot(
+        <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{fillNameSlot(
             t("copyTitle", { name: NAME_SLOT }),
             <RecipeName name={source.product_name ?? ""} temperature={recipe.is_prep ? null : source.temperature} />,
           )}</h1>

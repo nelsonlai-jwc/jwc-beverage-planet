@@ -20,7 +20,7 @@ export default async function NewRecipePage({ params }: { params: Promise<{ loca
         <Link href="/recipes" className="text-sm underline">
           {t("backToList")}
         </Link>
-        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("create")}</h1>
+        <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{t("create")}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("createIntro")}</p>
       </div>
       <NewRecipeForm outlets={outlets} allowAll={viewer.role === "ADMIN"} />

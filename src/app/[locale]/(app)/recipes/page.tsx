@@ -90,7 +90,7 @@ export default async function RecipesPage({
   const header = (
     <div className="flex flex-wrap items-end justify-between gap-4 lg:flex-nowrap">
       <div className="flex min-w-0 flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{nav("recipes")}</h1>
+        <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{nav("recipes")}</h1>
         <p className="text-sm text-[#3d3f3a]">{isStaff ? t("staffIntro") : t("intro")}</p>
       </div>
       {!isStaff && (
