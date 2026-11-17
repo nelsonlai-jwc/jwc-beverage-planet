@@ -134,7 +134,7 @@ export function PackagingForm({
           rows={3}
           value={values.description}
           onChange={(event) => set("description", event.target.value)}
-          className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
+          className="w-full rounded-xl border border-black/35 bg-white px-3 py-2.5 text-base focus:border-black focus:outline-none"
         />
       </div>
       {approved && !approved.isAdmin && (
@@ -147,7 +147,7 @@ export function PackagingForm({
             rows={2}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
+            className="w-full rounded-xl border border-black/35 bg-white px-3 py-2.5 text-base focus:border-black focus:outline-none"
           />
         </div>
       )}

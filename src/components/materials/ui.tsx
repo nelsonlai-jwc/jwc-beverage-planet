@@ -5,13 +5,13 @@ import type { Database } from "@/types/database";
 export type ApprovalStatus = Database["public"]["Enums"]["approval_status"];
 
 export const inputClass =
-  "h-12 w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 text-base disabled:opacity-60";
+  "h-10 w-full min-w-0 rounded-xl border border-black/35 bg-white px-3 text-base focus:border-black focus:outline-none disabled:bg-[#eceee8]";
 export const labelClass = "text-sm font-semibold";
-export const cardClass = "flex flex-col gap-4 rounded-[20px] bg-white p-5 sm:p-6";
+export const cardClass = "flex flex-col gap-4 rounded-[20px] bg-white p-4 sm:p-5";
 export const primaryButtonClass =
-  "inline-flex h-12 items-center justify-center rounded-xl bg-black px-5 text-sm font-semibold text-white disabled:opacity-60";
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-black px-5 text-sm font-semibold text-white hover:bg-black/85 disabled:opacity-50";
 export const secondaryButtonClass =
-  "inline-flex h-12 items-center justify-center rounded-xl border-[1.5px] border-black bg-white px-5 text-sm font-semibold disabled:opacity-60";
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-black bg-white px-4 text-sm font-semibold hover:bg-black/5 disabled:opacity-50";
 export const errorClass = "text-sm font-semibold text-[#c4161c]";
 
 // Colour plus text, never colour alone (ch. 17.3).
@@ -48,7 +48,7 @@ export function SectionTabs({
     { key: "packaging", href: `${basePath}?tab=packaging`, label: t("tabPackaging") },
   ] as const;
   return (
-    <nav aria-label={t("sections")} className="flex gap-2">
+    <nav aria-label={t("sections")} className="flex flex-wrap gap-1">
       {tabs.map((tab) => (
         <Link
           key={tab.key}
@@ -56,8 +56,8 @@ export function SectionTabs({
           aria-current={active === tab.key ? "page" : undefined}
           className={
             active === tab.key
-              ? "flex h-11 items-center rounded-full bg-black px-4 text-sm font-semibold text-white"
-              : "flex h-11 items-center rounded-full border-[1.5px] border-black bg-white px-4 text-sm"
+              ? "flex h-8 items-center rounded-full bg-black px-3.5 text-[13px] font-semibold text-white"
+              : "flex h-8 items-center rounded-full px-3.5 text-[13px] font-semibold text-black/70 hover:bg-black/5"
           }
         >
           {tab.label}

@@ -286,7 +286,7 @@ export function MenuEditor({
           {t("backToMenus")}
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-serif text-[32px] font-normal">{menu.name}</h1>
+          <h1 className="font-serif text-[28px] leading-tight font-normal">{menu.name}</h1>
           <MenuStatus status={menu.status} />
           {hasPending && !archived && <StatusBadge tone="purple">{t("pendingChanges")}</StatusBadge>}
         </div>

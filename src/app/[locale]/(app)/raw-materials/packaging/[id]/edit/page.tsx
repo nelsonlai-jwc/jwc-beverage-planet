@@ -39,7 +39,7 @@ export default async function EditPackagingPage({
   return (
     <div className="flex flex-col gap-6">
       <BackLink href={`/raw-materials/packaging/${id}`} label={item.name} />
-      <h1 className="font-serif text-[32px] font-normal">{t("detail.edit")}</h1>
+      <h1 className="font-serif text-[28px] leading-tight font-normal">{t("detail.edit")}</h1>
       <PackagingForm
         approved={approved ? { isAdmin } : undefined}
         initial={{

@@ -287,7 +287,7 @@ export function MaterialForm({
               value={values.description}
               rows={3}
               onChange={(event) => set("description", event.target.value)}
-              className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
+              className="w-full rounded-xl border border-black/35 bg-white px-3 py-2.5 text-base focus:border-black focus:outline-none"
             />
           </Field>
           <PhotoField
@@ -398,7 +398,7 @@ export function MaterialForm({
               rows={2}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              className="w-full rounded-[10px] border-[1.5px] border-black bg-white px-3.5 py-3 text-base"
+              className="w-full rounded-xl border border-black/35 bg-white px-3 py-2.5 text-base focus:border-black focus:outline-none"
             />
           </Field>
         )}

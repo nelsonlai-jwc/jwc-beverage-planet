@@ -8,7 +8,7 @@ export function ReportHeader({ title, note }: { title: string; note: string }) {
       <Link href="/reports" className="self-start text-sm underline print:hidden">
         {t("backToReports")}
       </Link>
-      <h1 className="font-serif text-[32px] font-normal">{title}</h1>
+      <h1 className="font-serif text-[28px] leading-tight font-normal">{title}</h1>
       <p className="text-sm text-[#3d3f3a]">{note}</p>
     </div>
   );

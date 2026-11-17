@@ -86,7 +86,7 @@ export default async function RecipesPage({
   const header = (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-serif text-[32px] font-normal">{nav("recipes")}</h1>
+        <h1 className="font-serif text-[28px] leading-tight font-normal">{nav("recipes")}</h1>
         <p className="text-sm text-[#3d3f3a]">{isStaff ? t("staffIntro") : t("intro")}</p>
       </div>
       {!isStaff && (
@@ -182,8 +182,8 @@ export default async function RecipesPage({
           aria-current={key === tab ? "page" : undefined}
           className={
             key === tab
-              ? "rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
-              : "rounded-full px-4 py-2 text-sm hover:bg-black/10"
+              ? "inline-flex h-8 items-center rounded-full bg-black px-3.5 text-[13px] font-semibold text-white"
+              : "inline-flex h-8 items-center rounded-full px-3.5 text-[13px] font-semibold text-black/70 hover:bg-black/5"
           }
         >
           {t(`tabs.${key}`)}

@@ -18,7 +18,7 @@ const CHIPS = ["name", "brand", "type", "pack", "cost", "status", "updated"] as 
 type ChipKey = (typeof CHIPS)[number];
 
 const compactInput =
-  "h-9 w-full min-w-0 rounded-lg border-[1.5px] border-black bg-white px-2 text-sm font-normal";
+  "h-9 w-full min-w-0 rounded-lg border border-black/35 bg-white px-2 text-sm font-normal";
 
 function toNumber(value: string) {
   if (value.trim() === "") return null;
@@ -331,7 +331,7 @@ export function MaterialTable({
   };
 
   const chipBase =
-    "inline-flex h-10 shrink-0 items-center rounded-lg border-[1.5px] border-black text-sm font-semibold whitespace-nowrap";
+    "inline-flex h-8 shrink-0 items-center rounded-full border border-black/70 text-[13px] font-semibold whitespace-nowrap";
 
   const chip = (key: ChipKey) => {
     const value = summary[key];
@@ -424,8 +424,8 @@ export function MaterialTable({
   return (
     <div className="flex flex-col gap-4">
       {/* One row of filter chips (scrolls sideways on phones), plus Sort on phones. */}
-      <div className="flex items-center gap-3">
-        <div className="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 py-0.5 md:flex-wrap">
+      <div className="flex flex-wrap gap-1.5">
+        <div className="contents">
           {CHIPS.map(chip)}
         </div>
         <span data-chip className="md:hidden">

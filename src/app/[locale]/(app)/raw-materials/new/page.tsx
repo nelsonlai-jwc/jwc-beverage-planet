@@ -25,7 +25,7 @@ export default async function NewMaterialPage({
   return (
     <div className="flex flex-col gap-6">
       <BackLink href="/raw-materials" label={t("title")} />
-      <h1 className="font-serif text-[32px] font-normal">{t("newMaterial")}</h1>
+      <h1 className="font-serif text-[28px] leading-tight font-normal">{t("newMaterial")}</h1>
       <MaterialForm types={types ?? []} />
     </div>
   );

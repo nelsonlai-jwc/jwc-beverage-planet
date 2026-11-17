@@ -19,7 +19,7 @@ export default async function NewPackagingPage({
   return (
     <div className="flex flex-col gap-6">
       <BackLink href="/raw-materials?tab=packaging" label={t("tabPackaging")} />
-      <h1 className="font-serif text-[32px] font-normal">{t("newPackaging")}</h1>
+      <h1 className="font-serif text-[28px] leading-tight font-normal">{t("newPackaging")}</h1>
       <PackagingForm />
     </div>
   );

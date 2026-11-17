@@ -92,7 +92,7 @@ export default async function CopyRecipePage({
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="font-serif text-[32px] font-normal">{t("copyTitle", { name: source.product_name ?? "" })}</h1>
+        <h1 className="font-serif text-[28px] leading-tight font-normal">{t("copyTitle", { name: source.product_name ?? "" })}</h1>
         <p className="text-sm text-[#3d3f3a]">
           {isApproved
             ? t("copySource", {

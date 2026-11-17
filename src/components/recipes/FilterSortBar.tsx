@@ -7,10 +7,10 @@ import { rememberRecipeList } from "@/lib/recipes/listMemory";
 // Filter chips + "Sort by" menu shared by the recipe list tabs (Approved catalogue, My outlets).
 
 const compactInput =
-  "h-9 w-full min-w-0 rounded-lg border-[1.5px] border-black bg-white px-2 text-sm font-normal";
+  "h-9 w-full min-w-0 rounded-lg border border-black/35 bg-white px-2 text-sm font-normal";
 
 const chipBase =
-  "inline-flex h-10 shrink-0 items-center rounded-lg border-[1.5px] border-black text-sm font-semibold whitespace-nowrap";
+  "inline-flex h-8 shrink-0 items-center rounded-full border border-black/70 text-[13px] font-semibold whitespace-nowrap";
 
 export type SortDir = "asc" | "desc";
 
@@ -153,8 +153,8 @@ export function FilterSortBar<F extends string, S extends string>({
   return (
     <>
       {/* One row of filter chips (scrolls sideways on phones), plus Sort by. */}
-      <div className="flex items-center gap-3">
-        <div className="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 py-0.5 md:flex-wrap">
+      <div className="flex flex-wrap gap-1.5">
+        <div className="contents">
           {filterKeys.map(chip)}
         </div>
         <span data-chip>

@@ -39,7 +39,7 @@ export default async function ImportPage({
     <div className="flex flex-col gap-6">
       <BackLink href={kind === "packaging" ? "/raw-materials?tab=packaging" : "/raw-materials"} label={t("title")} />
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-serif text-[32px] font-normal">{t("import.title")}</h1>
+        <h1 className="font-serif text-[28px] leading-tight font-normal">{t("import.title")}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("import.intro")}</p>
       </div>
       <SectionTabs active={kind} basePath="/raw-materials/import" />

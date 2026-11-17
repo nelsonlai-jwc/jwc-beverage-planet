@@ -68,7 +68,7 @@ export default async function PackagingPage({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-serif text-[32px] font-normal">{loc.t(item.name)}</h1>
+            <h1 className="font-serif text-[28px] leading-tight font-normal">{loc.t(item.name)}</h1>
             <StatusBadge status={item.status} />
           </div>
           {item.brand && <p className="text-sm text-[#3d3f3a]">{item.brand}</p>}
