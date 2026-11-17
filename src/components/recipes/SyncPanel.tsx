@@ -6,13 +6,15 @@ import { aiSyncRecipes, syncRecipes } from "@/app/[locale]/(app)/recipes/sync/ac
 import { useRouter } from "@/i18n/navigation";
 import { letterFor, relabelSteps } from "@/lib/recipes/letters";
 import type { SyncContent, SyncOption } from "@/lib/recipes/sync";
-import { UNITS, type BeverageStyle, type BeverageTemp, type MeasureUnit } from "@/lib/recipes/types";
+import { UNITS, type BeverageStyle, type BeverageTemp, type MeasureUnit, type Photo, type StepMedia } from "@/lib/recipes/types";
 import { explainApprovalError } from "./ReviewActions";
 import { alertClass, card, inputClass, primaryButton, secondaryButton, smallButton, textareaClass } from "./ui";
 
 type Props = {
   recipeIds: string[];
   columns: { id: string; label: string }[];
+  // Finished photos and step photos / videos of each compared recipe.
+  media: { recipeId: string; photos: Photo[]; steps: (StepMedia & { stepNo: number })[] }[];
   isPrep: boolean;
   options: SyncOption[];
   styles: BeverageStyle[];
@@ -21,7 +23,7 @@ type Props = {
 
 // AI writes one version from the compared recipes; the Super Admin edits it and syncs it
 // to every compared recipe at once (new approved version each, no approval step).
-export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }: Props) {
+export function SyncPanel({ recipeIds, columns, media, isPrep, options, styles, temps }: Props) {
   const t = useTranslations("Recipes");
   const locale = useLocale();
   const router = useRouter();
@@ -44,7 +46,8 @@ export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }
       setAiError(true);
       return;
     }
-    setContent(result.content);
+    // A new AI answer keeps the ticked recipes; step media is picked again for the new steps.
+    setContent((old) => ({ ...result.content, photo_recipe_ids: old?.photo_recipe_ids ?? [] }));
     setError(null);
   }
 
@@ -69,9 +72,11 @@ export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }
     if (!content) return;
     setPending(true);
     setError(null);
+    const keep = content.steps.map((s) => Boolean(s.trim()));
     const result = await syncRecipes(recipeIds, {
       ...content,
-      steps: content.steps.map((s) => s.trim()).filter(Boolean),
+      steps: content.steps.filter((_, n) => keep[n]).map((s) => s.trim()),
+      step_media: content.step_media.filter((_, n) => keep[n]),
     });
     setPending(false);
     if (!result.ok) {
@@ -88,6 +93,28 @@ export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }
     }
     router.push(`/recipes?tab=sync&synced=${result.count}`);
   }
+
+  // Ticking a recipe brings in its photos; unticking also clears its step media from the steps.
+  function toggleMediaRecipe(recipeId: string) {
+    if (!content) return;
+    const on = !content.photo_recipe_ids.includes(recipeId);
+    const ids = on
+      ? recipeIds.filter((id) => id === recipeId || content.photo_recipe_ids.includes(id))
+      : content.photo_recipe_ids.filter((id) => id !== recipeId);
+    const allowed = new Set(media.filter((m) => ids.includes(m.recipeId)).flatMap((m) => m.steps.map((s) => s.id)));
+    update({ photo_recipe_ids: ids, step_media: content.step_media.map((m) => (m && allowed.has(m) ? m : null)) });
+  }
+
+  const ticked = media.filter((m) => content?.photo_recipe_ids.includes(m.recipeId));
+  const photosUsed = ticked.flatMap((m) => m.photos).filter((p, n, all) => all.findIndex((x) => x.id === p.id) === n);
+  const stepChoices = ticked.flatMap((m) =>
+    m.steps.map((s) => ({
+      ...s,
+      label: `${columns.find((c) => c.id === m.recipeId)?.label ?? ""} · ${t("stepLabel", { no: s.stepNo })} (${
+        s.isVideo ? t("sync.video") : t("sync.photo")
+      })`,
+    })),
+  ).filter((s, n, all) => all.findIndex((x) => x.id === s.id) === n);
 
   const used = new Set(content?.ingredients.map((i) => i.key) ?? []);
   const unused = options.filter((o) => !used.has(o.key));
@@ -230,7 +257,12 @@ export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }
                   <button
                     type="button"
                     className={smallButton}
-                    onClick={() => update({ steps: content.steps.filter((_, k) => k !== n) })}
+                    onClick={() =>
+                      update({
+                        steps: content.steps.filter((_, k) => k !== n),
+                        step_media: content.step_media.filter((_, k) => k !== n),
+                      })
+                    }
                   >
                     {t("remove")}
                   </button>
@@ -241,13 +273,84 @@ export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }
                   onChange={(e) => update({ steps: content.steps.map((s, k) => (k === n ? e.target.value : s)) })}
                   className={textareaClass}
                 />
+                {stepChoices.length > 0 && (
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs">{t("sync.stepMedia")}</span>
+                    <select
+                      value={content.step_media[n] ?? ""}
+                      onChange={(e) =>
+                        update({ step_media: content.step_media.map((m, k) => (k === n ? e.target.value || null : m)) })
+                      }
+                      className={inputClass}
+                    >
+                      <option value="">{t("sync.noMedia")}</option>
+                      {stepChoices.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {content.step_media[n] && <MediaPreview item={stepChoices.find((c) => c.id === content.step_media[n])} />}
               </div>
             ))}
             <div>
-              <button type="button" className={smallButton} onClick={() => update({ steps: [...content.steps, ""] })}>
+              <button
+                type="button"
+                className={smallButton}
+                onClick={() => update({ steps: [...content.steps, ""], step_media: [...content.step_media, null] })}
+              >
                 {t("addStep")}
               </button>
             </div>
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-2 text-sm font-semibold">{t("sync.mediaTitle")}</legend>
+            <p className="text-[13px] text-[#3d3f3a]">{t("sync.mediaIntro")}</p>
+            {columns.map((c) => {
+              const m = media.find((x) => x.recipeId === c.id);
+              const ticked = content.photo_recipe_ids.includes(c.id);
+              return (
+                <label key={c.id} className="flex min-h-11 items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={ticked}
+                    onChange={() => toggleMediaRecipe(c.id)}
+                    className="h-5 w-5 accent-black"
+                  />
+                  <span className="flex flex-col">
+                    <span className="text-sm font-semibold">{c.label}</span>
+                    <span className="text-xs text-[#3d3f3a]">
+                      {t("sync.mediaCount", { photos: m?.photos.length ?? 0, steps: m?.steps.length ?? 0 })}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+            {content.photo_recipe_ids.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-sm">{t("sync.photosUsed")}</span>
+                {photosUsed.length === 0 ? (
+                  <p className={alertClass}>{t("sync.noPhotos")}</p>
+                ) : (
+                  <ul className="flex flex-wrap gap-2">
+                    {photosUsed.map((p) => (
+                      <li key={p.id}>
+                        {p.url ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- signed storage URLs
+                          <img src={p.url} alt="" className="h-20 w-20 rounded-[10px] object-cover" />
+                        ) : (
+                          <div className="h-20 w-20 rounded-[10px] bg-[#eceee8]" />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-[13px] text-[#3d3f3a]">{t("sync.stepMediaHint")}</p>
+              </div>
+            )}
           </fieldset>
 
           <fieldset className="grid gap-3 sm:grid-cols-2">
@@ -364,5 +467,15 @@ export function SyncPanel({ recipeIds, columns, isPrep, options, styles, temps }
         </div>
       )}
     </section>
+  );
+}
+
+function MediaPreview({ item }: { item?: StepMedia }) {
+  if (!item?.url) return null;
+  return item.isVideo ? (
+    <video src={item.url} controls preload="metadata" className="max-h-40 w-fit max-w-full rounded-[10px]" />
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- signed storage URLs
+    <img src={item.url} alt="" className="max-h-40 w-fit max-w-full rounded-[10px] object-cover" />
   );
 }

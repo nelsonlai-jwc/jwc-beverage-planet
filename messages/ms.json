@@ -1207,7 +1207,7 @@
       "reason": "Sebab (disimpan sebagai ringkasan perubahan)",
       "notes": "Nota",
       "stepsNote": "Rujuk bahan sebagai [A], [B] … mengikut huruf di atas.",
-      "keeps": "Setiap resipi mengekalkan nama, outlet, foto, pengenalan, tag, rasa, nota dan pembungkusan sendiri. Foto dan video langkah tidak dikekalkan. Versi lama kekal dalam sejarah dan boleh dipulihkan dengan Batal kelulusan.",
+      "keeps": "Setiap resipi mengekalkan nama, outlet, pengenalan, tag, rasa, nota dan pembungkusan sendiri. Versi lama kekal dalam sejarah dan boleh dipulihkan dengan Batal kelulusan.",
       "syncButton": "Selaraskan kepada {count} resipi",
       "incomplete": "Setiap bahan perlu kuantiti dan unit, dan sekurang-kurangnya satu langkah diperlukan.",
       "confirm": "{count} resipi ini akan bertukar kepada versi ini sekarang, tanpa kelulusan:",
@@ -1218,8 +1218,19 @@
       "errors": {
         "SYNC_NEED_TWO": "Pilih sekurang-kurangnya dua resipi.",
         "SYNC_NOT_SAME_NAME": "Resipi ini tidak lagi mempunyai nama sama atau tidak lagi aktif. Kembali dan pilih semula.",
-        "SYNC_OPEN_VERSION": "Salah satu resipi kini mempunyai versi draf atau menunggu kelulusan. Uruskannya dahulu."
-      }
+        "SYNC_OPEN_VERSION": "Salah satu resipi kini mempunyai versi draf atau menunggu kelulusan. Uruskannya dahulu.",
+        "SYNC_BAD_MEDIA": "Foto atau video yang dipilih tiada lagi dalam resipi yang ditanda. Muat semula dan pilih lagi."
+      },
+      "mediaTitle": "Foto dan video",
+      "mediaIntro": "Tiada yang ditanda: setiap resipi mengekalkan foto siap sendiri dan langkah tiada foto atau video. Tandakan resipi untuk membawa masuk foto dan videonya.",
+      "mediaCount": "{photos} foto siap · {steps} foto/video langkah",
+      "photosUsed": "Foto siap yang akan digunakan oleh setiap resipi:",
+      "noPhotos": "Resipi ini tiada foto siap; tandakan resipi lain.",
+      "stepMediaHint": "Pilih foto atau video langkah di bawah setiap langkah di atas.",
+      "stepMedia": "Foto / video langkah",
+      "noMedia": "Tiada",
+      "video": "video",
+      "photo": "foto"
     }
   },
   "Reports": {

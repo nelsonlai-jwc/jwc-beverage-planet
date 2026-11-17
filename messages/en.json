@@ -1207,7 +1207,7 @@
       "reason": "Why (saved as the change summary)",
       "notes": "Notes",
       "stepsNote": "Refer to ingredients as [A], [B] … by their letters above.",
-      "keeps": "Each recipe keeps its own name, outlets, photos, introduction, tags, flavour, notes and packaging. Step photos and videos are not kept. The old versions stay in the history and can be put back with Undo approval.",
+      "keeps": "Each recipe keeps its own name, outlets, introduction, tags, flavour, notes and packaging. The old versions stay in the history and can be put back with Undo approval.",
       "syncButton": "Sync to {count} recipes",
       "incomplete": "Every ingredient needs a quantity and unit, and at least one step is needed.",
       "confirm": "These {count} recipes change to this version now, with no approval:",
@@ -1218,8 +1218,19 @@
       "errors": {
         "SYNC_NEED_TWO": "Pick at least two recipes.",
         "SYNC_NOT_SAME_NAME": "The recipes no longer have the same name or are no longer active. Go back and pick again.",
-        "SYNC_OPEN_VERSION": "One of the recipes now has a draft or pending version. Handle it first."
-      }
+        "SYNC_OPEN_VERSION": "One of the recipes now has a draft or pending version. Handle it first.",
+        "SYNC_BAD_MEDIA": "A chosen photo or video is no longer in the ticked recipes. Reload and choose again."
+      },
+      "mediaTitle": "Photos and videos",
+      "mediaIntro": "Nothing ticked: each recipe keeps its own finished photos and the steps have no photo or video. Tick recipes to bring in their photos and videos.",
+      "mediaCount": "{photos} finished photos · {steps} step photos/videos",
+      "photosUsed": "Finished photos every recipe will use:",
+      "noPhotos": "These recipes have no finished photos; tick another recipe.",
+      "stepMediaHint": "Choose a step photo or video under each step above.",
+      "stepMedia": "Step photo / video",
+      "noMedia": "None",
+      "video": "video",
+      "photo": "photo"
     }
   },
   "Reports": {

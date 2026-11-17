@@ -106,6 +106,7 @@ export async function aiSyncRecipes(recipeIds: string[], locale: string): Promis
       const ingredients = output.ingredients.filter((i) => options.has(i.key) && !seen.has(i.key) && seen.add(i.key));
       if (!ingredients.length) throw new Error("No usable ingredients in the AI answer");
       console.info("AI recipe sync done with", model);
+      const steps = output.steps.map((s) => s.replace(/^\s*\d+[.)]\s*/, "").trim()).filter(Boolean);
       return {
         ok: true,
         reason: output.reason,
@@ -125,7 +126,9 @@ export async function aiSyncRecipes(recipeIds: string[], locale: string): Promis
           garnish: output.garnish,
           change_summary: output.reason,
           ingredients: ingredients.map((i) => ({ key: i.key, quantity: i.quantity, unit: i.unit, notes: i.notes })),
-          steps: output.steps.map((s) => s.replace(/^\s*\d+[.)]\s*/, "").trim()).filter(Boolean),
+          steps,
+          step_media: steps.map(() => null),
+          photo_recipe_ids: [],
         },
       };
     } catch (error) {

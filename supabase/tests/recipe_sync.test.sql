@@ -161,16 +161,39 @@ insert into storage.objects (bucket_id, name)
 insert into public.recipe_media (recipe_version_id, sort_order, media_asset_id) values
   ('50000000-0000-0000-0000-000000000001', 1, '70000000-0000-0000-0000-000000000001'),
   ('50000000-0000-0000-0000-000000000002', 1, '70000000-0000-0000-0000-000000000001');
+-- Recipe 2 also has its own second photo and a step video.
+insert into public.media_assets (id, object_path, mime_type, size_bytes, upload_status) values
+  ('70000000-0000-0000-0000-000000000002', 'x/latte2.jpg', 'image/jpeg', 1000, 'READY'),
+  ('70000000-0000-0000-0000-000000000003', 'x/pour.mp4', 'video/mp4', 1000, 'READY');
+insert into public.recipe_media (recipe_version_id, sort_order, media_asset_id) values
+  ('50000000-0000-0000-0000-000000000002', 2, '70000000-0000-0000-0000-000000000002');
+insert into public.recipe_steps (recipe_version_id, step_no, instruction, media_asset_id) values
+  ('50000000-0000-0000-0000-000000000002', 1, 'Pour', '70000000-0000-0000-0000-000000000003');
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', true);
 
+-- Step media must come from a ticked recipe.
+do $$
+begin
+  perform public.sync_recipes(
+    array['40000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002']::uuid[],
+    jsonb_build_object('photo_recipe_ids', jsonb_build_array('40000000-0000-0000-0000-000000000001'),
+      'steps', jsonb_build_array(jsonb_build_object('instruction', 'x', 'media_asset_id', '70000000-0000-0000-0000-000000000003'))));
+  raise exception 'step media from an unticked recipe';
+exception when check_violation then
+  assert sqlerrm = 'SYNC_BAD_MEDIA', sqlerrm;
+end;
+$$;
+
+-- Bring in recipe 2's photos and its step video.
 select public.sync_recipes(
   array['40000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002']::uuid[],
   jsonb_build_object(
     'style', 'COFFEE', 'temperature', 'COLD', 'cup_type', '16oz cup', 'change_summary', 'Unified',
+    'photo_recipe_ids', jsonb_build_array('40000000-0000-0000-0000-000000000002'),
     'ingredients', jsonb_build_array(jsonb_build_object(
       'material_id', '10000000-0000-0000-0000-000000000001', 'quantity', 200, 'unit', 'ml', 'notes', '')),
-    'steps', jsonb_build_array(jsonb_build_object('instruction', 'Pour [A] over ice'),
+    'steps', jsonb_build_array(jsonb_build_object('instruction', 'Pour [A] over ice', 'media_asset_id', '70000000-0000-0000-0000-000000000003'),
                                jsonb_build_object('instruction', '  '),
                                jsonb_build_object('instruction', 'Stir'))));
 do $$
@@ -183,9 +206,13 @@ begin
   loop
     assert r.version_no = 2 and r.status = 'APPROVED', 'new approved V2';
     assert r.cup_type = '16oz cup' and r.change_summary = 'Unified';
-    -- Each recipe keeps its own name and photos.
+    -- Each recipe keeps its own name.
     assert r.product_name = case when r.recipe_id = '40000000-0000-0000-0000-000000000001' then 'Iced Latte' else 'iced  latte ' end;
-    assert (select count(*) from public.recipe_media where recipe_version_id = r.id) = 1, 'photo kept';
+    assert (select array_agg(media_asset_id order by sort_order) from public.recipe_media where recipe_version_id = r.id)
+           = array['70000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000002']::uuid[],
+           'recipe 2 photos used by both';
+    assert (select array_agg(media_asset_id order by step_no) from public.recipe_steps where recipe_version_id = r.id)
+           = array['70000000-0000-0000-0000-000000000003', null]::uuid[], 'step video brought in';
     assert (select quantity from public.recipe_ingredients where recipe_version_id = r.id) = 200;
     assert (select array_agg(instruction order by step_no) from public.recipe_steps where recipe_version_id = r.id)
            = array['Pour [A] over ice', 'Stir'], 'blank step dropped, numbered 1..2';

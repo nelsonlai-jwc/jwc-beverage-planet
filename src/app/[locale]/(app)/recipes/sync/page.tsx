@@ -190,6 +190,11 @@ export default async function SyncRecipesPage({
       <SyncPanel
         recipeIds={sources.map((s) => s.id)}
         columns={columns}
+        media={sources.map((s) => ({
+          recipeId: s.id,
+          photos: s.version.photos,
+          steps: s.version.steps.flatMap((step) => (step.media ? [{ ...step.media, stepNo: step.step_no }] : [])),
+        }))}
         isPrep={isPrep}
         options={[...options].map(([key, name]) => ({ key, name }))}
         styles={styleValues(labels, STYLES).filter((s) => s !== "PREP_MATERIAL")}

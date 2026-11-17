@@ -1,4 +1,4 @@
-import type { BeverageStyle, BeverageTemp, FullVersion, MeasureUnit } from "./types";
+import type { BeverageStyle, BeverageTemp, MeasureUnit } from "./types";
 
 // Same rule as private.recipe_name_key: case and spacing do not matter.
 export function recipeNameKey(name: string | null | undefined) {
@@ -24,22 +24,11 @@ export type SyncContent = {
   change_summary: string;
   ingredients: { key: string; quantity: number | null; unit: MeasureUnit | null; notes: string }[];
   steps: string[];
+  // Step photo / video per step (same order as steps), from the ticked recipes only.
+  step_media: (string | null)[];
+  // Recipes whose finished photos and step media are brought in; empty = each keeps its own photos.
+  photo_recipe_ids: string[];
 };
-
-export function contentFromVersion(v: FullVersion): SyncContent {
-  return {
-    style: v.style,
-    temperature: v.temperature,
-    yield_quantity: v.yield_quantity,
-    yield_unit: v.yield_unit,
-    cup_type: v.cup_type ?? "",
-    serving_size: v.serving_size ?? "",
-    garnish: v.garnish ?? "",
-    change_summary: "",
-    ingredients: v.ingredients.map((i) => ({ key: ingredientKey(i), quantity: i.quantity, unit: i.unit, notes: i.notes ?? "" })),
-    steps: v.steps.map((s) => s.instruction),
-  };
-}
 
 // The payload public.sync_recipes reads.
 export function contentPayload(c: SyncContent) {
@@ -59,6 +48,7 @@ export function contentPayload(c: SyncContent) {
       unit: i.unit,
       notes: i.notes,
     })),
-    steps: c.steps.map((instruction) => ({ instruction })),
+    steps: c.steps.map((instruction, n) => ({ instruction, media_asset_id: c.step_media[n] ?? null })),
+    photo_recipe_ids: c.photo_recipe_ids,
   };
 }

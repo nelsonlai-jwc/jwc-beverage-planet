@@ -3,9 +3,13 @@
 --     (case and spacing ignored, drinks and Preps not mixed), compares them, and writes one
 --     unified content (usually from AI, edited by him).
 --   * sync_recipes overwrites every picked recipe with that content at once as a new APPROVED
---     version, no approval step. Each recipe keeps its own outlets, name, photos, introduction,
---     tags, taste, notes and packaging; the synced parts are the ingredients, the steps and the
---     main settings (style, temperature, yield, cup type, serving size, garnish).
+--     version, no approval step. Each recipe keeps its own outlets, name, introduction, tags,
+--     taste, notes and packaging; the synced parts are the ingredients, the steps and the main
+--     settings (style, temperature, yield, cup type, serving size, garnish).
+--   * Photos and videos (Nelson, 2026-11-17): by default each recipe keeps its own finished
+--     photos and the steps have no media. When he ticks recipes in "photo_recipe_ids", their
+--     finished photos (in tick order, without repeats) become every recipe's photos, and each
+--     step may take a step photo / video ("media_asset_id") from those recipes' steps.
 --   * Old versions stay in the history (SUPERSEDED) and can be put back with Undo approval.
 --   * A recipe with a draft / pending / returned version cannot be synced until that is handled.
 --   * Everything is one transaction: if one recipe fails (e.g. incomplete cost, a Prep that does
@@ -27,6 +31,8 @@ declare
   v_message text;
   v_detail text;
   v_state text;
+  v_photo_recipes uuid[];
+  v_photos uuid[];
 begin
   perform private.require_admin();  -- Super Admin only since 20261116170000
 
@@ -55,6 +61,31 @@ begin
     raise exception 'SYNC_OPEN_VERSION' using errcode = '23514';
   end if;
 
+  -- Photos and step media come only from the ticked recipes' approved versions, read before
+  -- any recipe changes.
+  v_photo_recipes := array(select (x #>> '{}')::uuid
+                             from jsonb_array_elements(coalesce(p_content -> 'photo_recipe_ids', '[]')) as x);
+  if not v_photo_recipes <@ p_recipe_ids then
+    raise exception 'SYNC_BAD_MEDIA' using errcode = '23514';
+  end if;
+  select coalesce(array_agg(media_asset_id order by first_pos), '{}') into v_photos
+    from (select rm.media_asset_id,
+                 min(array_position(v_photo_recipes, r.id) * 1000 + rm.sort_order) as first_pos
+            from public.recipes r
+            join public.recipe_media rm on rm.recipe_version_id = r.current_approved_version_id
+           where r.id = any (v_photo_recipes)
+           group by rm.media_asset_id) photos;
+  if exists (
+    select 1 from jsonb_array_elements(coalesce(p_content -> 'steps', '[]')) as s (x)
+     where s.x ->> 'media_asset_id' is not null
+       and not exists (
+         select 1 from public.recipes r
+           join public.recipe_steps rs on rs.recipe_version_id = r.current_approved_version_id
+          where r.id = any (v_photo_recipes) and rs.media_asset_id = (s.x ->> 'media_asset_id')::uuid)
+  ) then
+    raise exception 'SYNC_BAD_MEDIA' using errcode = '23514';
+  end if;
+
   foreach v_id in array p_recipe_ids loop
    begin
     -- Starts as a copy of the approved version (name, photos, packaging, notes ...).
@@ -79,12 +110,18 @@ begin
            (i.x ->> 'quantity')::numeric, (i.x ->> 'unit')::public.measure_unit, nullif(btrim(i.x ->> 'notes'), '')
       from jsonb_array_elements(coalesce(p_content -> 'ingredients', '[]')) with ordinality as i (x, ord);
 
-    -- Step photos / videos belong to the old wording, so synced steps have none.
     delete from public.recipe_steps where recipe_version_id = v_version;
-    insert into public.recipe_steps (recipe_version_id, step_no, instruction)
-    select v_version, row_number() over (order by s.ord), btrim(s.x ->> 'instruction')
+    insert into public.recipe_steps (recipe_version_id, step_no, instruction, media_asset_id)
+    select v_version, row_number() over (order by s.ord), btrim(s.x ->> 'instruction'),
+           (s.x ->> 'media_asset_id')::uuid
       from jsonb_array_elements(coalesce(p_content -> 'steps', '[]')) with ordinality as s (x, ord)
      where char_length(btrim(coalesce(s.x ->> 'instruction', ''))) > 0;
+
+    if cardinality(v_photo_recipes) > 0 then
+      delete from public.recipe_media where recipe_version_id = v_version;
+      insert into public.recipe_media (recipe_version_id, sort_order, media_asset_id)
+      select v_version, p.ord, p.id from unnest(v_photos) with ordinality as p (id, ord);
+    end if;
 
     select revision into v_revision from public.recipe_versions where id = v_version;
     v_result := public.publish_recipe_version(v_version, v_revision, null);
