@@ -45,7 +45,7 @@ export function AppShell({
             <MobileNav role={user?.displayRole ?? null} />
           </div>
         </header>
-        <main className="flex-1 px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:px-8 md:pt-8 md:pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <main className="flex-1 px-4 pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-8 md:pb-[calc(5rem+env(safe-area-inset-bottom))]">
           {children}
         </main>
       </div>

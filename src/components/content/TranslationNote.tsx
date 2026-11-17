@@ -33,14 +33,14 @@ export function TranslationNote({
 
   return createPortal(
     <>
-      <p className="flex items-center gap-2 whitespace-nowrap">
-        <span className="inline-flex rounded-full border-[1.5px] border-brand-purple bg-brand-purple/30 px-2.5 py-0.5 text-xs font-semibold">
+      <p className="flex min-w-0 items-center gap-[0.6em] whitespace-nowrap">
+        <span className="inline-flex shrink-0 rounded-full border-[1.5px] border-brand-purple bg-brand-purple/30 px-[0.8em] py-0.5 font-semibold">
           {label}
         </span>
         {canEdit && (
           <button
             type="button"
-            className="text-xs underline"
+            className="min-w-0 truncate underline"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
           >
