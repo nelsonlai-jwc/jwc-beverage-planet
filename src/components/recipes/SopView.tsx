@@ -56,7 +56,12 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
           />
         </h2>
         <p className="text-sm text-[#3d3f3a]">
-          {[data.style && t(`style.${data.style}`), data.temperature && t(`temp.${data.temperature}`), `V${data.versionNo}`]
+          {/* A drink's temperature already shows after its name. */}
+          {[
+            data.style && t(`style.${data.style}`),
+            data.style === "PREP_MATERIAL" && data.temperature && t(`temp.${data.temperature}`),
+            `V${data.versionNo}`,
+          ]
             .filter(Boolean)
             .join(" · ")}
           {data.updatedAt && ` · ${t("updatedAt", { date: data.updatedAt })}`}

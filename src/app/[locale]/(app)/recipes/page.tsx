@@ -142,7 +142,7 @@ export default async function RecipesPage({
                   <span className="text-base font-semibold"><RecipeName name={r.name} temperature={r.temp} /></span>
                   <TagList tags={tagsOf(r.approved)} />
                   <span className="text-sm text-[#3d3f3a]">
-                    {[r.approved!.style && t(`style.${r.approved!.style}`), r.approved!.temperature && t(`temp.${r.approved!.temperature}`)]
+                    {[r.approved!.style && t(`style.${r.approved!.style}`), r.is_prep && r.approved!.temperature && t(`temp.${r.approved!.temperature}`)]
                       .filter(Boolean)
                       .join(" · ")}
                   </span>

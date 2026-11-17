@@ -170,7 +170,7 @@ export function CatalogueGrid({
                   {r.outlets} · V{r.versionNo}
                 </span>
                 <span className="text-sm text-[#3d3f3a]">
-                  {[r.style && t(`style.${r.style}`), r.temperature && t(`temp.${r.temperature}`)]
+                  {[r.style && t(`style.${r.style}`), r.isPrep && r.temperature && t(`temp.${r.temperature}`)]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>

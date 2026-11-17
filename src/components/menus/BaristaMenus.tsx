@@ -42,7 +42,6 @@ export function BaristaMenus({ menus }: { menus: Menu[] }) {
                         <span className={mutedText}>
                           {[
                             item.recipe.style && t(`styles.${item.recipe.style}`),
-                            item.recipe.temperature && t(`temps.${item.recipe.temperature}`),
                           ]
                             .filter(Boolean)
                             .join(" · ")}
