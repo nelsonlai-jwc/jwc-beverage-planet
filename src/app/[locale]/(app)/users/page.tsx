@@ -64,6 +64,7 @@ export default async function UsersPage({
           role: i.role,
           status: i.status,
           expiresAt: i.expires_at,
+          createdAt: i.created_at,
           outletIds: i.invitation_outlets.map((io) => io.outlet_id),
         }))}
       />
