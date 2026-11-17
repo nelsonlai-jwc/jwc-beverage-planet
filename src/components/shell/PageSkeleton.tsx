@@ -24,7 +24,7 @@ export function PageSkeleton() {
         <div className={`${block} h-8 w-24`} />
         <div className={`${block} h-8 w-28`} />
       </div>
-      <div className="relative flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {[0, 1, 2, 3].map((row) => (
           <div key={row} className="flex items-center justify-between gap-4 rounded-[20px] bg-white/60 p-5">
             <div className="flex flex-1 flex-col gap-2.5">
@@ -34,9 +34,10 @@ export function PageSkeleton() {
             <div className={`${block} h-8 w-20`} />
           </div>
         ))}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <JwcSpinner3D className="h-14 w-36 md:h-16 md:w-40" />
-        </div>
+      </div>
+      {/* Centred on the whole screen, not just the content area. */}
+      <div className="pointer-events-none fixed inset-0 z-20 flex items-center justify-center">
+        <JwcSpinner3D className="h-14 w-36 md:h-16 md:w-40" />
       </div>
     </div>
   );
