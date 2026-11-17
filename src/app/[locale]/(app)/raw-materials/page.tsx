@@ -123,14 +123,6 @@ export default async function RawMaterialsPage({
           <p className="text-sm text-[#3d3f3a]">{t("intro")}</p>
         </div>
         <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
-          {showApprovals && (
-            <Link href="/raw-materials/approvals" className={secondaryButtonClass}>
-              {t("approvals")}
-              {waiting > 0 && (
-                <span className="ml-2 rounded-full bg-brand-orange px-2 text-xs">{waiting}</span>
-              )}
-            </Link>
-          )}
           <a href={`/${locale}/raw-materials/export?tab=${tab}`} className={secondaryButtonClass}>
             {t("export")}
           </a>
@@ -147,7 +139,7 @@ export default async function RawMaterialsPage({
         </div>
       </div>
 
-      <SectionTabs active={tab} />
+      <SectionTabs active={tab} pending={showApprovals ? waiting : undefined} />
 
       {tab === "materials" ? (
         <MaterialList locale={locale} search={search} />
