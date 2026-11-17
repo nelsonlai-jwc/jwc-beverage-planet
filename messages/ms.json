@@ -27,6 +27,10 @@
     "settings": "Tetapan"
   },
   "Shell": {
+    "toggleSection": "Tunjuk atau sembunyi halaman {name}",
+    "collapseSidebar": "Kecilkan bar sisi",
+    "expandSidebar": "Kembangkan bar sisi",
+    "resizeSidebar": "Ubah lebar bar sisi",
     "mainNav": "Navigasi utama",
     "menu": "Menu",
     "closeMenu": "Tutup",

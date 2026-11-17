@@ -27,6 +27,10 @@
     "settings": "设置"
   },
   "Shell": {
+    "toggleSection": "展开或收起{name}",
+    "collapseSidebar": "收起侧边栏",
+    "expandSidebar": "展开侧边栏",
+    "resizeSidebar": "调整侧边栏宽度",
     "mainNav": "主导航",
     "menu": "菜单",
     "closeMenu": "关闭",

@@ -27,6 +27,10 @@
     "settings": "Setting"
   },
   "Shell": {
+    "toggleSection": "Show or hide {name} pages",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "resizeSidebar": "Resize sidebar",
     "mainNav": "Main navigation",
     "menu": "Menu",
     "closeMenu": "Close",
