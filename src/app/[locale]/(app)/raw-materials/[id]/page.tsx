@@ -89,7 +89,7 @@ export default async function MaterialPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/raw-materials" label={t("title")} />
+      <BackLink href="/raw-materials" label={t("backToList")} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-3">

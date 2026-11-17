@@ -116,12 +116,12 @@ export default async function RawMaterialsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-end justify-between gap-4 lg:flex-nowrap">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("title")}</h1>
           <p className="text-sm text-[#3d3f3a]">{t("intro")}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
           {showApprovals && (
             <Link href="/raw-materials/approvals" className={secondaryButtonClass}>
               {t("approvals")}

@@ -172,7 +172,7 @@ export default async function ApprovalsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/raw-materials" label={t("title")} />
+      <BackLink href="/raw-materials" label={t("backToList")} />
       <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("approvals")}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("approvalsIntro")}</p>

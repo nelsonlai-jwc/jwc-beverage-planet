@@ -88,13 +88,13 @@ export default async function RecipesPage({
   const translationNote = <TranslationNote entries={loc.shown()} canEdit={viewer.role === "ADMIN"} />;
 
   const header = (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div className="flex flex-col gap-1.5">
+    <div className="flex flex-wrap items-end justify-between gap-4 lg:flex-nowrap">
+      <div className="flex min-w-0 flex-col gap-1.5">
         <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{nav("recipes")}</h1>
         <p className="text-sm text-[#3d3f3a]">{isStaff ? t("staffIntro") : t("intro")}</p>
       </div>
       {!isStaff && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
           <a href={`/${locale}/recipes/export`} className={secondaryButton}>
             {t("exportCsv")}
           </a>

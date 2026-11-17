@@ -37,7 +37,7 @@ export default async function ImportPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href={kind === "packaging" ? "/raw-materials?tab=packaging" : "/raw-materials"} label={t("title")} />
+      <BackLink href={kind === "packaging" ? "/raw-materials?tab=packaging" : "/raw-materials"} label={kind === "packaging" ? t("backToPackaging") : t("backToList")} />
       <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("import.title")}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("import.intro")}</p>

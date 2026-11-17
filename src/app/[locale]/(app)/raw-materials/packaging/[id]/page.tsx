@@ -64,7 +64,7 @@ export default async function PackagingPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/raw-materials?tab=packaging" label={t("tabPackaging")} />
+      <BackLink href="/raw-materials?tab=packaging" label={t("backToPackaging")} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-3">

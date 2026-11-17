@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MenuCategories } from "@/components/menus/MenuCategories";
+import { Link } from "@/i18n/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { CATEGORY_SELECT, toCategory } from "@/lib/menus/categories";
@@ -36,7 +37,12 @@ export default async function MenuCategoriesPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("title")} note={t("note")} />
+      <div className="flex flex-col gap-2">
+        <Link href="/menus" className="self-start text-sm underline">
+          {t("backToMenus")}
+        </Link>
+        <PageHeader title={t("title")} note={t("note")} />
+      </div>
       <MenuCategories
         // Remount when the outlet in the link changes.
         key={initialOutletId}
