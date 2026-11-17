@@ -12,6 +12,8 @@ import {
   type EstimateState,
 } from "@/components/menus/PriceHint";
 import { categoryLabel, type FlatCategory } from "@/lib/menus/categories";
+import { RecipeName } from "@/components/recipes/RecipeName";
+import type { BeverageTemp } from "@/lib/recipes/types";
 
 // Small buttons for the bar at the bottom of an open drink row.
 const rowButton =
@@ -21,6 +23,7 @@ const rowButton =
 export function DrinkRow({
   recipeId,
   name,
+  temperature,
   position,
   price,
   categoryId,
@@ -37,6 +40,7 @@ export function DrinkRow({
 }: {
   recipeId: string;
   name: string;
+  temperature?: BeverageTemp | null;
   position: number;
   price: string;
   categoryId: string;
@@ -90,7 +94,7 @@ export function DrinkRow({
           </span>
           <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="break-words font-semibold">
-              {position}. {name}
+              {position}. <RecipeName name={name} temperature={temperature} />
             </span>
             {over && (
               <span className="shrink-0 rounded-full bg-[#c4161c] px-2 py-0.5 text-[11px] font-semibold text-white">

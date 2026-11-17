@@ -15,6 +15,7 @@ import { ArchiveRecipeButton, RestoreRecipeButton, UndoRecipeApprovalButton } fr
 import { SopView } from "@/components/recipes/SopView";
 import { VersionActions } from "@/components/recipes/VersionActions";
 import { PurposeBadge, StatusBadge, card, primaryButton } from "@/components/recipes/ui";
+import { RecipeName } from "@/components/recipes/RecipeName";
 
 export default async function RecipeDetailPage({
   params,
@@ -44,7 +45,7 @@ export default async function RecipeDetailPage({
 
   const { data: versions } = await supabase
     .from("recipe_versions")
-    .select("id, version_no, status, product_name, purpose, submitted_by, submitted_at, approved_at, updated_at")
+    .select("id, version_no, status, product_name, temperature, purpose, submitted_by, submitted_at, approved_at, updated_at")
     .eq("recipe_id", recipeId)
     .order("version_no", { ascending: false });
   const open = (versions ?? []).find((v) => ["DRAFT", "PENDING", "RETURNED"].includes(v.status)) ?? null;
@@ -103,7 +104,9 @@ export default async function RecipeDetailPage({
         <Link href="/recipes" className="text-sm underline">
           {t("backToList")}
         </Link>
-        <h1 className="font-serif text-[28px] leading-tight font-normal">{name}</h1>
+        <h1 className="font-serif text-[28px] leading-tight font-normal">
+          <RecipeName name={name} temperature={recipe.is_prep ? null : (approved?.temperature ?? open?.temperature)} />
+        </h1>
         <p className="flex flex-wrap items-center gap-2 text-sm text-[#3d3f3a]">
           <span>{outletName}</span>
           <span>·</span>

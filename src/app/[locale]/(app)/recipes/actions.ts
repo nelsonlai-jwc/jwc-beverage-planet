@@ -23,6 +23,7 @@ const KNOWN_ERRORS = [
   "PREP_NOT_COVERED",
   "NOT_CURRENT_APPROVAL",
   "OPEN_VERSION_EXISTS",
+  "DUPLICATE_NAME",
 ];
 
 export type RecipeActionResult =

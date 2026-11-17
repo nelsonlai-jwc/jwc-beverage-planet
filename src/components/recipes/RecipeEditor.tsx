@@ -40,6 +40,7 @@ import {
   textareaClass,
 } from "./ui";
 import { useDragSort } from "./useDragSort";
+import { RecipeName } from "./RecipeName";
 
 type Option = {
   id: string;
@@ -540,7 +541,12 @@ export function RecipeEditor(props: Props) {
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="font-serif text-[28px] leading-tight font-normal">{fields.product_name || t("untitled")}</h1>
+        <h1 className="font-serif text-[28px] leading-tight font-normal">
+          <RecipeName
+            name={fields.product_name || t("untitled")}
+            temperature={isPrep ? null : ((fields.temperature || null) as FullVersion["temperature"])}
+          />
+        </h1>
         <p className="flex flex-wrap items-center gap-2 text-sm text-[#3d3f3a]">
           <span>{outletName}</span>
           <span>·</span>

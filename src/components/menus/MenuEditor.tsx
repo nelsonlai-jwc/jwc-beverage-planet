@@ -22,6 +22,8 @@ import { categoryLabel, groupByCategory, type FlatCategory } from "@/lib/menus/c
 import type { MenuRecipe } from "@/lib/menus/recipes";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
+import { recipeNameText } from "@/components/recipes/RecipeName";
+import type { BeverageTemp } from "@/lib/recipes/types";
 
 type Item = { recipeId: string; price: number | null; categoryId: string | null };
 // categoryId "" means Uncategorized.
@@ -43,6 +45,7 @@ export function MenuEditor({
   draftItems,
   recipes,
   allRecipeNames,
+  allRecipeTemps,
   categories,
   costs,
 }: {
@@ -59,6 +62,8 @@ export function MenuEditor({
   draftItems: Item[];
   recipes: MenuRecipe[];
   allRecipeNames: Record<string, string>;
+  // Drink temperatures, shown after the names.
+  allRecipeTemps: Record<string, BeverageTemp | null>;
   // The outlet's categories in tree order.
   categories: FlatCategory[];
   // Current cost of each drink, keyed by recipe id; missing when not available.
@@ -334,6 +339,7 @@ export function MenuEditor({
                         key={row.recipeId}
                         recipeId={row.recipeId}
                         name={name}
+                        temperature={allRecipeTemps[row.recipeId]}
                         position={ordered.indexOf(row) + 1}
                         price={row.price}
                         categoryId={row.categoryId ?? ""}
@@ -375,7 +381,7 @@ export function MenuEditor({
                 <option value="">{available.length ? t("chooseRecipe") : t("noRecipesAvailable")}</option>
                 {available.map((recipe) => (
                   <option key={recipe.id} value={recipe.id}>
-                    {recipe.productName}
+                    {recipeNameText(recipe.productName, recipe.temperature && t(`temps.${recipe.temperature}`))}
                   </option>
                 ))}
               </select>

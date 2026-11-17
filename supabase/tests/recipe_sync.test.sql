@@ -19,14 +19,16 @@ insert into public.user_outlets (user_id, outlet_id)
    where o.code in ('JB-BROOOS', 'JB-YOUBAR');
 
 -- Approved "Iced Latte" at two outlets, "iced  latte " at a third (same name after
--- ignoring case and spaces), a different drink, and a Prep with the same name.
+-- ignoring case and spaces), a different drink, a Prep with the same name and a HOT
+-- "Iced Latte" (same name, other temperature = a different drink).
 insert into public.recipes (id, outlet_id, is_prep, created_by)
   select r.id, o.id, r.is_prep, '00000000-0000-0000-0000-00000000000b'
     from (values ('40000000-0000-0000-0000-000000000001'::uuid, 'JB-BROOOS', false),
                  ('40000000-0000-0000-0000-000000000002', 'JB-YOUBAR', false),
-                 ('40000000-0000-0000-0000-000000000003', 'JB-BROOOS', false),
+                 ('40000000-0000-0000-0000-000000000003', 'JB-FACTORY30', false),
                  ('40000000-0000-0000-0000-000000000004', 'JB-BROOOS', false),
-                 ('40000000-0000-0000-0000-000000000005', 'JB-BROOOS', true)) as r (id, code, is_prep)
+                 ('40000000-0000-0000-0000-000000000005', 'JB-BROOOS', true),
+                 ('40000000-0000-0000-0000-000000000006', 'KL-COFFEEMAMAK', false)) as r (id, code, is_prep)
     join public.outlets o on o.code = r.code;
 insert into public.recipe_versions (id, recipe_id, version_no, status, product_name, style, temperature,
                                     yield_quantity, yield_unit, created_by)
@@ -40,7 +42,9 @@ values
   ('50000000-0000-0000-0000-000000000004', '40000000-0000-0000-0000-000000000004', 1, 'APPROVED',
    'Hot Latte', 'COFFEE', 'HOT', null, null, '00000000-0000-0000-0000-00000000000b'),
   ('50000000-0000-0000-0000-000000000005', '40000000-0000-0000-0000-000000000005', 1, 'APPROVED',
-   'Iced Latte', 'PREP_MATERIAL', null, 500, 'ml', '00000000-0000-0000-0000-00000000000b');
+   'Iced Latte', 'PREP_MATERIAL', null, 500, 'ml', '00000000-0000-0000-0000-00000000000b'),
+  ('50000000-0000-0000-0000-000000000006', '40000000-0000-0000-0000-000000000006', 1, 'APPROVED',
+   'Iced Latte', 'COFFEE', 'HOT', null, null, '00000000-0000-0000-0000-00000000000b');
 update public.recipes r set current_approved_version_id = v.id
   from public.recipe_versions v
  where v.recipe_id = r.id and v.status = 'APPROVED';
@@ -99,6 +103,14 @@ begin
       array['40000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000005']::uuid[],
       (select c from sync_content));
     raise exception 'drink and Prep are not mixed';
+  exception when check_violation then
+    assert sqlerrm = 'SYNC_NOT_SAME_NAME', sqlerrm;
+  end;
+  begin
+    perform public.sync_recipes(
+      array['40000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000006']::uuid[],
+      (select c from sync_content));
+    raise exception 'same name, other temperature';
   exception when check_violation then
     assert sqlerrm = 'SYNC_NOT_SAME_NAME', sqlerrm;
   end;

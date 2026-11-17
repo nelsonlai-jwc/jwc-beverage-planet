@@ -991,7 +991,8 @@
       "COST_PREP_COST_INCOMPLETE": "Kos Bahan Sediaan tidak lengkap",
       "COST_CYCLE_DETECTED": "Resipi menggunakan dirinya sendiri melalui Bahan Sediaan",
       "COST_NO_INGREDIENTS": "Tambah sekurang-kurangnya satu bahan",
-      "COST_UNKNOWN": "Kos tidak lengkap"
+      "COST_UNKNOWN": "Kos tidak lengkap",
+      "DUPLICATE_NAME": "Cawangan ini sudah ada minuman dengan nama dan suhu yang sama"
     },
     "nothingToReview": "Tiada versi yang menunggu kelulusan.",
     "reviewTitle": "Semak {name}",
@@ -1073,7 +1074,8 @@
       "OUTLET_NEEDED": "Resipi yang menggunakan Bahan Sediaan ini dibuat untuk cawangan yang anda buang. Ubah resipi itu terlebih dahulu.",
       "PREP_NOT_COVERED": "Resipi ini menggunakan Bahan Sediaan yang tidak dibuat untuk setiap cawangan yang dipilih. Ubah cawangan Bahan Sediaan itu terlebih dahulu.",
       "NOT_CURRENT_APPROVAL": "Hanya versi semasa yang diluluskan boleh dibatalkan. Muat semula halaman.",
-      "OPEN_VERSION_EXISTS": "Resipi ini sudah mempunyai versi terbuka. Padam, tarik balik atau semaknya terlebih dahulu."
+      "OPEN_VERSION_EXISTS": "Resipi ini sudah mempunyai versi terbuka. Padam, tarik balik atau semaknya terlebih dahulu.",
+      "DUPLICATE_NAME": "Cawangan yang dipilih sudah ada minuman dengan nama dan suhu yang sama."
     },
     "changeLog": {
       "open": "Log perubahan",

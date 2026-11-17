@@ -2541,6 +2541,7 @@ export type Database = {
           outlet_name: string | null
           product_name: string | null
           recipe_id: string
+          temperature: Database["public"]["Enums"]["beverage_temp"] | null
           usage: string
           via_prep_name: string | null
         }[]

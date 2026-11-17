@@ -3,6 +3,7 @@ import { letterFor, splitReferences } from "@/lib/recipes/letters";
 import type { BeverageStyle, BeverageTemp, MeasureUnit, Photo, StepMedia } from "@/lib/recipes/types";
 import { StepMediaView } from "./StepMediaView";
 import { TagList } from "./ui";
+import { RecipeName } from "./RecipeName";
 
 export type SopData = {
   productName: string | null;
@@ -48,9 +49,19 @@ export function SopView({ data, draft }: { data: SopData; draft?: boolean }) {
         </div>
       )}
       <header className="flex flex-col gap-1">
-        <h2 className="font-serif text-[26px] font-normal">{data.productName || t("untitled")}</h2>
+        <h2 className="font-serif text-[26px] font-normal">
+          <RecipeName
+            name={data.productName || t("untitled")}
+            temperature={data.style === "PREP_MATERIAL" ? null : data.temperature}
+          />
+        </h2>
         <p className="text-sm text-[#3d3f3a]">
-          {[data.style && t(`style.${data.style}`), data.temperature && t(`temp.${data.temperature}`), `V${data.versionNo}`]
+          {/* A drink's temperature already shows after its name. */}
+          {[
+            data.style && t(`style.${data.style}`),
+            data.style === "PREP_MATERIAL" && data.temperature && t(`temp.${data.temperature}`),
+            `V${data.versionNo}`,
+          ]
             .filter(Boolean)
             .join(" · ")}
           {data.updatedAt && ` · ${t("updatedAt", { date: data.updatedAt })}`}

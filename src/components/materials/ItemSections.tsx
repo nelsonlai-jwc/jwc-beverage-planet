@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { diffRows, MATERIAL_FIELDS, PACKAGING_FIELDS } from "@/lib/materials/changes";
 import { getViewer } from "@/lib/materials/viewer";
+import { RecipeName } from "@/components/recipes/RecipeName";
 import { ReviewActions } from "./ReviewActions";
 import { cardClass } from "./ui";
 
@@ -30,7 +31,7 @@ export async function UsageSection({ entity, id }: { entity: Entity; id: string 
             <li key={row.recipe_id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <div className="flex min-w-0 flex-col">
                 <Link href={`/recipes/${row.recipe_id}`} className="font-semibold underline">
-                  {row.product_name ?? t("untitled")}
+                  <RecipeName name={row.product_name ?? t("untitled")} temperature={row.temperature} />
                 </Link>
                 <span className="text-[13px] text-[#3d3f3a]">
                   {row.outlet_name ?? t("allOutlets")}

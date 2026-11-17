@@ -17,6 +17,7 @@ import {
 } from "@/lib/recipes/catalogue";
 import { PurposeBadge, TagList, card, inputClass, primaryButton, secondaryButton } from "./ui";
 import { FilterSortBar, writeFilterSortUrl } from "./FilterSortBar";
+import { RecipeName } from "./RecipeName";
 
 const typeOf = (row: CatalogueCard) => (row.isPrep ? "PREP" : "DRINK");
 
@@ -164,12 +165,12 @@ export function CatalogueGrid({
                 <div className="aspect-[4/3] w-full rounded-[12px] bg-[#eceee8]" aria-hidden />
               )}
               <div className="flex flex-col gap-1">
-                <span className="text-base font-semibold">{r.name}</span>
+                <span className="text-base font-semibold"><RecipeName name={r.name} temperature={r.isPrep ? null : r.temperature} /></span>
                 <span className="text-sm text-[#3d3f3a]">
                   {r.outlets} · V{r.versionNo}
                 </span>
                 <span className="text-sm text-[#3d3f3a]">
-                  {[r.style && t(`style.${r.style}`), r.temperature && t(`temp.${r.temperature}`)]
+                  {[r.style && t(`style.${r.style}`), r.isPrep && r.temperature && t(`temp.${r.temperature}`)]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
