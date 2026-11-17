@@ -428,7 +428,7 @@ export function MaterialTable({
         <div className="contents">
           {CHIPS.map(chip)}
         </div>
-        <span data-chip className="md:hidden">
+        <span data-chip className="xl:hidden">
           <button
             type="button"
             onClick={(e) => toggle("sort", e.currentTarget)}
@@ -477,7 +477,7 @@ export function MaterialTable({
         <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("empty")}</p>
       ) : (
         <>
-          <ul className="flex flex-col gap-3 md:hidden">
+          <ul className="grid gap-3 md:grid-cols-2 xl:hidden">
             {shown.map((row) => (
               <li key={row.id}>
                 <Link href={`/raw-materials/${row.id}`} className="flex flex-col gap-2 rounded-[20px] bg-white p-4">
@@ -504,7 +504,7 @@ export function MaterialTable({
               </li>
             ))}
           </ul>
-          <div className="hidden overflow-hidden rounded-[20px] bg-white md:block">
+          <div className="hidden overflow-hidden rounded-[20px] bg-white xl:block">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-black/15 text-[#3d3f3a]">
                 <tr>
@@ -527,11 +527,11 @@ export function MaterialTable({
                     </td>
                     <td className="px-5 py-3">{row.brand}</td>
                     <td className="px-5 py-3">{row.type}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 whitespace-nowrap">
                       {row.pack}
                       {row.extraPacks > 0 && <span className="text-[#3d3f3a]"> +{row.extraPacks}</span>}
                     </td>
-                    <td className="px-5 py-3 text-right tabular-nums">
+                    <td className="px-5 py-3 text-right whitespace-nowrap tabular-nums">
                       {row.unitCost ?? <span className="text-[#3d3f3a]">{t("noApprovedCost")}</span>}
                     </td>
                     <td className="px-5 py-3">

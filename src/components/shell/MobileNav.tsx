@@ -10,7 +10,7 @@ export function MobileNav({ role }: { role: UserRole | null }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
         aria-expanded={open}
