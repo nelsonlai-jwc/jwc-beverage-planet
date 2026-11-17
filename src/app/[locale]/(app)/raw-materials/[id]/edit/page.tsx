@@ -53,7 +53,7 @@ export default async function EditMaterialPage({
   return (
     <div className="flex flex-col gap-6">
       <BackLink href={`/raw-materials/${id}`} label={material.name} />
-      <h1 className="font-serif text-[28px] leading-tight font-normal">{t("detail.edit")}</h1>
+      <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("detail.edit")}</h1>
       <MaterialForm
         types={types ?? []}
         photoUrl={await signedMediaUrl(supabase, material.photo_asset_id)}

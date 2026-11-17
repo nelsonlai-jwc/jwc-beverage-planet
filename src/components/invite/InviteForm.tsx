@@ -129,7 +129,7 @@ export function InviteForm({ token }: { token: string }) {
               : t("notFound");
     return (
       <section className="flex w-full max-w-[480px] flex-col gap-3 rounded-[20px] bg-white p-6 sm:p-10">
-        <h1 className="font-serif text-[28px] font-normal">{t("invalidTitle")}</h1>
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("invalidTitle")}</h1>
         <p className="text-sm">{reason}</p>
         <p className="text-sm text-[#3d3f3a]">{t("contactAdmin")}</p>
       </section>
@@ -142,7 +142,7 @@ export function InviteForm({ token }: { token: string }) {
       onSubmit={handleSubmit}
     >
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-serif text-[28px] leading-tight font-normal">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("title")}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("intro")}</p>
       </div>
 

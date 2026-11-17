@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +29,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

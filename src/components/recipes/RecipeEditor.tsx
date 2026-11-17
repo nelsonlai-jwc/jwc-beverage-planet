@@ -541,7 +541,7 @@ export function RecipeEditor(props: Props) {
         <Link href={`/recipes/${recipeId}`} className="text-sm underline">
           {t("backToRecipe")}
         </Link>
-        <h1 className="font-serif text-[28px] leading-tight font-normal">
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">
           <RecipeName
             name={fields.product_name || t("untitled")}
             temperature={isPrep ? null : ((fields.temperature || null) as FullVersion["temperature"])}

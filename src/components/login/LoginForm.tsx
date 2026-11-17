@@ -57,7 +57,7 @@ export function LoginForm() {
       onSubmit={handleSubmit}
     >
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-serif text-[28px] leading-tight font-normal">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] md:text-[28px]">{t("title")}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("invitationOnly")}</p>
       </div>
       <div className="flex flex-col gap-1.5">
