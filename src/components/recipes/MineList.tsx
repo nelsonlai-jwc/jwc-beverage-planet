@@ -182,13 +182,14 @@ export function MineList({
               </span>
               <TagList tags={r.tags} />
               <span className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-[#3d3f3a]">
+                {/* min-w-0 + flex-1: long text wraps itself instead of pushing the buttons to a new line. */}
+                <span className="min-w-0 flex-1 text-sm text-[#3d3f3a]">
                   {r.outlets} · {r.isPrep ? t("prep") : t("drink")}
                   {r.approvedNo != null && ` · ${t("approvedVersion", { no: r.approvedNo })}`}
                   {r.open && ` · ${t("openVersion", { no: r.open.versionNo })}`}
                 </span>
                 {!r.archived && (
-                  <span className="relative z-10 flex flex-wrap items-center gap-2 has-[[role=dialog]]:basis-full">
+                  <span className="relative z-10 ml-auto flex flex-wrap items-center justify-end gap-2 has-[[role=dialog]]:basis-full">
                     {r.archivePending && <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>}
                     {/* Copies the version this card shows: the one in progress, else the approved one. */}
                     <Link
