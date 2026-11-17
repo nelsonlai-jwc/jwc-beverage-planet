@@ -13,6 +13,7 @@ import { loadApprovalSnapshots, loadCurrentCosts, loadSellingPrices } from "@/li
 import { createClient } from "@/lib/supabase/server";
 import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import type { Database } from "@/types/database";
+import { RecipeName, recipeNameText } from "@/components/recipes/RecipeName";
 
 type Style = Database["public"]["Enums"]["beverage_style"];
 const builtInStyles: Style[] = ["COFFEE", "TEA", "COCKTAIL", "MOCKTAIL", "PREP_MATERIAL"];
@@ -62,7 +63,7 @@ export default async function CostReportPage({
   const { data: versions } = versionIds.length
     ? await supabase
         .from("recipe_versions")
-        .select("id, recipe_id, version_no, product_name, style")
+        .select("id, recipe_id, version_no, product_name, style, temperature")
         .in("id", versionIds)
     : { data: [] };
   const versionByRecipe = new Map((versions ?? []).map((v) => [v.recipe_id, v]));
@@ -107,6 +108,8 @@ export default async function CostReportPage({
       return {
         id: recipe.id,
         name: version.product_name ?? "—",
+        // Drinks show their temperature after the name; Preps do not.
+        temperature: version.style === "PREP_MATERIAL" ? null : version.temperature,
         outlet: recipeOutlets(recipe),
         versionNo: version.version_no,
         style: version.style,
@@ -151,7 +154,7 @@ export default async function CostReportPage({
       t("columns.cost"), t("columns.price"), t("columns.margin"), t("columns.costRate"), t("columns.status"),
     ],
     rows.map((row) => [
-      row.name, row.outlet, `V${row.versionNo}`, row.style ? tr(`style.${row.style}`) : "",
+      recipeNameText(row.name, row.temperature && tr(`temp.${row.temperature}`)), row.outlet, `V${row.versionNo}`, row.style ? tr(`style.${row.style}`) : "",
       row.totalCost === null ? "" : row.totalCost.toFixed(2),
       row.price === null ? "" : row.price.toFixed(2),
       row.margin === null ? "" : row.margin.toFixed(2),
@@ -213,7 +216,7 @@ export default async function CostReportPage({
                 <summary className="flex cursor-pointer list-none flex-col gap-3 md:flex-row md:items-center">
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="font-semibold">
-                      {row.name} <span className="font-normal text-[#3d3f3a]">V{row.versionNo}</span>
+                      <RecipeName name={row.name} temperature={row.temperature} /> <span className="font-normal text-[#3d3f3a]">V{row.versionNo}</span>
                     </span>
                     <span className={mutedText}>
                       {[row.outlet, row.style && tr(`style.${row.style}`)].filter(Boolean).join(" · ")}

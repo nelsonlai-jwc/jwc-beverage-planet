@@ -12,6 +12,7 @@ import { loadApprovalSnapshots } from "@/lib/reports/data";
 import { createClient } from "@/lib/supabase/server";
 import { addedStyles, getOptionLabels } from "@/lib/settings/options";
 import type { Database } from "@/types/database";
+import { RecipeName, recipeNameText } from "@/components/recipes/RecipeName";
 
 type Enums = Database["public"]["Enums"];
 const builtInStyles: Enums["beverage_style"][] = ["COFFEE", "TEA", "COCKTAIL", "MOCKTAIL", "PREP_MATERIAL"];
@@ -73,7 +74,7 @@ export default async function RndReportPage({
   let versionQuery = supabase
     .from("recipe_versions")
     .select(
-      `id, recipe_id, version_no, status, product_name, purpose, style, change_summary, tasting_notes,
+      `id, recipe_id, version_no, status, product_name, temperature, purpose, style, change_summary, tasting_notes,
        created_by, submitted_by, created_at, submitted_at, approved_at,
        taste_sour, taste_sweet, taste_bitter, taste_salty, taste_umami, taste_spicy,
        taste_smoky, taste_zesty, taste_funky, taste_earthy, taste_oily`,
@@ -168,7 +169,7 @@ export default async function RndReportPage({
       t("columns.approvalCost"), t("columns.costChange"),
     ],
     rows.map((r) => [
-      r.product_name ?? "", `V${r.version_no}`, r.outlet, tr(`status.${r.status}`), tr(`purpose.${r.purpose}`),
+      recipeNameText(r.product_name ?? "", r.style === "PREP_MATERIAL" ? null : r.temperature && tr(`temp.${r.temperature}`)), `V${r.version_no}`, r.outlet, tr(`status.${r.status}`), tr(`purpose.${r.purpose}`),
       r.style ? tr(`style.${r.style}`) : "", r.author, myDate(r.created_at), myDate(r.submitted_at),
       myDate(r.approved_at), r.change_summary ?? "", r.tasting_notes ?? "", r.flavour,
       r.cost === null ? "" : r.cost.toFixed(2),
@@ -204,7 +205,7 @@ export default async function RndReportPage({
             <li key={r.id} className={`${cardClass} flex flex-col gap-3`}>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-base font-semibold">
-                  {r.product_name ?? "—"} <span className="font-normal text-[#3d3f3a]">V{r.version_no}</span>
+                  <RecipeName name={r.product_name ?? "—"} temperature={r.style === "PREP_MATERIAL" ? null : r.temperature} /> <span className="font-normal text-[#3d3f3a]">V{r.version_no}</span>
                 </span>
                 <StatusBadge tone={statusTone[r.status]}>{tr(`status.${r.status}`)}</StatusBadge>
                 <StatusBadge tone="grey">{tr(`purpose.${r.purpose}`)}</StatusBadge>

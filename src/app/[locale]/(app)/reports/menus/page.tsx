@@ -11,6 +11,7 @@ import { toCsv } from "@/lib/reports/csv";
 import { loadCurrentCosts } from "@/lib/reports/data";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import { RecipeName } from "@/components/recipes/RecipeName";
 
 type MenuStatusValue = Database["public"]["Enums"]["menu_status"];
 const statuses: MenuStatusValue[] = ["DRAFT", "PUBLISHED", "UNPUBLISHED", "ARCHIVED"];
@@ -182,7 +183,7 @@ export default async function MenuSummaryPage({
                   <tbody className="divide-y divide-black/10">
                     {menu.items.map((item, index) => (
                       <tr key={index}>
-                        <td className="py-2 pr-3 font-semibold">{item.name}</td>
+                        <td className="py-2 pr-3 font-semibold"><RecipeName name={item.name} temperature={item.temperature} /></td>
                         <td className="py-2 pr-3">{item.style ? tr(`style.${item.style}`) : "—"}</td>
                         <td className="py-2 pr-3">{item.temperature ? tr(`temp.${item.temperature}`) : "—"}</td>
                         <td className="py-2 pr-3 text-right">{money(item.price)}</td>

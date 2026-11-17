@@ -37,7 +37,11 @@ export async function loadSyncSources(
 
   const versions = await Promise.all(recipes!.map((r) => loadFullVersion(supabase, r.current_approved_version_id!)));
   if (versions.some((v) => !v)) return null;
-  if (new Set(versions.map((v) => recipeNameKey(v!.product_name))).size !== 1) return null;
+  // Same name and, for drinks, the same temperature (as public.sync_recipes).
+  const isPrep = recipes![0].is_prep;
+  const keyOf = (v: NonNullable<(typeof versions)[number]>) =>
+    `${isPrep ? "" : (v.temperature ?? "")}:${recipeNameKey(v.product_name)}`;
+  if (new Set(versions.map((v) => keyOf(v!))).size !== 1) return null;
 
   // Keep the order the recipes were picked in.
   const sources = unique.map((id) => {
@@ -45,5 +49,5 @@ export async function loadSyncSources(
     const r = recipes![index];
     return { id, all_outlets: r.all_outlets, recipe_outlets: r.recipe_outlets, version: versions[index]! };
   });
-  return { sources, isPrep: recipes![0].is_prep };
+  return { sources, isPrep };
 }
