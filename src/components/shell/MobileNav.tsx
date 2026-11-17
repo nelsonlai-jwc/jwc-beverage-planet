@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import type { UserRole } from "@/lib/auth/currentUser";
+import { Menu, X } from "lucide-react";
+import { Suspense, useState } from "react";
 import { NavLinks } from "./NavLinks";
+import type { NavViewer } from "./navItems";
 
-export function MobileNav({ role }: { role: UserRole | null }) {
+export function MobileNav({ viewer }: { viewer: NavViewer | null }) {
   const t = useTranslations("Shell");
   const [open, setOpen] = useState(false);
 
@@ -16,13 +17,9 @@ export function MobileNav({ role }: { role: UserRole | null }) {
         aria-expanded={open}
         aria-controls="mobile-nav"
         onClick={() => setOpen((value) => !value)}
-        className="flex h-11 items-center gap-2 rounded-xl border-[1.5px] border-black bg-white px-3.5 text-sm font-semibold"
+        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-black bg-white px-4 text-sm font-semibold hover:bg-black/5"
       >
-        <span aria-hidden="true" className="flex w-4 flex-col gap-[3px]">
-          <span className="h-0.5 bg-black" />
-          <span className="h-0.5 bg-black" />
-          <span className="h-0.5 bg-black" />
-        </span>
+        {open ? <X size={16} strokeWidth={2} aria-hidden /> : <Menu size={16} strokeWidth={2} aria-hidden />}
         {open ? t("closeMenu") : t("menu")}
       </button>
       {open && (
@@ -31,7 +28,9 @@ export function MobileNav({ role }: { role: UserRole | null }) {
           aria-label={t("mainNav")}
           className="absolute inset-x-0 top-full z-20 border-b border-black/15 bg-brand-base px-4 pt-2 pb-4 shadow-lg"
         >
-          <NavLinks role={role} onNavigate={() => setOpen(false)} />
+          <Suspense fallback={null}>
+            <NavLinks viewer={viewer} onNavigate={() => setOpen(false)} />
+          </Suspense>
         </nav>
       )}
     </div>

@@ -9,9 +9,9 @@ export const inputClass =
 export const labelClass = "text-sm font-semibold";
 export const cardClass = "flex flex-col gap-4 rounded-[20px] bg-white p-4 sm:p-5";
 export const primaryButtonClass =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-black px-5 text-sm font-semibold text-white hover:bg-black/85 disabled:opacity-50";
+  "inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-black px-5 text-sm font-semibold text-white hover:bg-black/85 disabled:opacity-50";
 export const secondaryButtonClass =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-black bg-white px-4 text-sm font-semibold hover:bg-black/5 disabled:opacity-50";
+  "inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-black bg-white px-4 text-sm font-semibold hover:bg-black/5 disabled:opacity-50";
 export const errorClass = "text-sm font-semibold text-[#c4161c]";
 
 // Colour plus text, never colour alone (ch. 17.3).
