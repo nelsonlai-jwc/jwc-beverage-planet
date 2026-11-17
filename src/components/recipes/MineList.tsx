@@ -17,6 +17,7 @@ import {
 import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "./RecipeRemove";
 import { FilterSortBar, writeFilterSortUrl, type SortDir } from "./FilterSortBar";
 import { StatusBadge, TagList, card, inputClass, secondaryButton, smallButton } from "./ui";
+import { RecipeName } from "./RecipeName";
 
 const typeOf = (row: MineCard) => (row.isPrep ? "PREP" : "DRINK");
 
@@ -172,7 +173,7 @@ export function MineList({
               <span className="flex flex-wrap items-center justify-between gap-2">
                 {/* The link covers the whole card; the delete control sits above it. */}
                 <Link href={`/recipes/${r.id}`} className="text-base font-semibold after:absolute after:inset-0 after:rounded-[20px]">
-                  {r.name}
+                  <RecipeName name={r.name} temperature={r.isPrep ? null : r.temperature} />
                 </Link>
                 <span className="flex flex-wrap gap-1.5">
                   {r.archived && <StatusBadge status="ARCHIVED" />}

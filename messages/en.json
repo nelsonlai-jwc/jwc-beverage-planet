@@ -991,7 +991,8 @@
       "COST_PREP_COST_INCOMPLETE": "Prep Material cost is incomplete",
       "COST_CYCLE_DETECTED": "Recipe uses itself through Prep Material",
       "COST_NO_INGREDIENTS": "Add at least one ingredient",
-      "COST_UNKNOWN": "Cost is incomplete"
+      "COST_UNKNOWN": "Cost is incomplete",
+      "DUPLICATE_NAME": "This outlet already has a drink with this name and temp"
     },
     "nothingToReview": "No version is waiting for approval.",
     "reviewTitle": "Review {name}",
@@ -1073,7 +1074,8 @@
       "OUTLET_NEEDED": "A recipe that uses this Prep Material is made for an outlet you are removing. Change that recipe first.",
       "PREP_NOT_COVERED": "This recipe uses a Prep Material that is not made for every chosen outlet. Change the Prep Material's outlets first.",
       "NOT_CURRENT_APPROVAL": "Only the current approved version can be undone. Refresh the page.",
-      "OPEN_VERSION_EXISTS": "This recipe already has an open version. Delete, withdraw or review it first."
+      "OPEN_VERSION_EXISTS": "This recipe already has an open version. Delete, withdraw or review it first.",
+      "DUPLICATE_NAME": "A chosen outlet already has a drink with this name and temp."
     },
     "changeLog": {
       "open": "Change log",

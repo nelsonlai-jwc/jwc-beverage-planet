@@ -13,6 +13,7 @@ import { MineList } from "@/components/recipes/MineList";
 import { RememberListFilters } from "@/components/recipes/RememberListFilters";
 import { recipeNameKey } from "@/lib/recipes/sync";
 import { MINE_STATUSES, mineStateFromSearch, type MineCard } from "@/lib/recipes/mine";
+import { RecipeName } from "@/components/recipes/RecipeName";
 import { TagList, card, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 
 type Tab = "mine" | "pending" | "catalogue" | "sync";
@@ -71,7 +72,10 @@ export default async function RecipesPage({
     const approved = own.find((v) => v.id === r.current_approved_version_id) ?? null;
     const open = own.find((v) => OPEN.includes(v.status)) ?? null;
     const neverSubmitted = !approved && own.every((v) => v.status === "DRAFT");
-    return { ...r, approved, open, neverSubmitted, sourceName: (approved ?? open ?? own[0])?.product_name ?? null };
+    const shown = approved ?? open ?? own[0];
+    // Drinks show their temperature after the name; Preps do not.
+    const temp = r.is_prep ? null : (shown?.temperature ?? null);
+    return { ...r, approved, open, neverSubmitted, sourceName: shown?.product_name ?? null, temp };
   });
   // Names in the viewer's language (AI translated); search still matches the original names.
   const loc = await getLocalizer(
@@ -135,7 +139,7 @@ export default async function RecipesPage({
               <li key={r.id}>
                 <Link href={`/recipes/${r.id}`} className={`${card} h-full hover:ring-2 hover:ring-black`}>
                   <Thumb url={photos.get(r.approved!.id)} alt={r.name} />
-                  <span className="text-base font-semibold">{r.name}</span>
+                  <span className="text-base font-semibold"><RecipeName name={r.name} temperature={r.temp} /></span>
                   <TagList tags={tagsOf(r.approved)} />
                   <span className="text-sm text-[#3d3f3a]">
                     {[r.approved!.style && t(`style.${r.approved!.style}`), r.approved!.temperature && t(`temp.${r.approved!.temperature}`)]
@@ -248,7 +252,7 @@ export default async function RecipesPage({
                       className={`${card} flex-row flex-wrap items-center justify-between hover:ring-2 hover:ring-black`}
                     >
                       <span className="flex flex-col gap-1">
-                        <span className="text-base font-semibold">{r?.name ?? t("untitled")}</span>
+                        <span className="text-base font-semibold">{r ? <RecipeName name={r.name} temperature={r.temp} /> : t("untitled")}</span>
                         <span className="text-sm text-[#3d3f3a]">
                           {r ? outletName(r) : "—"} · {request.reason}
                         </span>
@@ -269,7 +273,7 @@ export default async function RecipesPage({
               <li key={r.id}>
                 <Link href={`/recipes/${r.id}/review${filterQuery ? `?${filterQuery}` : ""}`} className={`${card} flex-row flex-wrap items-center justify-between hover:ring-2 hover:ring-black`}>
                   <span className="flex flex-col gap-1">
-                    <span className="text-base font-semibold">{r.name}</span>
+                    <span className="text-base font-semibold"><RecipeName name={r.name} temperature={r.temp} /></span>
                     <span className="text-sm text-[#3d3f3a]">
                       {outletName(r)} · V{r.open!.version_no} · {r.is_prep ? t("prep") : t("drink")}
                     </span>
@@ -289,7 +293,8 @@ export default async function RecipesPage({
     const groups = new Map<string, typeof rows>();
     for (const r of rows) {
       if (!r.approved || r.status !== "ACTIVE") continue;
-      const key = `${r.is_prep ? "p" : "d"}:${recipeNameKey(r.approved.product_name)}`;
+      // Same name and, for drinks, the same temperature.
+      const key = `${r.is_prep ? "p" : `d:${r.approved.temperature ?? ""}`}:${recipeNameKey(r.approved.product_name)}`;
       groups.set(key, [...(groups.get(key) ?? []), r]);
     }
     const same = [...groups.values()]
@@ -318,7 +323,7 @@ export default async function RecipesPage({
                 <li key={group[0].id}>
                   <form action={`/${locale}/recipes/sync`} className={card}>
                     <h2 className="flex flex-wrap items-baseline gap-2 text-base font-semibold">
-                      {group[0].name}
+                      <span><RecipeName name={group[0].name} temperature={group[0].is_prep ? null : group[0].approved!.temperature} /></span>
                       <span className="text-sm font-normal text-[#3d3f3a]">
                         {group[0].is_prep ? t("prep") : t("drink")} · {t("sync.count", { count: group.length })}
                       </span>

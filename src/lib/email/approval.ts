@@ -46,14 +46,21 @@ async function packagingName(supabase: Client, id: string) {
   return data ? [data.name, data.brand].filter(Boolean).join(" · ") : "";
 }
 
+// Drinks show their temperature after the name, e.g. "Matcha Latte (Hot)"; Preps do not.
+const TEMP_EN = { HOT: "Hot", COLD: "Cold", FROZEN: "Frozen" } as const;
+function withTemp(v: { product_name: string | null; style: string | null; temperature: keyof typeof TEMP_EN | null }) {
+  const name = v.product_name ?? "";
+  return v.temperature && v.style !== "PREP_MATERIAL" ? `${name} (${TEMP_EN[v.temperature]})` : name;
+}
+
 async function recipeName(supabase: Client, recipeId: string) {
   const { data } = await supabase
     .from("recipe_versions")
-    .select("product_name")
+    .select("product_name, style, temperature")
     .eq("recipe_id", recipeId)
     .order("version_no", { ascending: false })
     .limit(1);
-  return data?.[0]?.product_name ?? "";
+  return data?.[0] ? withTemp(data[0]) : "";
 }
 
 async function describe(supabase: Client, kind: ReviewedKind, id: string): Promise<Subject | null> {
@@ -123,13 +130,13 @@ async function describe(supabase: Client, kind: ReviewedKind, id: string): Promi
     case "recipe": {
       const { data } = await supabase
         .from("recipe_versions")
-        .select("recipe_id, version_no, product_name")
+        .select("recipe_id, version_no, product_name, style, temperature")
         .eq("id", id)
         .maybeSingle();
       if (!data) return null;
       return {
         submitterId: await lastSubmitter(supabase, "RECIPE_VERSION", id),
-        name: `${data.product_name ?? ""} V${data.version_no}`,
+        name: `${withTemp(data)} V${data.version_no}`,
         kindEn: "Recipe",
         kindZh: "配方",
         path: `/recipes/${data.recipe_id}`,

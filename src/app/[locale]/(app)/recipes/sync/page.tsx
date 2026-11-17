@@ -11,6 +11,7 @@ import { getOptionLabels, orderOf, styleValues } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 import { SyncPanel } from "@/components/recipes/SyncPanel";
 import { card } from "@/components/recipes/ui";
+import { RecipeName } from "@/components/recipes/RecipeName";
 
 // Super Admin: picked same-name recipes side by side, then AI writes one version to sync.
 export default async function SyncRecipesPage({
@@ -85,7 +86,11 @@ export default async function SyncRecipesPage({
     <div className="flex flex-col gap-6">
       {back}
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-serif text-[32px] font-normal">{t("sync.title", { name: sources[0].version.product_name ?? "" })}</h1>
+        <h1 className="font-serif text-[32px] font-normal">{t.rich("sync.title", {
+            name: () => (
+              <RecipeName name={sources[0].version.product_name ?? ""} temperature={isPrep ? null : sources[0].version.temperature} />
+            ),
+          })}</h1>
         <p className="text-sm text-[#3d3f3a]">{t("sync.compareIntro")}</p>
       </div>
 

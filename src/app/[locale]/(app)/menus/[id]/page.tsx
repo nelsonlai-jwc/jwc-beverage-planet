@@ -75,6 +75,7 @@ export default async function MenuPage({
         ]),
       )}
       allRecipeNames={Object.fromEntries([...names.values()].map((r) => [r.id, r.productName]))}
+      allRecipeTemps={Object.fromEntries([...names.values()].map((r) => [r.id, r.temperature]))}
     />
   );
 }

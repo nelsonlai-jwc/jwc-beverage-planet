@@ -2,6 +2,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { cardClass, mutedText } from "@/components/ui/styles";
 import { categoryLabel, groupByCategory, type FlatCategory } from "@/lib/menus/categories";
 import type { MenuRecipe } from "@/lib/menus/recipes";
+import { RecipeName } from "@/components/recipes/RecipeName";
 
 type Menu = {
   id: string;
@@ -34,7 +35,9 @@ export function BaristaMenus({ menus }: { menus: Menu[] }) {
                 {group.items.map((item, index) => (
                   <li key={item.recipe?.id ?? index} className="flex items-center justify-between gap-3 py-2.5">
                     <div className="flex min-w-0 flex-col">
-                      <span className="font-semibold">{item.recipe?.productName ?? "—"}</span>
+                      <span className="font-semibold">
+                        {item.recipe ? <RecipeName name={item.recipe.productName} temperature={item.recipe.temperature} /> : "—"}
+                      </span>
                       {item.recipe && (
                         <span className={mutedText}>
                           {[
