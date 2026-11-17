@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { LogoutButton } from "./LogoutButton";
@@ -20,21 +21,31 @@ export function BottomBar() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const rowRef = useRef<HTMLDivElement>(null);
+  useFitOneRow(rowRef);
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 bg-black pb-[env(safe-area-inset-bottom)] text-white print:hidden">
-      {/* Wraps to two rows on a narrow phone when the translation note does not fit beside the controls. */}
-      <div className="relative flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 md:px-8">
-        <div id={TRANSLATION_SLOT_ID} className="flex items-center" />
-        <div className="ml-auto flex items-center gap-2">
-          <label className="flex items-center">
+      {/* Always one row: useFitOneRow shrinks the font (12px down to 8px) until everything fits. */}
+      <div
+        ref={rowRef}
+        className="relative flex min-h-12 items-center gap-[0.75em] px-4 py-2 text-[12px] leading-[1.35] md:px-8"
+      >
+        <div id={TRANSLATION_SLOT_ID} className="flex min-w-0 items-center" />
+        <div className="ml-auto flex shrink-0 items-center gap-[0.5em]">
+          {/* Shows only the current language (so it stays narrow); the native select over it opens the list. */}
+          <label className="relative inline-flex items-center gap-[0.4em] rounded-full border-[1.5px] border-white/40 px-[0.8em] py-0.5 font-semibold whitespace-nowrap">
             <span className="sr-only">{t("language")}</span>
+            <span aria-hidden="true">{localeLabels[locale]}</span>
+            <span aria-hidden="true" className="text-[0.8em]">
+              ▼
+            </span>
             <select
               value={locale}
               onChange={(e) =>
                 router.replace(pathname, { locale: e.target.value })
               }
-              className="h-[23px] rounded-full border-[1.5px] border-white/40 bg-black py-0 pr-1.5 pl-2.5 text-xs leading-none font-semibold text-white"
+              className="absolute inset-0 cursor-pointer opacity-0"
             >
               {routing.locales.map((code) => (
                 <option key={code} value={code}>
@@ -43,9 +54,57 @@ export function BottomBar() {
               ))}
             </select>
           </label>
-          <LogoutButton className="shrink-0 rounded-full px-3 py-1.5 text-sm hover:bg-white/15 disabled:opacity-50" />
+          <LogoutButton className="shrink-0 rounded-full px-[0.6em] py-0.5 whitespace-nowrap hover:bg-white/15 disabled:opacity-50" />
         </div>
       </div>
     </div>
   );
+}
+
+const MAX_FONT = 12;
+const MIN_FONT = 8;
+
+/**
+ * Keeps the bar on one row: when the content is wider than the screen, the bar's font size
+ * (every item is sized in em) is lowered until it fits. Only below 8px does "Correct translation" cut off with "…".
+ */
+function useFitOneRow(rowRef: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+    const fit = () => {
+      let size = MAX_FONT;
+      row.style.fontSize = `${size}px`;
+      for (let i = 0; i < 4; i++) {
+        // Text that does not fit: the overflow of the truncating link plus anything past the row's edge.
+        const link = row.querySelector<HTMLElement>(
+          `#${TRANSLATION_SLOT_ID} button`,
+        );
+        const overflow =
+          (link ? link.scrollWidth - link.clientWidth : 0) +
+          (row.scrollWidth - row.clientWidth);
+        if (overflow <= 0 || size <= MIN_FONT) break;
+        const width = row.clientWidth;
+        size = Math.max(
+          MIN_FONT,
+          Math.floor(size * (width / (width + overflow)) * 4) / 4,
+        );
+        row.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    const resize = new ResizeObserver(fit);
+    resize.observe(row);
+    // The translation note is portalled in after the page renders, and its text changes with the language.
+    const mutation = new MutationObserver(fit);
+    mutation.observe(row, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => {
+      resize.disconnect();
+      mutation.disconnect();
+    };
+  }, [rowRef]);
 }
