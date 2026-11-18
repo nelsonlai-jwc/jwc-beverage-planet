@@ -4,7 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { smallButton } from "@/components/recipes/ui";
 import { mutedText } from "@/components/ui/styles";
 import { brewRatio, extractionYield } from "@/lib/calibration/calc";
-import type { CalibrationShot } from "./types";
+import { equipmentName, type CalibrationShot } from "./types";
 
 /** Test shots of one bean for the day, oldest first. */
 export function ShotList({
@@ -42,7 +42,7 @@ export function ShotList({
               <div className="flex min-w-0 flex-col gap-0.5 text-sm">
                 <span className="font-semibold">
                   #{index + 1} · {format.dateTime(new Date(shot.created_at), { timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" })} ·{" "}
-                  {grinderNames.get(shot.grinder_id) ?? "—"}
+                  {t(`drink.${shot.drink_type}`)} · {equipmentName(shot.grinder_id, shot.grinder_name, grinderNames)}
                 </span>
                 <span>{parts.join(" · ")}</span>
                 {shot.taste_notes && <span className={mutedText}>{shot.taste_notes}</span>}

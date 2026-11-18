@@ -108,10 +108,16 @@ export const navItems: readonly NavItem[] = [
     children: [
       {
         href: "/calibration",
-        label: "Calibration.espressoNav",
-        match: (p) => p.startsWith("/calibration") && !p.startsWith("/calibration/filter"),
+        label: "Calibration.espressoDailyNav",
+        match: (p) => p === "/calibration",
       },
-      { href: "/calibration/filter", label: "Calibration.filterNav", match: (p) => p.startsWith("/calibration/filter") },
+      { href: "/calibration/custom", label: "Calibration.espressoCustomNav", match: (p) => p === "/calibration/custom" },
+      { href: "/calibration/filter", label: "Calibration.filterDailyNav", match: (p) => p === "/calibration/filter" },
+      {
+        href: "/calibration/filter/custom",
+        label: "Calibration.filterCustomNav",
+        match: (p) => p === "/calibration/filter/custom",
+      },
     ],
   },
   {

@@ -21,12 +21,24 @@ import { BeanTargetForm } from "./BeanTargetForm";
 import { CalibrationForm } from "./CalibrationForm";
 import { ShotList } from "./ShotList";
 import { SurveyPanel, type Survey, type SurveyResponse } from "@/components/tasting/SurveyPanel";
-import type { Bean, BeanTarget, CalibrationRecord, CalibrationShot, Grinder, Machine } from "./types";
+import {
+  DRINK_TYPES,
+  equipmentName,
+  type Bean,
+  type BeanTarget,
+  type CalibrationRecord,
+  type CalibrationShot,
+  type Grinder,
+  type Machine,
+  type Purpose,
+} from "./types";
 
 /** Which form is open: a new record of a bean, an existing record, or a bean's targets. */
 type OpenForm = { kind: "new"; beanId: string } | { kind: "edit"; recordId: string } | { kind: "target"; beanId: string };
 
 export function CalibrationBoard({
+  purpose,
+  userId,
   outlets,
   outletId,
   date,
@@ -42,27 +54,37 @@ export function CalibrationBoard({
   shots,
   surveys,
   responses,
+  creatorNames,
 }: {
+  purpose: Purpose;
+  userId: string;
   outlets: Outlet[];
-  outletId: string;
+  /** Daily: the outlet shown. Custom: null. */
+  outletId: string | null;
   date: string;
   today: string;
+  /** Daily: inside the date window. Custom: always true (own records only). */
   editable: boolean;
   canManage: boolean;
   beans: Bean[];
   targets: BeanTarget[];
+  /** Daily: the outlet's equipment. Custom: every outlet's, names include the outlet. */
   grinders: Grinder[];
   machines: Machine[];
   records: CalibrationRecord[];
+  /** Daily: yesterday's records. Custom: my last record of each bean before this date. */
   previous: CalibrationRecord[];
   shots: CalibrationShot[];
   surveys: Survey[];
   responses: SurveyResponse[];
+  /** Custom (Super Admin): who made each record. */
+  creatorNames: Map<string, string>;
 }) {
   const t = useTranslations("Calibration");
   const format = useFormatter();
   const router = useRouter();
   const pathname = usePathname();
+  const custom = purpose === "CUSTOM";
   const [open, setOpen] = useState<OpenForm | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -73,7 +95,6 @@ export function CalibrationBoard({
   const machineNames = new Map(machines.map((m) => [m.id, m.name]));
   const activeGrinders = grinders.filter((g) => g.is_active);
   const activeMachines = machines.filter((m) => m.is_active);
-  const targetOf = new Map(targets.map((x) => [x.material_id, x]));
   // Beans with a record or test shot stay listed even if no longer offered for new records.
   const allBeans = [
     ...beans,
@@ -83,7 +104,8 @@ export function CalibrationBoard({
   ];
 
   function navigate(next: { outlet?: string; date?: string }) {
-    const params = new URLSearchParams({ outlet: next.outlet ?? outletId, date: next.date ?? date });
+    const params = new URLSearchParams({ date: next.date ?? date });
+    if (!custom) params.set("outlet", next.outlet ?? outletId ?? "");
     router.push(`${pathname}?${params}`);
   }
 
@@ -135,26 +157,28 @@ export function CalibrationBoard({
   return (
     <div className="flex flex-col gap-4">
       <div className={`${cardClass} grid gap-4 sm:grid-cols-2`}>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="calibration-outlet" className={labelClass}>
-            {t("outlet")}
-          </label>
-          <select
-            id="calibration-outlet"
-            value={outletId}
-            onChange={(event) => navigate({ outlet: event.target.value })}
-            className={inputClass}
-          >
-            {outlets.map((outlet) => (
-              <option key={outlet.id} value={outlet.id}>
-                {outlet.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!custom && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="calibration-outlet" className={labelClass}>
+              {t("outlet")}
+            </label>
+            <select
+              id="calibration-outlet"
+              value={outletId ?? ""}
+              onChange={(event) => navigate({ outlet: event.target.value })}
+              className={inputClass}
+            >
+              {outlets.map((outlet) => (
+                <option key={outlet.id} value={outlet.id}>
+                  {outlet.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="calibration-date" className={labelClass}>
-            {t("businessDate")}
+            {custom ? t("date") : t("businessDate")}
           </label>
           <input
             id="calibration-date"
@@ -166,19 +190,21 @@ export function CalibrationBoard({
           />
         </div>
         <p className={`${mutedText} sm:col-span-2`}>
-          {editable ? (canManage ? t("managerWindow") : t("baristaWindow")) : t("readOnly")}
+          {custom ? t("customWindow") : editable ? (canManage ? t("managerWindow") : t("baristaWindow")) : t("readOnly")}
         </p>
-        <p className="text-sm sm:col-span-2">
-          <span className={mutedText}>{t("equipment")}: </span>
-          {activeGrinders.length || activeMachines.length
-            ? [...activeGrinders, ...activeMachines]
-                .map((x) => [x.name, [x.brand, x.model].filter(Boolean).join(" ")].filter(Boolean).join(" · "))
-                .join(" / ")
-            : "—"}
-        </p>
+        {!custom && (
+          <p className="text-sm sm:col-span-2">
+            <span className={mutedText}>{t("equipment")}: </span>
+            {activeGrinders.length || activeMachines.length
+              ? [...activeGrinders, ...activeMachines]
+                  .map((x) => [x.name, [x.brand, x.model].filter(Boolean).join(" ")].filter(Boolean).join(" · "))
+                  .join(" / ")
+              : "—"}
+          </p>
+        )}
       </div>
 
-      {activeGrinders.length === 0 && <p className={`${cardClass} text-sm font-semibold`}>{t("noGrinders")}</p>}
+      {!custom && activeGrinders.length === 0 && <p className={`${cardClass} text-sm font-semibold`}>{t("noGrinders")}</p>}
 
       {error && (
         <p role="alert" className={errorText}>
@@ -192,12 +218,19 @@ export function CalibrationBoard({
         {allBeans.map((bean) => {
           const beanRecords = records
             .filter((r) => r.coffee_bean_material_id === bean.id)
-            .sort((a, b) => (grinderNames.get(a.grinder_id) ?? "").localeCompare(grinderNames.get(b.grinder_id) ?? ""));
+            .sort((a, b) =>
+              equipmentName(a.grinder_id, a.grinder_name, grinderNames).localeCompare(
+                equipmentName(b.grinder_id, b.grinder_name, grinderNames),
+              ),
+            );
           const beanShots = shots.filter((s) => s.coffee_bean_material_id === bean.id);
-          const target = targetOf.get(bean.id);
-          const freeGrinders = activeGrinders.filter((g) => !beanRecords.some((r) => r.grinder_id === g.id));
-          const yesterday = new Map(
-            previous.filter((r) => r.coffee_bean_material_id === bean.id).map((r) => [r.grinder_id, r]),
+          const beanTargets = targets.filter((x) => x.material_id === bean.id);
+          const freeGrinders = custom
+            ? activeGrinders
+            : activeGrinders.filter((g) => !beanRecords.some((r) => r.grinder_id === g.id));
+          const beanPrevious = previous.filter((r) => r.coffee_bean_material_id === bean.id);
+          const prevMap = new Map(
+            custom ? beanPrevious.slice(0, 1).map((r) => ["*", r] as const) : beanPrevious.map((r) => [r.grinder_id ?? "", r] as const),
           );
           const isNewOpen = open?.kind === "new" && open.beanId === bean.id;
           const isTargetOpen = open?.kind === "target" && open.beanId === bean.id;
@@ -209,40 +242,39 @@ export function CalibrationBoard({
                 {beanRecords.length === 0 && <StatusBadge tone="grey">{t("notRecorded")}</StatusBadge>}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-[13px]">
-                <span className={mutedText}>
-                  {target
-                    ? t("targetSummary", {
-                        dose: `${target.dose_min_g}–${target.dose_max_g}`,
-                        yield: `${target.yield_min_g}–${target.yield_max_g}`,
-                        time: `${target.time_min_seconds}–${target.time_max_seconds}`,
-                      })
+              <div className="flex flex-wrap items-start gap-2 text-[13px]">
+                <div className={`${mutedText} flex flex-col`}>
+                  {beanTargets.length
+                    ? DRINK_TYPES.map((type) => beanTargets.find((x) => x.drink_type === type))
+                        .filter((x): x is BeanTarget => !!x)
+                        .map((target) => (
+                          <span key={target.drink_type}>
+                            {t("targetSummary", {
+                              drink: t(`drink.${target.drink_type}`),
+                              dose: `${target.dose_min_g}–${target.dose_max_g}`,
+                              yield: `${target.yield_min_g}–${target.yield_max_g}`,
+                              time: `${target.time_min_seconds}–${target.time_max_seconds}`,
+                            })}
+                          </span>
+                        ))
                     : t("noTarget")}
-                </span>
+                </div>
                 {canManage && !isTargetOpen && (
                   <button type="button" onClick={() => show({ kind: "target", beanId: bean.id })} className="font-semibold underline">
-                    {target ? t("editTarget") : t("setTarget")}
+                    {beanTargets.length ? t("editTarget") : t("setTarget")}
                   </button>
                 )}
               </div>
-              {isTargetOpen && <BeanTargetForm beanId={bean.id} target={target} onClose={() => show(null)} />}
+              {isTargetOpen && <BeanTargetForm beanId={bean.id} espressoTargets={beanTargets} onClose={() => show(null)} />}
 
               {beanRecords.map((record) => {
                 const deleted = !!record.deleted_at;
                 const isOpen = open?.kind === "edit" && open.recordId === record.id;
-                const ey = extractionYield(record.dose_g, record.yield_g, record.tds_percent);
-                const age = daysOffRoast(record.roast_date, date);
-                const off = (value: number, min?: number, max?: number) =>
-                  min != null && max != null && checkRange(value, min, max) !== "OK" ? "text-[#c4161c]" : "";
-                const facts: [string, string, string?][] = [
-                  [t("dose"), `${record.dose_g} g`, off(record.dose_g, target?.dose_min_g, target?.dose_max_g)],
-                  [t("yield"), `${record.yield_g} g`, off(record.yield_g, target?.yield_min_g, target?.yield_max_g)],
-                  [t("ratio"), brewRatio(record.dose_g, record.yield_g) ?? "—"],
-                  [
-                    t("time"),
-                    `${record.extraction_time_seconds} s`,
-                    off(record.extraction_time_seconds, target?.time_min_seconds, target?.time_max_seconds),
-                  ],
+                const mine = !custom || record.created_by === userId;
+                const canEdit = editable && mine;
+                const canDelete = custom ? mine : canManage;
+                const age = daysOffRoast(record.roast_date, record.business_date);
+                const facts: [string, string][] = [
                   [t("grind"), record.grind_setting],
                   ...(record.water_temp_c != null ? [[t("waterTemp"), `${record.water_temp_c} °C`] as [string, string]] : []),
                   ...(record.pressure_bar != null ? [[t("pressure"), `${record.pressure_bar} bar`] as [string, string]] : []),
@@ -250,51 +282,79 @@ export function CalibrationBoard({
                     ? [[t("preinfusion"), `${record.preinfusion_seconds} s`] as [string, string]]
                     : []),
                   ...(record.basket_g != null ? [[t("basket"), `${record.basket_g} g`] as [string, string]] : []),
-                  ...(record.tds_percent != null ? [["TDS", `${record.tds_percent}%`] as [string, string]] : []),
-                  ...(ey != null ? [["EY", `${ey}%`] as [string, string]] : []),
                   ...(age != null ? [[t("roastAge"), t("daysShort", { days: age })] as [string, string]] : []),
-                  ...(record.taste_balance
-                    ? [[t("tasteBalance"), t(`balance.${record.taste_balance}`)] as [string, string]]
-                    : []),
                 ];
+                const drinks = DRINK_TYPES.map((type) => record.drinks.find((d) => d.drink_type === type)).filter(
+                  (d): d is CalibrationRecord["drinks"][number] => !!d,
+                );
+                const milk = drinks.find((d) => d.drink_type.startsWith("MILK")) ?? drinks[0];
                 return (
                   <div key={record.id} className="flex flex-col gap-3 rounded-[12px] border border-black/15 p-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold">{grinderNames.get(record.grinder_id) ?? "—"}</span>
-                      {record.espresso_machine_id && (
-                        <span className={mutedText}>· {machineNames.get(record.espresso_machine_id) ?? "—"}</span>
+                      <span className="text-sm font-semibold">{equipmentName(record.grinder_id, record.grinder_name, grinderNames)}</span>
+                      {(record.espresso_machine_id || record.machine_name) && (
+                        <span className={mutedText}>· {equipmentName(record.espresso_machine_id, record.machine_name, machineNames)}</span>
                       )}
                       {deleted ? (
                         <StatusBadge tone="red">{t("deleted")}</StatusBadge>
                       ) : (
                         <StatusBadge tone="green">{t("final")}</StatusBadge>
                       )}
+                      {custom && !mine && (
+                        <span className={mutedText}>{t("createdBy", { name: creatorNames.get(record.created_by) ?? "—" })}</span>
+                      )}
                     </div>
                     {isOpen ? (
                       <CalibrationForm
+                        purpose={purpose}
                         outletId={outletId}
                         date={date}
                         beanId={bean.id}
                         record={record}
-                        grinders={grinders.filter((g) => g.id === record.grinder_id)}
+                        grinders={custom ? grinders.filter((g) => g.is_active || g.id === record.grinder_id) : grinders.filter((g) => g.id === record.grinder_id)}
                         machines={machinesFor(record)}
-                        target={target}
-                        yesterday={yesterday}
-                        shots={beanShots.filter((s) => s.grinder_id === record.grinder_id)}
+                        targets={beanTargets}
+                        previous={new Map()}
+                        shots={beanShots.filter((s) => custom || s.grinder_id === record.grinder_id)}
                         grinderNames={grinderNames}
                         onClose={() => show(null)}
                       />
                     ) : (
                       <>
                         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-                          {facts.map(([label, value, tone]) => (
+                          {facts.map(([label, value]) => (
                             <div key={label}>
                               <dt className={mutedText}>{label}</dt>
-                              <dd className={`font-semibold ${tone ?? ""}`}>{value}</dd>
+                              <dd className="font-semibold">{value}</dd>
                             </div>
                           ))}
                         </dl>
-                        {record.taste_notes && <p className="text-sm">{record.taste_notes}</p>}
+                        <ul className="flex flex-col gap-2">
+                          {drinks.map((d) => {
+                            const target = beanTargets.find((x) => x.drink_type === d.drink_type);
+                            const off = (value: number, min?: number, max?: number) =>
+                              min != null && max != null && checkRange(value, min, max) !== "OK" ? "text-[#c4161c]" : "";
+                            const ey = extractionYield(d.dose_g, d.yield_g, d.tds_percent);
+                            return (
+                              <li key={d.drink_type} className="flex flex-col gap-0.5 border-t border-black/10 pt-2 text-sm">
+                                <span className="font-semibold">{t(`drink.${d.drink_type}`)}</span>
+                                <span>
+                                  <span className={off(d.dose_g, target?.dose_min_g, target?.dose_max_g)}>{d.dose_g} g</span>
+                                  {" → "}
+                                  <span className={off(d.yield_g, target?.yield_min_g, target?.yield_max_g)}>{d.yield_g} g</span>
+                                  {` (${brewRatio(d.dose_g, d.yield_g) ?? "—"}) · `}
+                                  <span className={off(d.extraction_time_seconds, target?.time_min_seconds, target?.time_max_seconds)}>
+                                    {d.extraction_time_seconds} s
+                                  </span>
+                                  {d.tds_percent != null ? ` · TDS ${d.tds_percent}%` : ""}
+                                  {ey != null ? ` · EY ${ey}%` : ""}
+                                  {d.taste_balance ? ` · ${t(`balance.${d.taste_balance}`)}` : ""}
+                                </span>
+                                {d.taste_notes && <span className={mutedText}>{d.taste_notes}</span>}
+                              </li>
+                            );
+                          })}
+                        </ul>
                         <p className={mutedText}>
                           {deleted
                             ? t("deletedReason", { reason: record.delete_reason ?? "" })
@@ -303,14 +363,14 @@ export function CalibrationBoard({
                       </>
                     )}
 
-                    {editable && !isOpen && (
+                    {canEdit && !isOpen && (
                       <div className="flex flex-wrap gap-2">
                         {!deleted && (
                           <button type="button" onClick={() => show({ kind: "edit", recordId: record.id })} className={secondaryButton}>
                             {t("edit")}
                           </button>
                         )}
-                        {canManage && !deleted && deleteFor !== record.id && (
+                        {canDelete && !deleted && deleteFor !== record.id && (
                           <button
                             type="button"
                             onClick={() => {
@@ -323,7 +383,7 @@ export function CalibrationBoard({
                             {t("delete")}
                           </button>
                         )}
-                        {canManage && deleted && (
+                        {canDelete && deleted && (
                           <button
                             type="button"
                             disabled={busy}
@@ -336,13 +396,13 @@ export function CalibrationBoard({
                       </div>
                     )}
 
-                    {!isOpen && (() => {
+                    {!custom && !isOpen && milk && (() => {
                       const survey = surveys.find((s) => s.calibration_id === record.id) ?? null;
                       return deleted && !survey ? null : (
                         <SurveyPanel
                           calibrationId={record.id}
                           date={date}
-                          yieldG={record.yield_g}
+                          yieldG={milk.yield_g}
                           survey={survey}
                           responses={survey ? responses.filter((r) => r.survey_id === survey.id) : []}
                           canManage={canManage}
@@ -383,32 +443,31 @@ export function CalibrationBoard({
 
               {isNewOpen ? (
                 <CalibrationForm
+                  purpose={purpose}
                   outletId={outletId}
                   date={date}
                   beanId={bean.id}
                   record={null}
                   grinders={freeGrinders}
                   machines={activeMachines}
-                  target={target}
-                  yesterday={yesterday}
-                  shots={beanShots.filter((s) => freeGrinders.some((g) => g.id === s.grinder_id))}
+                  targets={beanTargets}
+                  previous={prevMap}
+                  shots={custom ? beanShots : beanShots.filter((s) => freeGrinders.some((g) => g.id === s.grinder_id))}
                   grinderNames={grinderNames}
                   onClose={() => show(null)}
                 />
               ) : (
                 <>
-                  {editable && freeGrinders.length > 0 && (
+                  {editable && (custom || freeGrinders.length > 0) && (
                     <button
                       type="button"
                       onClick={() => show({ kind: "new", beanId: bean.id })}
                       className={`${secondaryButton} self-start`}
                     >
-                      {beanRecords.length ? t("recordAnotherGrinder") : t("record")}
+                      {beanRecords.length ? (custom ? t("recordAnother") : t("recordAnotherGrinder")) : t("record")}
                     </button>
                   )}
-                  {beanShots.length > 0 && !editingHere && (
-                    <ShotList shots={beanShots} grinderNames={grinderNames} />
-                  )}
+                  {beanShots.length > 0 && !editingHere && <ShotList shots={beanShots} grinderNames={grinderNames} />}
                 </>
               )}
             </li>

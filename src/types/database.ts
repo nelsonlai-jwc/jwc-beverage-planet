@@ -175,6 +175,42 @@ export type Database = {
         }
         Relationships: []
       }
+      calibration_drinks: {
+        Row: {
+          calibration_id: string
+          dose_g: number
+          drink_type: string
+          extraction_time_seconds: number
+          id: string
+          taste_balance: string | null
+          taste_notes: string | null
+          tds_percent: number | null
+          yield_g: number
+        }
+        Insert: {
+          calibration_id: string
+          dose_g: number
+          drink_type: string
+          extraction_time_seconds: number
+          id?: string
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          yield_g: number
+        }
+        Update: {
+          calibration_id?: string
+          dose_g?: number
+          drink_type?: string
+          extraction_time_seconds?: number
+          id?: string
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          yield_g?: number
+        }
+        Relationships: []
+      }
       calibration_history: {
         Row: {
           calibration_id: string
@@ -216,6 +252,10 @@ export type Database = {
       }
       calibration_shots: {
         Row: {
+          purpose: string
+          grinder_name: string | null
+          machine_name: string | null
+          drink_type: string
           basket_g: number | null
           business_date: string
           coffee_bean_material_id: string
@@ -225,9 +265,9 @@ export type Database = {
           espresso_machine_id: string | null
           extraction_time_seconds: number
           grind_setting: string
-          grinder_id: string
+          grinder_id: string | null
           id: string
-          outlet_id: string
+          outlet_id: string | null
           preinfusion_seconds: number | null
           pressure_bar: number | null
           taste_balance: string | null
@@ -237,6 +277,10 @@ export type Database = {
           yield_g: number
         }
         Insert: {
+          purpose?: string
+          grinder_name?: string | null
+          machine_name?: string | null
+          drink_type: string
           basket_g?: number | null
           business_date?: string
           coffee_bean_material_id: string
@@ -246,9 +290,9 @@ export type Database = {
           espresso_machine_id?: string | null
           extraction_time_seconds: number
           grind_setting: string
-          grinder_id: string
+          grinder_id?: string | null
           id?: string
-          outlet_id: string
+          outlet_id?: string | null
           preinfusion_seconds?: number | null
           pressure_bar?: number | null
           taste_balance?: string | null
@@ -258,6 +302,10 @@ export type Database = {
           yield_g: number
         }
         Update: {
+          purpose?: string
+          grinder_name?: string | null
+          machine_name?: string | null
+          drink_type?: string
           basket_g?: number | null
           business_date?: string
           coffee_bean_material_id?: string
@@ -267,9 +315,9 @@ export type Database = {
           espresso_machine_id?: string | null
           extraction_time_seconds?: number
           grind_setting?: string
-          grinder_id?: string
+          grinder_id?: string | null
           id?: string
-          outlet_id?: string
+          outlet_id?: string | null
           preinfusion_seconds?: number | null
           pressure_bar?: number | null
           taste_balance?: string | null
@@ -282,13 +330,14 @@ export type Database = {
       }
       calibrations: {
         Row: {
-          grinder_id: string
+          purpose: string
+          grinder_name: string | null
+          machine_name: string | null
+          grinder_id: string | null
           water_temp_c: number | null
           pressure_bar: number | null
           preinfusion_seconds: number | null
           basket_g: number | null
-          tds_percent: number | null
-          taste_balance: string | null
           espresso_machine_id: string | null
           roast_date: string | null
           business_date: string
@@ -298,25 +347,22 @@ export type Database = {
           delete_reason: string | null
           deleted_at: string | null
           deleted_by: string | null
-          dose_g: number
-          extraction_time_seconds: number
           grind_setting: string
           id: string
-          outlet_id: string
+          outlet_id: string | null
           revision: number
-          taste_notes: string | null
           updated_at: string
           updated_by: string | null
-          yield_g: number
         }
         Insert: {
-          grinder_id: string
+          purpose?: string
+          grinder_name?: string | null
+          machine_name?: string | null
+          grinder_id?: string | null
           water_temp_c?: number | null
           pressure_bar?: number | null
           preinfusion_seconds?: number | null
           basket_g?: number | null
-          tds_percent?: number | null
-          taste_balance?: string | null
           espresso_machine_id?: string | null
           roast_date?: string | null
           business_date?: string
@@ -326,25 +372,22 @@ export type Database = {
           delete_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          dose_g: number
-          extraction_time_seconds: number
           grind_setting: string
           id?: string
-          outlet_id: string
+          outlet_id?: string | null
           revision?: number
-          taste_notes?: string | null
           updated_at?: string
           updated_by?: string | null
-          yield_g: number
         }
         Update: {
-          grinder_id?: string
+          purpose?: string
+          grinder_name?: string | null
+          machine_name?: string | null
+          grinder_id?: string | null
           water_temp_c?: number | null
           pressure_bar?: number | null
           preinfusion_seconds?: number | null
           basket_g?: number | null
-          tds_percent?: number | null
-          taste_balance?: string | null
           espresso_machine_id?: string | null
           roast_date?: string | null
           business_date?: string
@@ -354,16 +397,12 @@ export type Database = {
           delete_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          dose_g?: number
-          extraction_time_seconds?: number
           grind_setting?: string
           id?: string
-          outlet_id?: string
+          outlet_id?: string | null
           revision?: number
-          taste_notes?: string | null
           updated_at?: string
           updated_by?: string | null
-          yield_g?: number
         }
         Relationships: [
           {
@@ -491,6 +530,7 @@ export type Database = {
       }
       coffee_bean_targets: {
         Row: {
+          drink_type: string
           created_at: string
           dose_max_g: number
           dose_min_g: number
@@ -504,6 +544,7 @@ export type Database = {
           yield_min_g: number
         }
         Insert: {
+          drink_type: string
           created_at?: string
           dose_max_g: number
           dose_min_g: number
@@ -517,6 +558,7 @@ export type Database = {
           yield_min_g: number
         }
         Update: {
+          drink_type?: string
           created_at?: string
           dose_max_g?: number
           dose_min_g?: number
@@ -867,19 +909,22 @@ export type Database = {
       }
       filter_calibration_brews: {
         Row: {
+          purpose: string
+          brewer_name: string | null
+          grinder_name: string | null
           beverage_g: number | null
           bloom_seconds: number | null
           bloom_water_g: number | null
-          brewer_id: string
+          brewer_id: string | null
           business_date: string
           coffee_bean_material_id: string
           created_at: string
           created_by: string
           dose_g: number
           grind_setting: string
-          grinder_id: string
+          grinder_id: string | null
           id: string
-          outlet_id: string
+          outlet_id: string | null
           pour_count: number | null
           taste_balance: string | null
           taste_notes: string | null
@@ -889,19 +934,22 @@ export type Database = {
           water_temp_c: number | null
         }
         Insert: {
+          purpose?: string
+          brewer_name?: string | null
+          grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
           bloom_water_g?: number | null
-          brewer_id: string
+          brewer_id?: string | null
           business_date?: string
           coffee_bean_material_id: string
           created_at?: string
           created_by?: string
           dose_g: number
           grind_setting: string
-          grinder_id: string
+          grinder_id?: string | null
           id?: string
-          outlet_id: string
+          outlet_id?: string | null
           pour_count?: number | null
           taste_balance?: string | null
           taste_notes?: string | null
@@ -911,19 +959,22 @@ export type Database = {
           water_temp_c?: number | null
         }
         Update: {
+          purpose?: string
+          brewer_name?: string | null
+          grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
           bloom_water_g?: number | null
-          brewer_id?: string
+          brewer_id?: string | null
           business_date?: string
           coffee_bean_material_id?: string
           created_at?: string
           created_by?: string
           dose_g?: number
           grind_setting?: string
-          grinder_id?: string
+          grinder_id?: string | null
           id?: string
-          outlet_id?: string
+          outlet_id?: string | null
           pour_count?: number | null
           taste_balance?: string | null
           taste_notes?: string | null
@@ -936,10 +987,13 @@ export type Database = {
       }
       filter_calibrations: {
         Row: {
+          purpose: string
+          brewer_name: string | null
+          grinder_name: string | null
           beverage_g: number | null
           bloom_seconds: number | null
           bloom_water_g: number | null
-          brewer_id: string
+          brewer_id: string | null
           business_date: string
           coffee_bean_material_id: string
           created_at: string
@@ -949,9 +1003,9 @@ export type Database = {
           deleted_by: string | null
           dose_g: number
           grind_setting: string
-          grinder_id: string
+          grinder_id: string | null
           id: string
-          outlet_id: string
+          outlet_id: string | null
           pour_count: number | null
           revision: number
           roast_date: string | null
@@ -965,10 +1019,13 @@ export type Database = {
           water_temp_c: number | null
         }
         Insert: {
+          purpose?: string
+          brewer_name?: string | null
+          grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
           bloom_water_g?: number | null
-          brewer_id: string
+          brewer_id?: string | null
           business_date?: string
           coffee_bean_material_id: string
           created_at?: string
@@ -978,9 +1035,9 @@ export type Database = {
           deleted_by?: string | null
           dose_g: number
           grind_setting: string
-          grinder_id: string
+          grinder_id?: string | null
           id?: string
-          outlet_id: string
+          outlet_id?: string | null
           pour_count?: number | null
           revision?: number
           roast_date?: string | null
@@ -994,10 +1051,13 @@ export type Database = {
           water_temp_c?: number | null
         }
         Update: {
+          purpose?: string
+          brewer_name?: string | null
+          grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
           bloom_water_g?: number | null
-          brewer_id?: string
+          brewer_id?: string | null
           business_date?: string
           coffee_bean_material_id?: string
           created_at?: string
@@ -1007,9 +1067,9 @@ export type Database = {
           deleted_by?: string | null
           dose_g?: number
           grind_setting?: string
-          grinder_id?: string
+          grinder_id?: string | null
           id?: string
-          outlet_id?: string
+          outlet_id?: string | null
           pour_count?: number | null
           revision?: number
           roast_date?: string | null
@@ -3029,6 +3089,10 @@ export type Database = {
       }
     }
     Functions: {
+      save_espresso_calibration: {
+        Args: { p_id: string | null; p_revision: number | null; p_record: Json; p_drinks: Json }
+        Returns: string
+      }
       admin_update_user: {
         Args: {
           p_expected_revision: number

@@ -19,15 +19,21 @@ import { checkRange, daysOffRoast } from "@/lib/calibration/calc";
 import { filterExtractionYield, minutes, waterRatio } from "@/lib/calibration/filterCalc";
 import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "../BeanTargetForm";
-import type { Bean, Grinder } from "../types";
+import { equipmentName, type Bean, type Grinder, type Purpose } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
 import { FilterForm } from "./FilterForm";
 import type { Brewer, FilterBrew, FilterRecord, FilterTarget } from "./types";
 
 /** Which form is open: a new record of a bean, an existing record, or a bean's targets. */
-type OpenForm = { kind: "new"; beanId: string } | { kind: "edit"; recordId: string } | { kind: "target"; beanId: string };
+type OpenForm =
+  | { kind: "new"; beanId: string }
+  | { kind: "edit"; recordId: string }
+  | { kind: "target"; beanId: string };
 
 export function FilterBoard({
+  purpose,
+  userId,
+  creatorNames,
   outlets,
   outletId,
   date,
@@ -42,8 +48,13 @@ export function FilterBoard({
   previous,
   brews,
 }: {
+  purpose: Purpose;
+  userId: string;
+  /** Custom (Super Admin): who made each record. */
+  creatorNames: Map<string, string>;
   outlets: Outlet[];
-  outletId: string;
+  /** Daily: the outlet shown. Custom: null. */
+  outletId: string | null;
   date: string;
   today: string;
   editable: boolean;
@@ -61,6 +72,7 @@ export function FilterBoard({
   const format = useFormatter();
   const router = useRouter();
   const pathname = usePathname();
+  const custom = purpose === "CUSTOM";
   const [open, setOpen] = useState<OpenForm | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -81,7 +93,8 @@ export function FilterBoard({
   ];
 
   function navigate(next: { outlet?: string; date?: string }) {
-    const params = new URLSearchParams({ outlet: next.outlet ?? outletId, date: next.date ?? date });
+    const params = new URLSearchParams({ date: next.date ?? date });
+    if (!custom) params.set("outlet", next.outlet ?? outletId ?? "");
     router.push(`${pathname}?${params}`);
   }
 
@@ -103,7 +116,10 @@ export function FilterBoard({
       .from("filter_calibrations")
       .update(
         deleted
-          ? { deleted_at: new Date().toISOString(), delete_reason: reason.trim() }
+          ? {
+              deleted_at: new Date().toISOString(),
+              delete_reason: reason.trim(),
+            }
           : { deleted_at: null, deleted_by: null, delete_reason: null },
       )
       .eq("id", record.id)
@@ -133,26 +149,28 @@ export function FilterBoard({
   return (
     <div className="flex flex-col gap-4">
       <div className={`${cardClass} grid gap-4 sm:grid-cols-2`}>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="filter-outlet" className={labelClass}>
-            {t("outlet")}
-          </label>
-          <select
-            id="filter-outlet"
-            value={outletId}
-            onChange={(event) => navigate({ outlet: event.target.value })}
-            className={inputClass}
-          >
-            {outlets.map((outlet) => (
-              <option key={outlet.id} value={outlet.id}>
-                {outlet.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!custom && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="filter-outlet" className={labelClass}>
+              {t("outlet")}
+            </label>
+            <select
+              id="filter-outlet"
+              value={outletId ?? ""}
+              onChange={(event) => navigate({ outlet: event.target.value })}
+              className={inputClass}
+            >
+              {outlets.map((outlet) => (
+                <option key={outlet.id} value={outlet.id}>
+                  {outlet.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="filter-date" className={labelClass}>
-            {t("businessDate")}
+            {custom ? t("date") : t("businessDate")}
           </label>
           <input
             id="filter-date"
@@ -164,19 +182,27 @@ export function FilterBoard({
           />
         </div>
         <p className={`${mutedText} sm:col-span-2`}>
-          {editable ? (canManage ? t("managerWindow") : t("baristaWindow")) : t("readOnly")}
+          {custom
+            ? t("customWindow")
+            : editable
+              ? canManage
+                ? t("managerWindow")
+                : t("baristaWindow")
+              : t("readOnly")}
         </p>
-        <p className="text-sm sm:col-span-2">
-          <span className={mutedText}>{t("equipment")}: </span>
-          {activeBrewers.length || activeGrinders.length
-            ? [...activeBrewers, ...activeGrinders]
-                .map((x) => [x.name, [x.brand, x.model].filter(Boolean).join(" ")].filter(Boolean).join(" · "))
-                .join(" / ")
-            : "—"}
-        </p>
+        {!custom && (
+          <p className="text-sm sm:col-span-2">
+            <span className={mutedText}>{t("equipment")}: </span>
+            {activeBrewers.length || activeGrinders.length
+              ? [...activeBrewers, ...activeGrinders]
+                  .map((x) => [x.name, [x.brand, x.model].filter(Boolean).join(" ")].filter(Boolean).join(" · "))
+                  .join(" / ")
+              : "—"}
+          </p>
+        )}
       </div>
 
-      {(activeBrewers.length === 0 || activeGrinders.length === 0) && (
+      {!custom && (activeBrewers.length === 0 || activeGrinders.length === 0) && (
         <p className={`${cardClass} text-sm font-semibold`}>{tf("noEquipment")}</p>
       )}
 
@@ -192,12 +218,21 @@ export function FilterBoard({
         {allBeans.map((bean) => {
           const beanRecords = records
             .filter((r) => r.coffee_bean_material_id === bean.id)
-            .sort((a, b) => (brewerNames.get(a.brewer_id) ?? "").localeCompare(brewerNames.get(b.brewer_id) ?? ""));
+            .sort((a, b) =>
+              equipmentName(a.brewer_id, a.brewer_name, brewerNames).localeCompare(
+                equipmentName(b.brewer_id, b.brewer_name, brewerNames),
+              ),
+            );
           const beanBrews = brews.filter((s) => s.coffee_bean_material_id === bean.id);
           const target = targetOf.get(bean.id);
-          const freeBrewers = activeBrewers.filter((b) => !beanRecords.some((r) => r.brewer_id === b.id));
+          const freeBrewers = custom
+            ? activeBrewers
+            : activeBrewers.filter((b) => !beanRecords.some((r) => r.brewer_id === b.id));
+          const beanPrevious = previous.filter((r) => r.coffee_bean_material_id === bean.id);
           const yesterday = new Map(
-            previous.filter((r) => r.coffee_bean_material_id === bean.id).map((r) => [r.brewer_id, r]),
+            custom
+              ? beanPrevious.slice(0, 1).map((r) => ["*", r] as const)
+              : beanPrevious.map((r) => [r.brewer_id ?? "", r] as const),
           );
           const isNewOpen = open?.kind === "new" && open.beanId === bean.id;
           const isTargetOpen = open?.kind === "target" && open.beanId === bean.id;
@@ -220,7 +255,11 @@ export function FilterBoard({
                     : t("noTarget")}
                 </span>
                 {canManage && !isTargetOpen && (
-                  <button type="button" onClick={() => show({ kind: "target", beanId: bean.id })} className="font-semibold underline">
+                  <button
+                    type="button"
+                    onClick={() => show({ kind: "target", beanId: bean.id })}
+                    className="font-semibold underline"
+                  >
                     {target ? t("editTarget") : t("setTarget")}
                   </button>
                 )}
@@ -232,9 +271,13 @@ export function FilterBoard({
                 const isOpen = open?.kind === "edit" && open.recordId === record.id;
                 const ratio = waterRatio(record.dose_g, record.water_g);
                 const ey = filterExtractionYield(record.dose_g, record.beverage_g, record.tds_percent);
-                const age = daysOffRoast(record.roast_date, date);
+                const age = daysOffRoast(record.roast_date, record.business_date);
+                const mine = !custom || record.created_by === userId;
+                const canDelete = custom ? mine : canManage;
                 const off = (value: number | null, min?: number, max?: number) =>
-                  value != null && min != null && max != null && checkRange(value, min, max) !== "OK" ? "text-[#c4161c]" : "";
+                  value != null && min != null && max != null && checkRange(value, min, max) !== "OK"
+                    ? "text-[#c4161c]"
+                    : "";
                 const facts: [string, string, string?][] = [
                   [t("dose"), `${record.dose_g} g`, off(record.dose_g, target?.dose_min_g, target?.dose_max_g)],
                   [tf("water"), `${record.water_g} g`],
@@ -244,19 +287,25 @@ export function FilterBoard({
                     minutes(record.total_time_seconds),
                     off(record.total_time_seconds, target?.time_min_seconds, target?.time_max_seconds),
                   ],
-                  [t("grinder"), grinderNames.get(record.grinder_id) ?? "—"],
+                  [t("grinder"), equipmentName(record.grinder_id, record.grinder_name, grinderNames)],
                   [t("grind"), record.grind_setting],
-                  ...(record.water_temp_c != null ? [[t("waterTemp"), `${record.water_temp_c} °C`] as [string, string]] : []),
+                  ...(record.water_temp_c != null
+                    ? [[t("waterTemp"), `${record.water_temp_c} °C`] as [string, string]]
+                    : []),
                   ...(record.bloom_water_g != null || record.bloom_seconds != null
                     ? [
-                        [
-                          tf("bloom"),
-                          `${record.bloom_water_g ?? "—"} g · ${record.bloom_seconds ?? "—"} s`,
-                        ] as [string, string],
+                        [tf("bloom"), `${record.bloom_water_g ?? "—"} g · ${record.bloom_seconds ?? "—"} s`] as [
+                          string,
+                          string,
+                        ],
                       ]
                     : []),
-                  ...(record.pour_count != null ? [[tf("pourCount"), String(record.pour_count)] as [string, string]] : []),
-                  ...(record.beverage_g != null ? [[tf("beverage"), `${record.beverage_g} g`] as [string, string]] : []),
+                  ...(record.pour_count != null
+                    ? [[tf("pourCount"), String(record.pour_count)] as [string, string]]
+                    : []),
+                  ...(record.beverage_g != null
+                    ? [[tf("beverage"), `${record.beverage_g} g`] as [string, string]]
+                    : []),
                   ...(record.tds_percent != null ? [["TDS", `${record.tds_percent}%`] as [string, string]] : []),
                   ...(ey != null ? [["EY", `${ey}%`] as [string, string]] : []),
                   ...(age != null ? [[t("roastAge"), t("daysShort", { days: age })] as [string, string]] : []),
@@ -267,24 +316,38 @@ export function FilterBoard({
                 return (
                   <div key={record.id} className="flex flex-col gap-3 rounded-[12px] border border-black/15 p-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold">{brewerNames.get(record.brewer_id) ?? "—"}</span>
+                      <span className="text-sm font-semibold">
+                        {equipmentName(record.brewer_id, record.brewer_name, brewerNames)}
+                      </span>
                       {deleted ? (
                         <StatusBadge tone="red">{t("deleted")}</StatusBadge>
                       ) : (
                         <StatusBadge tone="green">{t("final")}</StatusBadge>
                       )}
+                      {custom && !mine && (
+                        <span className={mutedText}>
+                          {t("createdBy", {
+                            name: creatorNames.get(record.created_by) ?? "—",
+                          })}
+                        </span>
+                      )}
                     </div>
                     {isOpen ? (
                       <FilterForm
+                        purpose={purpose}
                         outletId={outletId}
                         date={date}
                         beanId={bean.id}
                         record={record}
-                        brewers={brewers.filter((b) => b.id === record.brewer_id)}
+                        brewers={
+                          custom
+                            ? brewers.filter((b) => b.is_active || b.id === record.brewer_id)
+                            : brewers.filter((b) => b.id === record.brewer_id)
+                        }
                         grinders={grindersFor(record)}
                         target={target}
                         yesterday={yesterday}
-                        brews={beanBrews.filter((s) => s.brewer_id === record.brewer_id)}
+                        brews={beanBrews.filter((s) => custom || s.brewer_id === record.brewer_id)}
                         brewerNames={brewerNames}
                         onClose={() => show(null)}
                       />
@@ -301,20 +364,28 @@ export function FilterBoard({
                         {record.taste_notes && <p className="text-sm">{record.taste_notes}</p>}
                         <p className={mutedText}>
                           {deleted
-                            ? t("deletedReason", { reason: record.delete_reason ?? "" })
-                            : t("updated", { date: updatedAt(record.updated_at) })}
+                            ? t("deletedReason", {
+                                reason: record.delete_reason ?? "",
+                              })
+                            : t("updated", {
+                                date: updatedAt(record.updated_at),
+                              })}
                         </p>
                       </>
                     )}
 
-                    {editable && !isOpen && (
+                    {editable && mine && !isOpen && (
                       <div className="flex flex-wrap gap-2">
                         {!deleted && (
-                          <button type="button" onClick={() => show({ kind: "edit", recordId: record.id })} className={secondaryButton}>
+                          <button
+                            type="button"
+                            onClick={() => show({ kind: "edit", recordId: record.id })}
+                            className={secondaryButton}
+                          >
                             {t("edit")}
                           </button>
                         )}
-                        {canManage && !deleted && deleteFor !== record.id && (
+                        {canDelete && !deleted && deleteFor !== record.id && (
                           <button
                             type="button"
                             onClick={() => {
@@ -327,7 +398,7 @@ export function FilterBoard({
                             {t("delete")}
                           </button>
                         )}
-                        {canManage && deleted && (
+                        {canDelete && deleted && (
                           <button
                             type="button"
                             disabled={busy}
@@ -372,6 +443,7 @@ export function FilterBoard({
 
               {isNewOpen ? (
                 <FilterForm
+                  purpose={purpose}
                   outletId={outletId}
                   date={date}
                   beanId={bean.id}
@@ -380,22 +452,24 @@ export function FilterBoard({
                   grinders={activeGrinders}
                   target={target}
                   yesterday={yesterday}
-                  brews={beanBrews.filter((s) => freeBrewers.some((b) => b.id === s.brewer_id))}
+                  brews={custom ? beanBrews : beanBrews.filter((s) => freeBrewers.some((b) => b.id === s.brewer_id))}
                   brewerNames={brewerNames}
                   onClose={() => show(null)}
                 />
               ) : (
                 <>
-                  {editable && freeBrewers.length > 0 && activeGrinders.length > 0 && (
+                  {editable && (custom || (freeBrewers.length > 0 && activeGrinders.length > 0)) && (
                     <button
                       type="button"
                       onClick={() => show({ kind: "new", beanId: bean.id })}
                       className={`${secondaryButton} self-start`}
                     >
-                      {beanRecords.length ? tf("recordAnotherBrewer") : t("record")}
+                      {beanRecords.length ? (custom ? t("recordAnother") : tf("recordAnotherBrewer")) : t("record")}
                     </button>
                   )}
-                  {beanBrews.length > 0 && !editingHere && <FilterBrewList brews={beanBrews} brewerNames={brewerNames} />}
+                  {beanBrews.length > 0 && !editingHere && (
+                    <FilterBrewList brews={beanBrews} brewerNames={brewerNames} />
+                  )}
                 </>
               )}
             </li>

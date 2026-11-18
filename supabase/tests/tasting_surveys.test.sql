@@ -27,10 +27,9 @@ insert into public.grinders (id, outlet_id, name)
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000c', true);
-insert into public.calibrations (id, outlet_id, coffee_bean_material_id, grinder_id, dose_g, yield_g,
-                                 extraction_time_seconds, grind_setting)
+insert into public.calibrations (id, outlet_id, coffee_bean_material_id, grinder_id, grind_setting)
   select '00000000-0000-0000-0000-0000000000c1', id, '00000000-0000-0000-0000-0000000000b1',
-         '00000000-0000-0000-0000-0000000000a1', 18, 36, 28, '12'
+         '00000000-0000-0000-0000-0000000000a1', '12'
     from public.outlets where code = 'JB-BROOOS';
 
 -- Barista cannot open a survey.

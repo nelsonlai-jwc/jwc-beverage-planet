@@ -406,7 +406,7 @@
     "failed": "Something went wrong. Please try again."
   },
   "Calibration": {
-    "title": "Espresso Calibration",
+    "title": "Espresso Calibration · Daily",
     "note": "One final record per coffee bean per grinder per outlet per day.",
     "noOutlet": "Your account has no outlet yet.",
     "outlet": "Outlet",
@@ -484,7 +484,7 @@
     "testShots": "Test shots ({count})",
     "useShot": "Use these values",
     "recordAnotherGrinder": "Record on another grinder",
-    "targetSummary": "Target: dose {dose} g · yield {yield} g · time {time} s",
+    "targetSummary": "{drink}: dose {dose} g · yield {yield} g · time {time} s",
     "noTarget": "No target set for this bean.",
     "setTarget": "Set target",
     "editTarget": "Edit target",
@@ -494,12 +494,34 @@
     "targetRange": "Target {min}–{max} {unit}",
     "min": "Min",
     "max": "Max",
-    "espressoNav": "Espresso",
-    "filterNav": "Filter",
-    "ratioWater": "Water ratio (1:x)"
+    "ratioWater": "Water ratio (1:x)",
+    "espressoDailyNav": "Espresso · Daily",
+    "espressoCustomNav": "Espresso · Custom",
+    "filterDailyNav": "Filter · Daily",
+    "filterCustomNav": "Filter · Custom",
+    "customTitle": "Espresso Calibration · Custom",
+    "customNote": "Your own records. Only you and the Super Admin can see them.",
+    "customWindow": "Record any day, as many times as you like. Only you can change your records.",
+    "date": "Date",
+    "otherEquipment": "Other (type a name)",
+    "equipmentNameLabel": "Name",
+    "invalidShared": "Grinder and grind setting are required (type a name when choosing Other).",
+    "invalidDrink": "{drink}: dose, yield and time must be greater than zero.",
+    "needDrink": "Turn on at least one drink.",
+    "drinksTitle": "Drinks",
+    "drinksHint": "Turn on the drinks you dialled in. Grind and machine settings are shared.",
+    "drink": {
+      "BLACK_HOT": "Black (Hot)",
+      "BLACK_ICED": "Black (Iced)",
+      "MILK_HOT": "Milk (Hot)",
+      "MILK_ICED": "Milk (Iced)"
+    },
+    "useLast": "Use my last values",
+    "createdBy": "By {name}",
+    "recordAnother": "Record again"
   },
   "FilterCalibration": {
-    "title": "Filter Calibration",
+    "title": "Filter Calibration · Daily",
     "note": "One final record per coffee bean per brewer per outlet per day.",
     "noEquipment": "This outlet needs at least one brewer and one grinder. An Admin adds them in Settings.",
     "invalid": "Dose, water and total time must be greater than zero, and brewer, grinder and grind setting are required.",
@@ -528,7 +550,8 @@
     "bloomShort": "bloom {water} g / {seconds} s",
     "poursShort": "{count, plural, one {# pour} other {# pours}}",
     "targetSummary": "Target: dose {dose} g · ratio 1:{ratio} · time {time}",
-    "recordAnotherBrewer": "Record on another brewer"
+    "recordAnotherBrewer": "Record on another brewer",
+    "customTitle": "Filter Calibration · Custom"
   },
   "Users": {
     "title": "Users",

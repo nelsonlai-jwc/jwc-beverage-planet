@@ -406,7 +406,7 @@
     "failed": "出错了，请再试一次。"
   },
   "Calibration": {
-    "title": "Espresso 校准",
+    "title": "Espresso 校准 · Daily",
     "note": "每间分店每天、每支咖啡豆在每台磨豆机只有一份最终记录。",
     "noOutlet": "你的账号尚未分配分店。",
     "outlet": "分店",
@@ -484,7 +484,7 @@
     "testShots": "试萃记录（{count}）",
     "useShot": "套用这杯",
     "recordAnotherGrinder": "记录另一台磨豆机",
-    "targetSummary": "目标：粉量 {dose} g · 萃取量 {yield} g · 时间 {time} 秒",
+    "targetSummary": "{drink}：粉量 {dose} g · 液重 {yield} g · 时间 {time} s",
     "noTarget": "这支豆尚未设定目标。",
     "setTarget": "设定目标",
     "editTarget": "修改目标",
@@ -494,12 +494,34 @@
     "targetRange": "目标 {min}–{max} {unit}",
     "min": "最小",
     "max": "最大",
-    "espressoNav": "Espresso",
-    "filterNav": "Filter",
-    "ratioWater": "粉水比 (1:x)"
+    "ratioWater": "粉水比 (1:x)",
+    "espressoDailyNav": "Espresso · Daily",
+    "espressoCustomNav": "Espresso · Custom",
+    "filterDailyNav": "Filter · Daily",
+    "filterCustomNav": "Filter · Custom",
+    "customTitle": "Espresso 校准 · Custom",
+    "customNote": "你自己的记录，只有你和 Super Admin 看得到。",
+    "customWindow": "任何日期都可以记录，次数不限。只有你能修改自己的记录。",
+    "date": "日期",
+    "otherEquipment": "其他（自己输入名称）",
+    "equipmentNameLabel": "名称",
+    "invalidShared": "必须选择磨豆机并填写研磨刻度（选“其他”时要输入名称）。",
+    "invalidDrink": "{drink}：粉量、液重和时间必须大于零。",
+    "needDrink": "至少打开一种饮品。",
+    "drinksTitle": "饮品",
+    "drinksHint": "打开这次调整过的饮品。研磨和咖啡机设定是共用的。",
+    "drink": {
+      "BLACK_HOT": "黑咖啡（热）",
+      "BLACK_ICED": "黑咖啡（冰）",
+      "MILK_HOT": "牛奶咖啡（热）",
+      "MILK_ICED": "牛奶咖啡（冰）"
+    },
+    "useLast": "带入我上一次的数值",
+    "createdBy": "记录人：{name}",
+    "recordAnother": "再记录一份"
   },
   "FilterCalibration": {
-    "title": "Filter 校准",
+    "title": "Filter 校准 · Daily",
     "note": "每个分店、每天、每支咖啡豆、每个冲煮器具只有一份最终记录。",
     "noEquipment": "这个分店至少需要一个冲煮器具和一台磨豆机。请 Admin 在设置中添加。",
     "invalid": "粉量、水量和总时间必须大于零，并且必须选择冲煮器具、磨豆机和填写研磨刻度。",
@@ -528,7 +550,8 @@
     "bloomShort": "闷蒸 {water} g / {seconds} s",
     "poursShort": "注水 {count} 次",
     "targetSummary": "目标：粉量 {dose} g · 粉水比 1:{ratio} · 时间 {time}",
-    "recordAnotherBrewer": "在另一个冲煮器具上记录"
+    "recordAnotherBrewer": "在另一个冲煮器具上记录",
+    "customTitle": "Filter 校准 · Custom"
   },
   "Users": {
     "title": "用户",
