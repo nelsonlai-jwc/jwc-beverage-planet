@@ -22,7 +22,7 @@
     "rawMaterials": "Raw Material",
     "recipes": "Beverage Recipe",
     "menus": "Menu",
-    "calibration": "Daily Coffee Calibration",
+    "calibration": "Coffee Calibration",
     "reports": "Report",
     "settings": "Setting"
   },
@@ -217,7 +217,7 @@
       "disable": "Disable",
       "disabledNotice": "Disabled. It no longer appears in new calibrations.",
       "cancel": "Cancel",
-      "hint": "The usual temperature and pressure are filled in when the machine is chosen in Daily Coffee Calibration.",
+      "hint": "The usual temperature and pressure are filled in when the machine is chosen in Espresso Calibration.",
       "errors": {
         "NUMBER": "Check the numbers (machine: 1–6 groups, 80–100 °C, up to 20 bar).",
         "SCALE_RANGE": "The scale 'From' must be below 'To'.",
@@ -393,7 +393,7 @@
     "failed": "Something went wrong. Please try again."
   },
   "Calibration": {
-    "title": "Daily Coffee Calibration",
+    "title": "Espresso Calibration",
     "note": "One final record per coffee bean per grinder per outlet per day.",
     "noOutlet": "Your account has no outlet yet.",
     "outlet": "Outlet",
@@ -480,7 +480,8 @@
     "targetInvalid": "Enter every minimum and maximum; each minimum must be above zero and not above its maximum.",
     "targetRange": "Target {min}–{max} {unit}",
     "min": "Min",
-    "max": "Max"
+    "max": "Max",
+    "espressoNav": "Espresso"
   },
   "Users": {
     "title": "Users",
@@ -642,7 +643,7 @@
       "abv": "ABV",
       "bx": "Bx",
       "percentHint": "0 to 100. Leave blank if unknown.",
-      "coffeeBean": "Coffee bean (used in Daily Coffee Calibration)",
+      "coffeeBean": "Coffee bean (used in coffee calibration)",
       "unitCostPreview": "Unit cost",
       "toBeFilled": "To be filled",
       "packInvalid": "Pack size must be greater than 0",
@@ -1522,5 +1523,109 @@
       "NOT_ALLOWED": "Only an Admin can correct translations.",
       "UNKNOWN": "Could not save. Please try again."
     }
+  },
+  "Tasting": {
+    "title": "Tasting survey",
+    "notFound": "This survey link is not valid.",
+    "closed": "This survey is closed. Thank you!",
+    "whichDrink": "Which drink did you taste?",
+    "drink": {
+      "ESPRESSO": "Espresso",
+      "MILK": "Milk drink (latte)"
+    },
+    "milkRecipe": "Recipe: espresso {espresso} g + milk {milk} ml (ratio {ratio})",
+    "milkRecipeShort": "espresso {espresso} g + milk {milk} ml",
+    "scaleHint": "Score 0–6 in steps of 0.5, as in barista championships.",
+    "scale": {
+      "0": "Unacceptable",
+      "1": "Acceptable",
+      "2": "Average",
+      "3": "Good",
+      "4": "Very good",
+      "5": "Excellent",
+      "6": "Extraordinary"
+    },
+    "criteria": {
+      "visual": "Visual",
+      "taste_balance": "Taste balance",
+      "tactile": "Tactile",
+      "flavor": "Flavour"
+    },
+    "help": {
+      "ESPRESSO": {
+        "taste_balance": "Sweet, sour and bitter in harmony",
+        "tactile": "Body, texture and finish in the mouth",
+        "flavor": "Clarity and quality of the flavours",
+        "visual": ""
+      },
+      "MILK": {
+        "visual": "Look of the drink and latte art",
+        "taste_balance": "Milk and espresso in harmony",
+        "tactile": "Milk texture and mouthfeel",
+        "flavor": "Coffee flavour coming through the milk"
+      }
+    },
+    "milkAmount": "Milk ratio",
+    "milk": {
+      "TOO_MUCH": "Too much milk",
+      "RIGHT": "Just right",
+      "TOO_LITTLE": "Too little milk"
+    },
+    "milkAmountRequired": "Please choose the milk ratio.",
+    "flavorTags": "Flavours you taste (optional)",
+    "tags": {
+      "FRUITY": "Fruity",
+      "BERRY": "Berry",
+      "CITRUS": "Citrus",
+      "STONE_FRUIT": "Stone fruit",
+      "FLORAL": "Floral",
+      "CHOCOLATE": "Chocolate",
+      "CARAMEL": "Caramel",
+      "NUTTY": "Nutty",
+      "SPICY": "Spicy",
+      "ROASTED": "Roasted"
+    },
+    "comment": "Short comment (optional)",
+    "submit": "Send",
+    "sending": "Sending…",
+    "thanks": "Thank you! Your scores were sent.",
+    "rateAlso": "Also rate the {drink}",
+    "errors": {
+      "INVALID": "Please check your answers.",
+      "CLOSED": "This survey is closed.",
+      "ALREADY": "You have already rated this drink on this phone.",
+      "TOO_MANY": "Too many answers from this network. Please try again later.",
+      "NOT_FOUND": "This survey link is not valid.",
+      "UNKNOWN": "Could not send. Please try again."
+    },
+    "openSurvey": "Open tasting survey",
+    "openTitle": "Tasting survey: which drinks are served?",
+    "milkEspressoG": "Espresso in the latte (g)",
+    "milkMl": "Milk (ml)",
+    "ratio": "Ratio {ratio}",
+    "closesAt": "Closes at (Malaysia time)",
+    "openHint": "Anyone with the QR code can answer without signing in; one answer per phone per drink, up to 200 answers.",
+    "openButton": "Open and create QR code",
+    "cancel": "Cancel",
+    "pickDrink": "Choose at least one drink.",
+    "milkRecipeRequired": "Enter the espresso and milk amounts.",
+    "closesFuture": "The closing time must be in the future.",
+    "saveFailed": "Could not save. Please try again.",
+    "surveyTitle": "Tasting survey",
+    "openUntil": "Open until {time}",
+    "closedBadge": "Closed",
+    "responses": "{count, plural, one {# answer} other {# answers}}",
+    "showQr": "Show QR code",
+    "downloadQr": "Download QR",
+    "copyLink": "Copy link",
+    "closeNow": "Close survey",
+    "reopen": "Reopen",
+    "average": "Average",
+    "hide": "Hide",
+    "unhide": "Show",
+    "hiddenNote": "Hidden answers are left out of the scores.",
+    "scanTitle": "Scan to rate today's coffee",
+    "closeQr": "Close",
+    "tagsResult": "Flavours"
   }
 }

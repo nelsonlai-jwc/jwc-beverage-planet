@@ -22,7 +22,7 @@
     "rawMaterials": "Bahan Mentah",
     "recipes": "Resipi Minuman",
     "menus": "Menu",
-    "calibration": "Kalibrasi Kopi Harian",
+    "calibration": "Kalibrasi Kopi",
     "reports": "Laporan",
     "settings": "Tetapan"
   },
@@ -217,7 +217,7 @@
       "disable": "Nyahaktif",
       "disabledNotice": "Dinyahaktifkan. Tidak lagi dipaparkan dalam kalibrasi baharu.",
       "cancel": "Batal",
-      "hint": "Suhu dan tekanan biasa diisi apabila mesin dipilih dalam Kalibrasi Kopi Harian.",
+      "hint": "Suhu dan tekanan biasa diisi apabila mesin dipilih dalam Kalibrasi Espresso.",
       "errors": {
         "NUMBER": "Semak nombor (mesin: 1–6 kumpulan, 80–100 °C, hingga 20 bar).",
         "SCALE_RANGE": "Skala 'Dari' mesti lebih kecil daripada 'Hingga'.",
@@ -393,7 +393,7 @@
     "failed": "Berlaku ralat. Sila cuba lagi."
   },
   "Calibration": {
-    "title": "Kalibrasi Kopi Harian",
+    "title": "Kalibrasi Espresso",
     "note": "Satu rekod muktamad bagi setiap biji kopi bagi setiap pengisar bagi setiap cawangan setiap hari.",
     "noOutlet": "Akaun anda belum mempunyai cawangan.",
     "outlet": "Cawangan",
@@ -480,7 +480,8 @@
     "targetInvalid": "Masukkan setiap minimum dan maksimum; minimum mesti melebihi sifar dan tidak melebihi maksimum.",
     "targetRange": "Sasaran {min}–{max} {unit}",
     "min": "Min",
-    "max": "Maks"
+    "max": "Maks",
+    "espressoNav": "Espresso"
   },
   "Users": {
     "title": "Pengguna",
@@ -642,7 +643,7 @@
       "abv": "ABV",
       "bx": "Bx",
       "percentHint": "0 hingga 100. Biarkan kosong jika tidak diketahui.",
-      "coffeeBean": "Biji kopi (digunakan dalam Kalibrasi Kopi Harian)",
+      "coffeeBean": "Biji kopi (digunakan dalam kalibrasi kopi)",
       "unitCostPreview": "Kos seunit",
       "toBeFilled": "Perlu diisi",
       "packInvalid": "Saiz pek mesti lebih daripada 0",
@@ -1522,5 +1523,109 @@
       "NOT_ALLOWED": "Hanya Admin boleh membetulkan terjemahan.",
       "UNKNOWN": "Tidak dapat menyimpan. Sila cuba lagi."
     }
+  },
+  "Tasting": {
+    "title": "Soal selidik rasa",
+    "notFound": "Pautan soal selidik ini tidak sah.",
+    "closed": "Soal selidik ini telah ditutup. Terima kasih!",
+    "whichDrink": "Minuman yang mana anda rasa?",
+    "drink": {
+      "ESPRESSO": "Espresso",
+      "MILK": "Minuman susu (latte)"
+    },
+    "milkRecipe": "Resipi: espresso {espresso} g + susu {milk} ml (nisbah {ratio})",
+    "milkRecipeShort": "espresso {espresso} g + susu {milk} ml",
+    "scaleHint": "Skor 0–6 dalam langkah 0.5, seperti pertandingan barista.",
+    "scale": {
+      "0": "Tidak boleh diterima",
+      "1": "Boleh diterima",
+      "2": "Sederhana",
+      "3": "Baik",
+      "4": "Sangat baik",
+      "5": "Cemerlang",
+      "6": "Luar biasa"
+    },
+    "criteria": {
+      "visual": "Visual",
+      "taste_balance": "Keseimbangan rasa",
+      "tactile": "Taktil",
+      "flavor": "Perisa"
+    },
+    "help": {
+      "ESPRESSO": {
+        "taste_balance": "Manis, masam dan pahit seimbang",
+        "tactile": "Badan, tekstur dan kesudahan di mulut",
+        "flavor": "Kejelasan dan kualiti perisa",
+        "visual": ""
+      },
+      "MILK": {
+        "visual": "Rupa minuman dan seni latte",
+        "taste_balance": "Susu dan espresso seimbang",
+        "tactile": "Tekstur susu dan rasa di mulut",
+        "flavor": "Perisa kopi terasa melalui susu"
+      }
+    },
+    "milkAmount": "Nisbah susu",
+    "milk": {
+      "TOO_MUCH": "Terlalu banyak susu",
+      "RIGHT": "Tepat",
+      "TOO_LITTLE": "Terlalu sedikit susu"
+    },
+    "milkAmountRequired": "Sila pilih nisbah susu.",
+    "flavorTags": "Perisa yang dirasa (pilihan)",
+    "tags": {
+      "FRUITY": "Buah-buahan",
+      "BERRY": "Beri",
+      "CITRUS": "Sitrus",
+      "STONE_FRUIT": "Buah berbiji",
+      "FLORAL": "Bunga",
+      "CHOCOLATE": "Coklat",
+      "CARAMEL": "Karamel",
+      "NUTTY": "Kacang",
+      "SPICY": "Rempah",
+      "ROASTED": "Panggang"
+    },
+    "comment": "Komen ringkas (pilihan)",
+    "submit": "Hantar",
+    "sending": "Menghantar…",
+    "thanks": "Terima kasih! Skor anda telah dihantar.",
+    "rateAlso": "Nilai juga {drink}",
+    "errors": {
+      "INVALID": "Sila semak jawapan anda.",
+      "CLOSED": "Soal selidik ini telah ditutup.",
+      "ALREADY": "Anda sudah menilai minuman ini pada telefon ini.",
+      "TOO_MANY": "Terlalu banyak jawapan dari rangkaian ini. Sila cuba sebentar lagi.",
+      "NOT_FOUND": "Pautan soal selidik ini tidak sah.",
+      "UNKNOWN": "Tidak dapat menghantar. Sila cuba lagi."
+    },
+    "openSurvey": "Buka soal selidik rasa",
+    "openTitle": "Soal selidik rasa: minuman apa dihidangkan?",
+    "milkEspressoG": "Espresso dalam latte (g)",
+    "milkMl": "Susu (ml)",
+    "ratio": "Nisbah {ratio}",
+    "closesAt": "Ditutup pada (waktu Malaysia)",
+    "openHint": "Sesiapa dengan kod QR boleh menjawab tanpa log masuk; satu jawapan setiap telefon setiap minuman, hingga 200 jawapan.",
+    "openButton": "Buka dan cipta kod QR",
+    "cancel": "Batal",
+    "pickDrink": "Pilih sekurang-kurangnya satu minuman.",
+    "milkRecipeRequired": "Masukkan jumlah espresso dan susu.",
+    "closesFuture": "Masa tutup mesti pada masa hadapan.",
+    "saveFailed": "Tidak dapat menyimpan. Sila cuba lagi.",
+    "surveyTitle": "Soal selidik rasa",
+    "openUntil": "Dibuka hingga {time}",
+    "closedBadge": "Ditutup",
+    "responses": "{count} jawapan",
+    "showQr": "Papar kod QR",
+    "downloadQr": "Muat turun QR",
+    "copyLink": "Salin pautan",
+    "closeNow": "Tutup soal selidik",
+    "reopen": "Buka semula",
+    "average": "Purata",
+    "hide": "Sembunyi",
+    "unhide": "Papar",
+    "hiddenNote": "Jawapan tersembunyi tidak dikira dalam skor.",
+    "scanTitle": "Imbas untuk menilai kopi hari ini",
+    "closeQr": "Tutup",
+    "tagsResult": "Perisa"
   }
 }

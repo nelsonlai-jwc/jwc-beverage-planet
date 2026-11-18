@@ -2593,6 +2593,108 @@ export type Database = {
           },
         ]
       }
+      tasting_responses: {
+        Row: {
+          comment: string | null
+          created_at: string
+          device_id: string
+          drink: string
+          flavor: number
+          flavor_tags: string[]
+          hidden: boolean
+          id: string
+          ip_hash: string | null
+          milk_amount: string | null
+          survey_id: string
+          tactile: number
+          taste_balance: number
+          visual: number | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          device_id: string
+          drink: string
+          flavor: number
+          flavor_tags?: string[]
+          hidden?: boolean
+          id?: string
+          ip_hash?: string | null
+          milk_amount?: string | null
+          survey_id: string
+          tactile: number
+          taste_balance: number
+          visual?: number | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          device_id?: string
+          drink?: string
+          flavor?: number
+          flavor_tags?: string[]
+          hidden?: boolean
+          id?: string
+          ip_hash?: string | null
+          milk_amount?: string | null
+          survey_id?: string
+          tactile?: number
+          taste_balance?: number
+          visual?: number | null
+        }
+        Relationships: []
+      }
+      tasting_surveys: {
+        Row: {
+          calibration_id: string
+          closed_at: string | null
+          closes_at: string
+          created_at: string
+          created_by: string
+          id: string
+          max_responses: number
+          milk_espresso_g: number | null
+          milk_ml: number | null
+          revision: number
+          serves_espresso: boolean
+          serves_milk: boolean
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          calibration_id: string
+          closed_at?: string | null
+          closes_at: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          max_responses?: number
+          milk_espresso_g?: number | null
+          milk_ml?: number | null
+          revision?: number
+          serves_espresso?: boolean
+          serves_milk?: boolean
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          calibration_id?: string
+          closed_at?: string | null
+          closes_at?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          max_responses?: number
+          milk_espresso_g?: number | null
+          milk_ml?: number | null
+          revision?: number
+          serves_espresso?: boolean
+          serves_milk?: boolean
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_identity: {
         Row: {
           created_at: string
@@ -2748,6 +2850,23 @@ export type Database = {
         Returns: string
       }
       create_recipe_version: { Args: { p_recipe_id: string }; Returns: string }
+      get_tasting_survey: { Args: { p_token: string }; Returns: Json }
+      submit_tasting_response: {
+        Args: {
+          p_comment: string | null
+          p_device_id: string
+          p_drink: string
+          p_flavor: number
+          p_flavor_tags: string[]
+          p_ip_hash: string | null
+          p_milk_amount: string | null
+          p_tactile: number
+          p_taste_balance: number
+          p_token: string
+          p_visual: number | null
+        }
+        Returns: undefined
+      }
       get_invitation: {
         Args: { p_token: string }
         Returns: {
