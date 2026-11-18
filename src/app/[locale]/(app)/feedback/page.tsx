@@ -5,7 +5,17 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cardClass, mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { FEEDBACK_KINDS, FEEDBACK_STATUSES, isKind, isStatus, statusTone } from "@/lib/feedback/types";
+import { CopyForClaudeButton } from "@/components/feedback/CopyForClaudeButton";
+import {
+  FEEDBACK_KINDS,
+  FEEDBACK_PRIORITIES,
+  FEEDBACK_STATUSES,
+  isKind,
+  isPriority,
+  isStatus,
+  priorityTone,
+  statusTone,
+} from "@/lib/feedback/types";
 import { createClient } from "@/lib/supabase/server";
 
 const chip = (active: boolean) =>
@@ -18,7 +28,7 @@ export default async function FeedbackPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ kind?: string; status?: string }>;
+  searchParams: Promise<{ kind?: string; status?: string; sort?: string }>;
 }) {
   const { locale } = await params;
   const query = await searchParams;
@@ -30,32 +40,49 @@ export default async function FeedbackPage({
   const isSuperAdmin = user.role === "ADMIN";
   const kind = isSuperAdmin && isKind(query.kind) ? query.kind : null;
   const status = isSuperAdmin && isStatus(query.status) ? query.status : null;
+  const sort = isSuperAdmin && query.sort === "priority" ? "priority" : null;
 
   const supabase = await createClient();
   let request = supabase
     .from("feedback_reports")
-    .select("id, kind, title, status, created_by, created_at, photo_paths, admin_reply")
+    .select("id, number, kind, title, status, created_by, created_at, photo_paths, admin_reply, reject_reasons")
     .order("created_at", { ascending: false })
     .limit(500);
   // The Super Admin's policy shows every report; the list for anyone else is their own.
   if (!isSuperAdmin) request = request.eq("created_by", user.id);
   if (kind) request = request.eq("kind", kind);
   if (status) request = request.eq("status", status);
-  const { data: reports } = await request;
+  const { data: rows } = await request;
+  let reports = rows ?? [];
 
   const people = new Map<string, string>();
-  if (isSuperAdmin && reports?.length) {
+  const priorityOf = new Map<string, (typeof FEEDBACK_PRIORITIES)[number]>();
+  if (isSuperAdmin && reports.length) {
     const ids = [...new Set(reports.map((r) => r.created_by))];
-    const { data } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+    const [{ data }, { data: triage }] = await Promise.all([
+      supabase.from("profiles").select("id, full_name").in("id", ids),
+      supabase.from("feedback_triage").select("report_id, priority").in("report_id", reports.map((r) => r.id)),
+    ]);
     for (const p of data ?? []) people.set(p.id, p.full_name);
+    for (const row of triage ?? []) if (isPriority(row.priority)) priorityOf.set(row.report_id, row.priority);
+  }
+  if (sort === "priority") {
+    // High, medium, low, then none; newest first within each.
+    const rank = (id: string) => {
+      const p = priorityOf.get(id);
+      return p ? FEEDBACK_PRIORITIES.indexOf(p) : FEEDBACK_PRIORITIES.length;
+    };
+    reports = [...reports].sort((a, b) => rank(a.id) - rank(b.id));
   }
 
-  const href = (next: { kind?: string | null; status?: string | null }) => {
+  const href = (next: { kind?: string | null; status?: string | null; sort?: string | null }) => {
     const params = new URLSearchParams();
     const k = next.kind === undefined ? kind : next.kind;
     const s = next.status === undefined ? status : next.status;
+    const o = next.sort === undefined ? sort : next.sort;
     if (k) params.set("kind", k);
     if (s) params.set("status", s);
+    if (o) params.set("sort", o);
     const qs = params.toString();
     return qs ? `/feedback?${qs}` : "/feedback";
   };
@@ -107,10 +134,29 @@ export default async function FeedbackPage({
               </Link>
             ))}
           </nav>
+          <nav aria-label={t("sortBy")} className="flex flex-wrap items-center gap-1.5">
+            <span className={`${mutedText} mr-1`}>{t("sortBy")}</span>
+            <Link href={href({ sort: null })} className={chip(!sort)}>
+              {t("sortNewest")}
+            </Link>
+            <Link href={href({ sort: "priority" })} className={chip(sort === "priority")}>
+              {t("sortPriority")}
+            </Link>
+          </nav>
         </div>
       )}
 
-      {!reports?.length ? (
+      {isSuperAdmin && status === "ACCEPTED" && reports.length > 0 && (
+        <div className={`${cardClass} flex flex-wrap items-center justify-between gap-3`}>
+          <p className="text-sm">{t("copyAcceptedHint", { count: reports.length })}</p>
+          <CopyForClaudeButton
+            ids={reports.slice(0, 50).map((r) => r.id)}
+            label={t("copyAccepted", { count: Math.min(reports.length, 50) })}
+          />
+        </div>
+      )}
+
+      {!reports.length ? (
         <p className={`${cardClass} text-sm`}>{isSuperAdmin ? t("emptyAdmin") : t("empty")}</p>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -130,10 +176,19 @@ export default async function FeedbackPage({
                       </span>
                     </StatusBadge>
                     {isStatus(report.status) && (
-                      <StatusBadge tone={statusTone[report.status]}>{t(`status.${report.status}`)}</StatusBadge>
+                      <StatusBadge tone={statusTone[report.status]}>
+                        {isSuperAdmin ? t(`status.${report.status}`) : t(`statusUser.${report.status}`)}
+                      </StatusBadge>
+                    )}
+                    {priorityOf.has(report.id) && (
+                      <StatusBadge tone={priorityTone[priorityOf.get(report.id)!]}>
+                        {t(`priority.${priorityOf.get(report.id)!}`)}
+                      </StatusBadge>
                     )}
                   </div>
-                  <span className="text-base font-semibold break-words">{report.title}</span>
+                  <span className="text-base font-semibold break-words">
+                    <span className="text-[#3d3f3a]">#{report.number}</span> {report.title}
+                  </span>
                   <span className={`${mutedText} flex flex-wrap items-center gap-x-3 gap-y-1`}>
                     {isSuperAdmin && <span>{people.get(report.created_by) ?? "—"}</span>}
                     <span>{format.dateTime(new Date(report.created_at), { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" })}</span>
@@ -143,7 +198,7 @@ export default async function FeedbackPage({
                         {report.photo_paths.length}
                       </span>
                     )}
-                    {report.admin_reply && (
+                    {(report.admin_reply || report.reject_reasons.length > 0) && (
                       <span className="inline-flex items-center gap-1">
                         <MessageSquareReply size={14} aria-hidden />
                         {t("replied")}

@@ -6,7 +6,7 @@ import { BackLink } from "@/components/materials/ui";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cardClass, labelClass, mutedText } from "@/components/ui/styles";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { FEEDBACK_BUCKET, isStatus, statusTone } from "@/lib/feedback/types";
+import { FEEDBACK_BUCKET, isPriority, isStatus, priorityTone, statusTone } from "@/lib/feedback/types";
 import { createClient } from "@/lib/supabase/server";
 
 const localeNames: Record<string, string> = { en: "English", "zh-CN": "简体中文", ms: "Bahasa Melayu" };
@@ -28,7 +28,7 @@ export default async function FeedbackDetailPage({
   const { data: report } = await supabase.from("feedback_reports").select("*").eq("id", id).maybeSingle();
   if (!report) notFound();
 
-  const [{ data: submitter }, { data: outlets }, photos, { data: replier }] = await Promise.all([
+  const [{ data: submitter }, { data: outlets }, photos, { data: replier }, { data: triage }] = await Promise.all([
     supabase.from("profiles").select("full_name, email").eq("id", report.created_by).maybeSingle(),
     supabase.from("user_outlets").select("outlets(name, sort_order)").eq("user_id", report.created_by),
     report.photo_paths.length
@@ -36,6 +36,9 @@ export default async function FeedbackDetailPage({
       : Promise.resolve({ data: [] as { signedUrl: string | null }[] }),
     report.replied_by
       ? supabase.from("profiles").select("full_name").eq("id", report.replied_by).maybeSingle()
+      : Promise.resolve({ data: null }),
+    isSuperAdmin
+      ? supabase.from("feedback_triage").select("priority, note").eq("report_id", report.id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
   const outletNames = (outlets ?? [])
@@ -47,6 +50,8 @@ export default async function FeedbackDetailPage({
     format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" });
   const status = isStatus(report.status) ? report.status : "NEW";
   const KindIcon = report.kind === "BUG" ? Bug : Lightbulb;
+  // Submitters see "In progress" where the Super Admin sees "With Claude".
+  const statusText = (value: string) => (isSuperAdmin ? t(`status.${value}`) : t(`statusUser.${value}`));
 
   const info: [string, React.ReactNode][] = [
     [t("info.submittedBy"), submitter ? `${submitter.full_name} (${submitter.email})` : "—"],
@@ -71,9 +76,14 @@ export default async function FeedbackDetailPage({
               {t(`kind.${report.kind}`)}
             </span>
           </StatusBadge>
-          <StatusBadge tone={statusTone[status]}>{t(`status.${status}`)}</StatusBadge>
+          <StatusBadge tone={statusTone[status]}>{statusText(status)}</StatusBadge>
+          {isSuperAdmin && isPriority(triage?.priority) && (
+            <StatusBadge tone={priorityTone[triage.priority]}>{t(`priority.${triage.priority}`)}</StatusBadge>
+          )}
         </div>
-        <h1 className="font-serif text-[26px] leading-tight font-normal break-words md:text-[28px]">{report.title}</h1>
+        <h1 className="font-serif text-[26px] leading-tight font-normal break-words md:text-[28px]">
+          <span className="text-[#3d3f3a]">#{report.number}</span> {report.title}
+        </h1>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -106,6 +116,13 @@ export default async function FeedbackDetailPage({
           {!isSuperAdmin && (
             <section className={`${cardClass} flex flex-col gap-2`}>
               <h2 className={labelClass}>{t("replyLabel")}</h2>
+              {status === "REJECTED" && report.reject_reasons.length > 0 && (
+                <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">
+                  {report.reject_reasons.map((reason) => (
+                    <li key={reason}>{t.has(`reasons.${reason}.text`) ? t(`reasons.${reason}.text`) : reason}</li>
+                  ))}
+                </ul>
+              )}
               {report.admin_reply ? (
                 <>
                   <p className="text-sm whitespace-pre-wrap break-words">{report.admin_reply}</p>
@@ -117,13 +134,21 @@ export default async function FeedbackDetailPage({
                   )}
                 </>
               ) : (
-                <p className={mutedText}>{t("noReply")}</p>
+                !report.reject_reasons.length && <p className={mutedText}>{t("noReply")}</p>
               )}
             </section>
           )}
 
           {isSuperAdmin && (
-            <FeedbackAdminForm id={report.id} status={status} reply={report.admin_reply ?? ""} />
+            <FeedbackAdminForm
+              id={report.id}
+              kind={report.kind === "IDEA" ? "IDEA" : "BUG"}
+              status={status}
+              reply={report.admin_reply ?? ""}
+              rejectReasons={report.reject_reasons}
+              priority={isPriority(triage?.priority) ? triage.priority : null}
+              note={triage?.note ?? ""}
+            />
           )}
         </div>
 
