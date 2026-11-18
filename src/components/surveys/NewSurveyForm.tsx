@@ -18,8 +18,9 @@ type Person = { id: string; full_name: string; role: string };
 const SUBJECTS: SubjectType[] = ["ESPRESSO", "FILTER", "RECIPE"];
 const AUDIENCES: Audience[] = ["OUTLET", "PUBLIC"];
 
-/** "YYYY-MM-DDTHH:mm" in Malaysia time → ISO. */
-const myToIso = (local: string) => new Date(`${local}:00+08:00`).toISOString();
+/** How long a survey stays open, in minutes; "none" closes it after 24 hours (database default). */
+const DURATIONS = ["15", "30", "60", "300", "none"] as const;
+type Duration = (typeof DURATIONS)[number];
 
 const chip = (on: boolean) =>
   `inline-flex min-h-9 items-center rounded-full border px-3.5 text-sm font-semibold ${
@@ -50,7 +51,7 @@ export function NewSurveyForm({
   const [chosenOutlet, setChosenOutlet] = useState(outlets[0]?.id ?? "");
   const [people, setPeople] = useState<Person[] | null>(null);
   const [ticked, setTicked] = useState<string[]>([]);
-  const [deadline, setDeadline] = useState("");
+  const [duration, setDuration] = useState<Duration>("none");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +99,6 @@ export function NewSurveyForm({
     if (subject === "ESPRESSO" && drinks.length === 0) return setError(t("pickDrinks"));
     if (needsOutlet && !outletId) return setError(t("pickOutlet"));
     if (audience === "OUTLET" && ticked.length === 0) return setError(t("pickPeople"));
-    if (deadline && new Date(myToIso(deadline)).getTime() <= Date.now()) return setError(t("deadlineFuture"));
 
     setBusy(true);
     const supabase = createClient();
@@ -113,7 +113,7 @@ export function NewSurveyForm({
         audience,
         drinks: subject === "ESPRESSO" ? drinks : subject === "FILTER" ? ["FILTER"] : ["RECIPE"],
         note: note.trim() || null,
-        ...(deadline ? { closes_at: myToIso(deadline) } : {}),
+        ...(duration !== "none" ? { closes_at: new Date(Date.now() + Number(duration) * 60e3).toISOString() } : {}),
       })
       .select("id")
       .single();
@@ -287,11 +287,17 @@ export function NewSurveyForm({
         </div>
       )}
 
-      <label className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <span className={labelClass}>{t("deadline")}</span>
-        <input type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
+        <div className="flex flex-wrap gap-2">
+          {DURATIONS.map((x) => (
+            <button key={x} type="button" aria-pressed={duration === x} onClick={() => setDuration(x)} className={chip(duration === x)}>
+              {t(`duration.${x}`)}
+            </button>
+          ))}
+        </div>
         <span className={mutedText}>{t("deadlineHint")}</span>
-      </label>
+      </div>
 
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>{t("noteLabel")}</span>
