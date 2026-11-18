@@ -1728,10 +1728,10 @@
     },
     "status": {
       "NEW": "New",
-      "PLANNED": "Planned",
-      "IN_PROGRESS": "In progress",
-      "DONE": "Done",
-      "WONT_DO": "Won't do"
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Not taken up",
+      "WITH_CLAUDE": "With Claude",
+      "DONE": "Done"
     },
     "device": {
       "PHONE": "Phone",
@@ -1772,7 +1772,8 @@
         "size": "Each photo must be 10 MB or smaller.",
         "convert": "This HEIC photo could not be converted. Try a JPEG.",
         "upload": "Photo upload failed. Try again."
-      }
+      },
+      "REASON_REQUIRED": "Pick a reason or write a reply."
     },
     "manage": "Status and reply",
     "statusLabel": "Status",
@@ -1808,8 +1809,94 @@
       "language": "Language",
       "photos": "Photos",
       "reply": "Reply",
-      "repliedAt": "Replied at"
-    }
+      "repliedAt": "Replied at",
+      "number": "No.",
+      "priority": "Priority",
+      "rejectReasons": "Reasons",
+      "note": "Internal note"
+    },
+    "statusUser": {
+      "NEW": "New",
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Not taken up",
+      "WITH_CLAUDE": "In progress",
+      "DONE": "Done"
+    },
+    "reasons": {
+      "WORKS_AS_DESIGNED": {
+        "label": "Works as designed",
+        "text": "We checked: this is how the feature is meant to work, not a system error. Ask your manager if you are not sure how to use it."
+      },
+      "CANNOT_REPRODUCE": {
+        "label": "Can't reproduce",
+        "text": "We tried the same steps but could not make it happen. If it happens again, please send a new report with a screenshot."
+      },
+      "ALREADY_FIXED": {
+        "label": "Already fixed",
+        "text": "This has already been fixed. Please refresh the page, or log out and log in again."
+      },
+      "NEED_DETAILS": {
+        "label": "Need more details",
+        "text": "We need more details to act on this. Please send a new report with the steps you took and a screenshot."
+      },
+      "PERMISSION": {
+        "label": "Role permission",
+        "text": "This is limited by your role on purpose. Ask your manager or Admin if you need access."
+      },
+      "DEVICE_NETWORK": {
+        "label": "Device or network",
+        "text": "This looks like a device or internet connection problem, not the app. Please check your connection and update your browser."
+      },
+      "DUPLICATE": {
+        "label": "Duplicate",
+        "text": "This was already reported. We are following it up in another report."
+      },
+      "ALREADY_EXISTS": {
+        "label": "Already exists",
+        "text": "The app can already do this. Ask your manager to show you where it is."
+      },
+      "NOT_FIT_WORKFLOW": {
+        "label": "Doesn't fit our workflow",
+        "text": "Thanks for the idea. It does not fit how our outlets work or our SOPs, so we won't add it."
+      },
+      "NOT_PRIORITY": {
+        "label": "Not a priority now",
+        "text": "Good idea, but other work comes first right now. We may look at it again later."
+      },
+      "COST_TOO_HIGH": {
+        "label": "Too much work for the benefit",
+        "text": "This would take a lot of work for a small benefit, so we won't do it for now."
+      },
+      "AFFECTS_OTHERS": {
+        "label": "Affects other users",
+        "text": "This change would make things harder for other outlets or roles, so we won't add it."
+      },
+      "POLICY": {
+        "label": "Against company rules",
+        "text": "This goes against company rules (approvals, cost control or data access), so we can't add it."
+      }
+    },
+    "rejectReasonsLabel": "Why not",
+    "rejectReasonsHint": "Tap one or more. The person sees these sentences in their own language; no typing needed.",
+    "internalTitle": "Only you see this",
+    "priorityLabel": "Priority",
+    "priorityNone": "None",
+    "priority": {
+      "HIGH": "High",
+      "MEDIUM": "Medium",
+      "LOW": "Low"
+    },
+    "noteLabel": "Note for Claude",
+    "notePlaceholder": "Optional, e.g. \"Phone only\" or \"Do this first\". Included when you copy for Claude.",
+    "copyForClaude": "Copy for Claude",
+    "copying": "Copying…",
+    "copied": "Copied",
+    "copyFailed": "Copy failed, try again",
+    "copyAccepted": "Copy {count} for Claude",
+    "copyAcceptedHint": "{count, plural, one {# accepted report} other {# accepted reports}}. Copy them as one task and paste it into Claude Code.",
+    "sortBy": "Sort by",
+    "sortNewest": "Newest",
+    "sortPriority": "Priority"
   },
   "Surveys": {
     "title": "Survey",

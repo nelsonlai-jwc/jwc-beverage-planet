@@ -9,15 +9,19 @@ import {
   MAX_REPLY,
   MAX_TITLE,
   isKind,
+  MAX_NOTE,
+  isPriority,
+  isRejectReason,
   isStatus,
   safeFromPath,
   type FeedbackDevice,
 } from "@/lib/feedback/types";
+import { claudeTask } from "@/lib/feedback/claude";
 import { createClient } from "@/lib/supabase/server";
 
 export type FeedbackResult =
   | { ok: true; id?: string }
-  | { ok: false; error: "TITLE_REQUIRED" | "DESCRIPTION_REQUIRED" | "INVALID" | "NOT_ALLOWED" | "UNKNOWN" };
+  | { ok: false; error: "TITLE_REQUIRED" | "DESCRIPTION_REQUIRED" | "REASON_REQUIRED" | "INVALID" | "NOT_ALLOWED" | "UNKNOWN" };
 
 export async function submitFeedback(input: {
   kind: string;
@@ -62,19 +66,41 @@ export async function submitFeedback(input: {
   return { ok: true, id };
 }
 
-/** Super Admin: status and the one reply the submitter reads. */
-export async function updateFeedback(id: string, input: { status: string; reply: string }): Promise<FeedbackResult> {
+/** Super Admin: status, reply, one-tap reject reasons, and the internal priority and note. */
+export async function updateFeedback(
+  id: string,
+  input: { status: string; reply: string; rejectReasons: string[]; priority: string | null; note: string },
+): Promise<FeedbackResult> {
   const user = await getCurrentUser();
   if (user?.role !== "ADMIN") return { ok: false, error: "NOT_ALLOWED" };
-  if (!isStatus(input.status) || input.reply.length > MAX_REPLY) return { ok: false, error: "INVALID" };
+  const reply = input.reply.trim();
+  const note = input.note.trim();
+  const reasons = input.status === "REJECTED" ? [...new Set(input.rejectReasons)] : [];
+  if (!isStatus(input.status) || reply.length > MAX_REPLY || note.length > MAX_NOTE) return { ok: false, error: "INVALID" };
+  if (!reasons.every(isRejectReason)) return { ok: false, error: "INVALID" };
+  if (input.priority !== null && !isPriority(input.priority)) return { ok: false, error: "INVALID" };
+  if (input.status === "REJECTED" && !reasons.length && !reply) return { ok: false, error: "REASON_REQUIRED" };
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("feedback_reports")
-    .update({ status: input.status, admin_reply: input.reply.trim() || null })
+    .update({ status: input.status, admin_reply: reply || null, reject_reasons: reasons })
     .eq("id", id)
     .select("id");
   if (error) return { ok: false, error: "UNKNOWN" };
   if (!data?.length) return { ok: false, error: "NOT_ALLOWED" };
+  const triage = await supabase
+    .from("feedback_triage")
+    .upsert({ report_id: id, priority: input.priority, note: note || null });
+  if (triage.error) return { ok: false, error: "UNKNOWN" };
   revalidatePath("/feedback");
   return { ok: true };
+}
+
+/** Super Admin: the reports as a ready-to-paste task for Claude Code. */
+export async function copyForClaude(ids: string[]): Promise<{ ok: true; text: string } | { ok: false }> {
+  const user = await getCurrentUser();
+  if (user?.role !== "ADMIN" || !ids.length || ids.length > 50) return { ok: false };
+  const text = await claudeTask(ids);
+  return text ? { ok: true, text } : { ok: false };
 }

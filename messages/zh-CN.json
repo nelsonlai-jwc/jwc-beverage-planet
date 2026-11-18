@@ -1728,10 +1728,10 @@
     },
     "status": {
       "NEW": "新提交",
-      "PLANNED": "已排期",
-      "IN_PROGRESS": "处理中",
-      "DONE": "已完成",
-      "WONT_DO": "不处理"
+      "ACCEPTED": "已接受",
+      "REJECTED": "不处理",
+      "WITH_CLAUDE": "Claude 处理中",
+      "DONE": "已完成"
     },
     "device": {
       "PHONE": "手机",
@@ -1772,7 +1772,8 @@
         "size": "每张照片不能超过 10 MB。",
         "convert": "无法转换这张 HEIC 照片，请改用 JPEG。",
         "upload": "照片上传失败，请重试。"
-      }
+      },
+      "REASON_REQUIRED": "请点选原因或写回复。"
     },
     "manage": "状态与回复",
     "statusLabel": "状态",
@@ -1808,8 +1809,94 @@
       "language": "语言",
       "photos": "照片",
       "reply": "回复",
-      "repliedAt": "回复时间"
-    }
+      "repliedAt": "回复时间",
+      "number": "编号",
+      "priority": "优先度",
+      "rejectReasons": "不处理原因",
+      "note": "内部备注"
+    },
+    "statusUser": {
+      "NEW": "新提交",
+      "ACCEPTED": "已接受",
+      "REJECTED": "不处理",
+      "WITH_CLAUDE": "处理中",
+      "DONE": "已完成"
+    },
+    "reasons": {
+      "WORKS_AS_DESIGNED": {
+        "label": "功能本来如此",
+        "text": "我们检查过：这是功能原本的设计，不是系统错误。如不确定怎么用，请问你的经理。"
+      },
+      "CANNOT_REPRODUCE": {
+        "label": "无法重现",
+        "text": "我们按同样步骤测试，但没有出现这个问题。如果再发生，请附截图重新提交。"
+      },
+      "ALREADY_FIXED": {
+        "label": "已修复",
+        "text": "这个问题已经修好了。请刷新页面，或退出后重新登录。"
+      },
+      "NEED_DETAILS": {
+        "label": "资料不足",
+        "text": "我们需要更多资料才能处理。请重新提交，写下你的操作步骤并附截图。"
+      },
+      "PERMISSION": {
+        "label": "角色权限",
+        "text": "这是按你的角色特意限制的。如需权限，请联系经理或 Admin。"
+      },
+      "DEVICE_NETWORK": {
+        "label": "设备或网络",
+        "text": "这看起来是设备或网络连接的问题，不是软件本身。请检查网络并更新浏览器。"
+      },
+      "DUPLICATE": {
+        "label": "重复回报",
+        "text": "这个问题已经有人回报，我们会在另一则回报中跟进。"
+      },
+      "ALREADY_EXISTS": {
+        "label": "功能已存在",
+        "text": "软件已经可以做到这点。请让经理带你看在哪里使用。"
+      },
+      "NOT_FIT_WORKFLOW": {
+        "label": "不符合工作流程",
+        "text": "谢谢你的想法。它不符合我们分店的工作方式或 SOP，所以不会加入。"
+      },
+      "NOT_PRIORITY": {
+        "label": "目前不优先",
+        "text": "好想法，但目前有更重要的工作。之后可能会再考虑。"
+      },
+      "COST_TOO_HIGH": {
+        "label": "投入太大",
+        "text": "这需要很多工作，但带来的帮助较小，所以暂时不做。"
+      },
+      "AFFECTS_OTHERS": {
+        "label": "影响其他用户",
+        "text": "这个改动会让其他分店或角色更难使用，所以不会加入。"
+      },
+      "POLICY": {
+        "label": "不符合公司规定",
+        "text": "这与公司规定（审批、成本控制或资料权限）不符，所以不能加入。"
+      }
+    },
+    "rejectReasonsLabel": "不处理原因",
+    "rejectReasonsHint": "点选一个或多个。提交人会以自己的语言看到这些句子，不用打字。",
+    "internalTitle": "只有你看得到",
+    "priorityLabel": "优先度",
+    "priorityNone": "无",
+    "priority": {
+      "HIGH": "高",
+      "MEDIUM": "中",
+      "LOW": "低"
+    },
+    "noteLabel": "给 Claude 的备注",
+    "notePlaceholder": "可选，例如「只改手机版」「先做这个」。复制给 Claude 时会一起带上。",
+    "copyForClaude": "复制给 Claude",
+    "copying": "复制中…",
+    "copied": "已复制",
+    "copyFailed": "复制失败，请重试",
+    "copyAccepted": "复制 {count} 则给 Claude",
+    "copyAcceptedHint": "共 {count} 则已接受的回报。一次复制成一个任务，贴到 Claude Code。",
+    "sortBy": "排序",
+    "sortNewest": "最新",
+    "sortPriority": "优先度"
   },
   "Surveys": {
     "title": "问卷",

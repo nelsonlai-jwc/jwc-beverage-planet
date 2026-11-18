@@ -1728,10 +1728,10 @@
     },
     "status": {
       "NEW": "Baharu",
-      "PLANNED": "Dirancang",
-      "IN_PROGRESS": "Sedang dibuat",
-      "DONE": "Selesai",
-      "WONT_DO": "Tidak akan dibuat"
+      "ACCEPTED": "Diterima",
+      "REJECTED": "Tidak diteruskan",
+      "WITH_CLAUDE": "Dengan Claude",
+      "DONE": "Selesai"
     },
     "device": {
       "PHONE": "Telefon",
@@ -1772,7 +1772,8 @@
         "size": "Setiap foto mestilah 10 MB atau kurang.",
         "convert": "Foto HEIC ini tidak dapat ditukar. Cuba JPEG.",
         "upload": "Muat naik foto gagal. Cuba lagi."
-      }
+      },
+      "REASON_REQUIRED": "Pilih sebab atau tulis balasan."
     },
     "manage": "Status dan balasan",
     "statusLabel": "Status",
@@ -1808,8 +1809,94 @@
       "language": "Bahasa",
       "photos": "Foto",
       "reply": "Balasan",
-      "repliedAt": "Dibalas pada"
-    }
+      "repliedAt": "Dibalas pada",
+      "number": "No.",
+      "priority": "Keutamaan",
+      "rejectReasons": "Sebab",
+      "note": "Nota dalaman"
+    },
+    "statusUser": {
+      "NEW": "Baharu",
+      "ACCEPTED": "Diterima",
+      "REJECTED": "Tidak diteruskan",
+      "WITH_CLAUDE": "Sedang dibuat",
+      "DONE": "Selesai"
+    },
+    "reasons": {
+      "WORKS_AS_DESIGNED": {
+        "label": "Memang begitu reka bentuknya",
+        "text": "Kami telah semak: ini cara ciri ini direka, bukan ralat sistem. Tanya pengurus anda jika tidak pasti cara menggunakannya."
+      },
+      "CANNOT_REPRODUCE": {
+        "label": "Tidak dapat diulang",
+        "text": "Kami cuba langkah yang sama tetapi masalah ini tidak berlaku. Jika ia berlaku lagi, sila hantar laporan baharu dengan tangkapan skrin."
+      },
+      "ALREADY_FIXED": {
+        "label": "Sudah dibaiki",
+        "text": "Masalah ini sudah dibaiki. Sila muat semula halaman, atau log keluar dan log masuk semula."
+      },
+      "NEED_DETAILS": {
+        "label": "Perlu butiran lanjut",
+        "text": "Kami perlukan butiran lanjut. Sila hantar laporan baharu dengan langkah yang anda buat dan tangkapan skrin."
+      },
+      "PERMISSION": {
+        "label": "Kebenaran peranan",
+        "text": "Ini sengaja dihadkan mengikut peranan anda. Hubungi pengurus atau Admin jika anda perlukan akses."
+      },
+      "DEVICE_NETWORK": {
+        "label": "Peranti atau rangkaian",
+        "text": "Ini nampaknya masalah peranti atau sambungan internet, bukan aplikasi. Sila semak sambungan dan kemas kini pelayar anda."
+      },
+      "DUPLICATE": {
+        "label": "Laporan berulang",
+        "text": "Masalah ini sudah dilaporkan. Kami sedang mengikutinya dalam laporan lain."
+      },
+      "ALREADY_EXISTS": {
+        "label": "Sudah ada",
+        "text": "Aplikasi sudah boleh melakukan ini. Minta pengurus tunjukkan di mana."
+      },
+      "NOT_FIT_WORKFLOW": {
+        "label": "Tidak sesuai dengan aliran kerja",
+        "text": "Terima kasih atas idea anda. Ia tidak sesuai dengan cara kerja cawangan atau SOP kami, jadi kami tidak akan menambahnya."
+      },
+      "NOT_PRIORITY": {
+        "label": "Bukan keutamaan sekarang",
+        "text": "Idea yang baik, tetapi ada kerja lain yang lebih penting sekarang. Kami mungkin melihatnya semula nanti."
+      },
+      "COST_TOO_HIGH": {
+        "label": "Usaha terlalu besar",
+        "text": "Ini memerlukan banyak kerja untuk manfaat yang kecil, jadi kami tidak akan membuatnya buat masa ini."
+      },
+      "AFFECTS_OTHERS": {
+        "label": "Menjejaskan pengguna lain",
+        "text": "Perubahan ini akan menyukarkan cawangan atau peranan lain, jadi kami tidak akan menambahnya."
+      },
+      "POLICY": {
+        "label": "Bercanggah dengan peraturan syarikat",
+        "text": "Ini bercanggah dengan peraturan syarikat (kelulusan, kawalan kos atau akses data), jadi kami tidak boleh menambahnya."
+      }
+    },
+    "rejectReasonsLabel": "Sebab tidak diteruskan",
+    "rejectReasonsHint": "Ketik satu atau lebih. Pengirim akan melihat ayat ini dalam bahasa mereka sendiri; tidak perlu menaip.",
+    "internalTitle": "Hanya anda yang nampak",
+    "priorityLabel": "Keutamaan",
+    "priorityNone": "Tiada",
+    "priority": {
+      "HIGH": "Tinggi",
+      "MEDIUM": "Sederhana",
+      "LOW": "Rendah"
+    },
+    "noteLabel": "Nota untuk Claude",
+    "notePlaceholder": "Pilihan, cth. \"Telefon sahaja\" atau \"Buat ini dahulu\". Disertakan apabila disalin untuk Claude.",
+    "copyForClaude": "Salin untuk Claude",
+    "copying": "Menyalin…",
+    "copied": "Disalin",
+    "copyFailed": "Gagal menyalin, cuba lagi",
+    "copyAccepted": "Salin {count} untuk Claude",
+    "copyAcceptedHint": "{count} laporan diterima. Salin sebagai satu tugasan dan tampal ke Claude Code.",
+    "sortBy": "Susun ikut",
+    "sortNewest": "Terbaharu",
+    "sortPriority": "Keutamaan"
   },
   "Surveys": {
     "title": "Soal Selidik",

@@ -80,12 +80,12 @@ begin
   end if;
 end;
 $$;
-update public.feedback_reports set status = 'IN_PROGRESS', admin_reply = 'Fixing it'
+update public.feedback_reports set status = 'WITH_CLAUDE', admin_reply = 'Fixing it'
  where id = '00000000-0000-0000-0000-0000000000f1';
 do $$
 begin
   if not exists (select 1 from public.feedback_reports
-                  where id = '00000000-0000-0000-0000-0000000000f1' and status = 'IN_PROGRESS'
+                  where id = '00000000-0000-0000-0000-0000000000f1' and status = 'WITH_CLAUDE'
                     and admin_reply = 'Fixing it' and replied_at is not null
                     and replied_by = '00000000-0000-0000-0000-00000000000a') then
     raise exception 'super admin status/reply not saved';
@@ -99,12 +99,64 @@ begin
 end;
 $$;
 
+
+-- Report numbers are assigned.
+do $$
+begin
+  if exists (select 1 from public.feedback_reports where number is null) then
+    raise exception 'every report needs a number';
+  end if;
+end;
+$$;
+
+-- Rejecting needs a reason; preset reasons are kept, cleared when status moves on.
+do $$
+begin
+  begin
+    update public.feedback_reports set status = 'REJECTED', admin_reply = null
+     where id = '00000000-0000-0000-0000-0000000000f1';
+    raise exception 'reject without a reason should fail';
+  exception when check_violation then
+    null;
+  end;
+  begin
+    update public.feedback_reports set status = 'REJECTED', reject_reasons = array['NOT_A_REASON']
+     where id = '00000000-0000-0000-0000-0000000000f1';
+    raise exception 'unknown reason should fail';
+  exception when check_violation then
+    null;
+  end;
+end;
+$$;
+update public.feedback_reports set status = 'REJECTED', admin_reply = null, reject_reasons = array['WORKS_AS_DESIGNED', 'NEED_DETAILS']
+ where id = '00000000-0000-0000-0000-0000000000f1';
+update public.feedback_reports set status = 'ACCEPTED' where id = '00000000-0000-0000-0000-0000000000f1';
+do $$
+begin
+  if (select cardinality(reject_reasons) from public.feedback_reports where id = '00000000-0000-0000-0000-0000000000f1') <> 0 then
+    raise exception 'reasons should clear when no longer rejected';
+  end if;
+end;
+$$;
+
+-- Internal triage: Super Admin writes it.
+insert into public.feedback_triage (report_id, priority, note)
+values ('00000000-0000-0000-0000-0000000000f1', 'HIGH', 'Phone only');
+update public.feedback_reports set status = 'REJECTED', reject_reasons = array['DUPLICATE']
+ where id = '00000000-0000-0000-0000-0000000000f1';
+
 -- The barista reads the reply.
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000c', true);
 do $$
 begin
-  if (select admin_reply from public.feedback_reports where id = '00000000-0000-0000-0000-0000000000f1') <> 'Fixing it' then
-    raise exception 'submitter should read the reply';
+  if (select admin_reply from public.feedback_reports where id = '00000000-0000-0000-0000-0000000000f1') is not null then
+    raise exception 'reply was cleared above';
+  end if;
+  if (select reject_reasons from public.feedback_reports where id = '00000000-0000-0000-0000-0000000000f1') <> array['DUPLICATE'] then
+    raise exception 'submitter should read the reasons';
+  end if;
+  if exists (select 1 from public.feedback_triage) then
+    raise exception 'submitter must not see the internal note';
   end if;
 end;
 $$;

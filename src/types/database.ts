@@ -917,8 +917,10 @@ export type Database = {
           id: string
           kind: string
           locale: string | null
+          number: number
           page_url: string | null
           photo_paths: string[]
+          reject_reasons: string[]
           replied_at: string | null
           replied_by: string | null
           revision: number
@@ -936,8 +938,10 @@ export type Database = {
           id?: string
           kind: string
           locale?: string | null
+          number?: number
           page_url?: string | null
           photo_paths?: string[]
+          reject_reasons?: string[]
           replied_at?: string | null
           replied_by?: string | null
           revision?: number
@@ -955,8 +959,10 @@ export type Database = {
           id?: string
           kind?: string
           locale?: string | null
+          number?: number
           page_url?: string | null
           photo_paths?: string[]
+          reject_reasons?: string[]
           replied_at?: string | null
           replied_by?: string | null
           revision?: number
@@ -978,6 +984,38 @@ export type Database = {
             columns: ["replied_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_triage: {
+        Row: {
+          note: string | null
+          priority: string | null
+          report_id: string
+          revision: number
+          updated_at: string
+        }
+        Insert: {
+          note?: string | null
+          priority?: string | null
+          report_id: string
+          revision?: number
+          updated_at?: string
+        }
+        Update: {
+          note?: string | null
+          priority?: string | null
+          report_id?: string
+          revision?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_triage_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: true
+            referencedRelation: "feedback_reports"
             referencedColumns: ["id"]
           },
         ]
