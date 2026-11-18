@@ -29,6 +29,7 @@ export type EquipmentItem = {
   groupCount?: number | null;
   defaultWaterTempC?: number | null;
   defaultPressureBar?: number | null;
+  brewerType?: string | null;
 };
 
 type OutletOption = { id: string; name: string };
@@ -51,6 +52,7 @@ function toInput(item: EquipmentItem | null, outlets: OutletOption[]): Equipment
     groupCount: s(item?.groupCount),
     defaultWaterTempC: s(item?.defaultWaterTempC),
     defaultPressureBar: s(item?.defaultPressureBar),
+    brewerType: item?.brewerType ?? "POUR_OVER",
   };
 }
 
@@ -64,6 +66,8 @@ export function equipmentSummary(
   if (kind === "GRINDER") {
     if (item.burrType) parts.push(t(`burr.${item.burrType}`) + (item.burrSizeMm ? ` ${item.burrSizeMm} mm` : ""));
     if (item.scaleMin != null && item.scaleMax != null) parts.push(t("scaleShort", { min: item.scaleMin, max: item.scaleMax }));
+  } else if (kind === "BREWER") {
+    if (item.brewerType) parts.push(t(`brewerType.${item.brewerType}`));
   } else {
     if (item.groupCount) parts.push(t("groupsShort", { count: item.groupCount }));
     if (item.defaultWaterTempC) parts.push(`${item.defaultWaterTempC} °C`);
@@ -113,7 +117,7 @@ function EquipmentForm({
       }}
     >
       <Field label={t("name")}>
-        <input value={form.name} maxLength={60} required onChange={set("name")} placeholder={t(kind === "GRINDER" ? "grinderPlaceholder" : "machinePlaceholder")} className={inputClass} />
+        <input value={form.name} maxLength={60} required onChange={set("name")} placeholder={t(kind === "GRINDER" ? "grinderPlaceholder" : kind === "BREWER" ? "brewerPlaceholder" : "machinePlaceholder")} className={inputClass} />
       </Field>
       <Field label={t("outlet")}>
         <select value={form.outletId} onChange={set("outletId")} className={inputClass}>
@@ -159,6 +163,13 @@ function EquipmentForm({
             </span>
           </Field>
         </>
+      ) : kind === "BREWER" ? (
+        <Field label={t("brewerTypeLabel")}>
+          <select value={form.brewerType} onChange={set("brewerType")} className={inputClass}>
+            <option value="POUR_OVER">{t("brewerType.POUR_OVER")}</option>
+            <option value="BATCH">{t("brewerType.BATCH")}</option>
+          </select>
+        </Field>
       ) : (
         <>
           <Field label={t("groupCount")}>
@@ -235,7 +246,7 @@ export function EquipmentEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      {sorted.length === 0 && <p className="text-sm text-[#3d3f3a]">{t(kind === "GRINDER" ? "noGrinders" : "noMachines")}</p>}
+      {sorted.length === 0 && <p className="text-sm text-[#3d3f3a]">{t(kind === "GRINDER" ? "noGrinders" : kind === "BREWER" ? "noBrewers" : "noMachines")}</p>}
       <ul className="flex flex-col gap-2">
         {sorted.map((item) => {
           const open = openId === item.id;
@@ -309,7 +320,7 @@ export function EquipmentEditor({
           />
         ) : (
           <button type="button" className={secondaryButton} onClick={() => setAdding(true)}>
-            {t(kind === "GRINDER" ? "addGrinder" : "addMachine")}
+            {t(kind === "GRINDER" ? "addGrinder" : kind === "BREWER" ? "addBrewer" : "addMachine")}
           </button>
         )}
       </div>

@@ -19,13 +19,14 @@ export default async function SettingsPage({
   setRequestLocale(locale);
   const t = await getTranslations("Settings");
   const supabase = await createClient();
-  const [user, labels, { data: types }, { data: outlets }, { data: grinders }, { data: machines }] = await Promise.all([
+  const [user, labels, { data: types }, { data: outlets }, { data: grinders }, { data: machines }, { data: brewers }] = await Promise.all([
     getCurrentUser(),
     getOptionLabels(),
     supabase.from("material_types").select("id, name, is_active").order("sort_order"),
     supabase.from("outlets").select("id, code, name, is_active").order("sort_order"),
     supabase.from("grinders").select("*").order("name"),
     supabase.from("espresso_machines").select("*").order("name"),
+    supabase.from("brewers").select("*").order("name"),
   ]);
   const isAdmin = user?.role === "ADMIN";
 
@@ -69,11 +70,23 @@ export default async function SettingsPage({
     defaultWaterTempC: m.default_water_temp_c,
     defaultPressureBar: m.default_pressure_bar,
   }));
+  const brewerItems: EquipmentItem[] = (brewers ?? []).map((b) => ({
+    id: b.id,
+    outletId: b.outlet_id,
+    name: b.name,
+    brand: b.brand,
+    model: b.model,
+    serialNumber: b.serial_number,
+    notes: b.notes,
+    active: b.is_active,
+    brewerType: b.brewer_type,
+  }));
   const outletOptions = (outlets ?? []).filter((o) => o.is_active).map((o) => ({ id: o.id, name: o.name }));
   const outletName = new Map((outlets ?? []).map((o) => [o.id, o.name]));
   const equipmentCards = [
     { key: "grinders", kind: "GRINDER" as const, items: grinderItems },
     { key: "machines", kind: "MACHINE" as const, items: machineItems },
+    { key: "brewers", kind: "BREWER" as const, items: brewerItems },
   ];
 
   return (
