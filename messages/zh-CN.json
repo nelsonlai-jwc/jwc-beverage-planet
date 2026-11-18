@@ -24,6 +24,7 @@
     "menus": "菜单",
     "calibration": "咖啡校准",
     "reports": "报表",
+    "feedback": "问题与建议",
     "settings": "设置"
   },
   "Toast": {
@@ -41,7 +42,8 @@
     "copied": "已复制为草稿",
     "invited": "邀请已发送",
     "undone": "已撤销批准",
-    "withdrawn": "已撤回"
+    "withdrawn": "已撤回",
+    "reported": "已提交"
   },
   "Shell": {
     "loading": "加载中…",
@@ -61,7 +63,8 @@
       "ADMIN": "管理员",
       "MANAGER": "经理",
       "BARISTA": "咖啡师"
-    }
+    },
+    "feedback": "问题与建议"
   },
   "Placeholder": {
     "comingSoon": "此页面尚未开发。"
@@ -1697,5 +1700,115 @@
     "scanTitle": "扫码为今天的咖啡评分",
     "closeQr": "关闭",
     "tagsResult": "风味"
+  },
+  "Feedback": {
+    "title": "问题与建议",
+    "note": "回报 Bug 或提出改进想法。你可以在这里查看自己提交的回报和处理状态。",
+    "noteAdmin": "所有用户提交的 Bug 和想法。设置状态并回复，用来规划升级。",
+    "newReport": "新回报",
+    "newTitle": "新回报",
+    "newNote": "告诉我们哪里出了问题，或怎样让软件更好用。",
+    "back": "问题与建议",
+    "exportCsv": "导出 CSV",
+    "filterKind": "按类型筛选",
+    "filterStatus": "按状态筛选",
+    "allKinds": "全部类型",
+    "allStatuses": "全部状态",
+    "empty": "你还没有提交任何回报。",
+    "emptyAdmin": "没有符合条件的回报。",
+    "replied": "已回复",
+    "noAccess": "只有 Super Admin 可以执行此操作。",
+    "kind": {
+      "BUG": "Bug",
+      "IDEA": "想法"
+    },
+    "kindHint": {
+      "BUG": "有地方出错或不能使用",
+      "IDEA": "新功能或改进软件的建议"
+    },
+    "status": {
+      "NEW": "新提交",
+      "PLANNED": "已排期",
+      "IN_PROGRESS": "处理中",
+      "DONE": "已完成",
+      "WONT_DO": "不处理"
+    },
+    "device": {
+      "PHONE": "手机",
+      "TABLET": "平板",
+      "DESKTOP": "电脑"
+    },
+    "form": {
+      "kind": "类型",
+      "title": "标题",
+      "titlePlaceholder": {
+        "BUG": "例如：菜单页面空白",
+        "IDEA": "例如：配方列表显示成本"
+      },
+      "description": "详细说明",
+      "descriptionPlaceholder": {
+        "BUG": "你做了什么、发生了什么、原本预期是什么？",
+        "IDEA": "你希望有什么功能？对你的工作有什么帮助？"
+      },
+      "photos": "照片",
+      "addPhotos": "添加照片",
+      "uploading": "上传中…",
+      "removePhoto": "移除照片",
+      "photosHint": "可选。最多 {max} 张照片或截图，JPEG、PNG、WebP 或 HEIC，每张不超过 10 MB。",
+      "page": "页面",
+      "send": "提交回报",
+      "sending": "提交中…",
+      "cancel": "取消"
+    },
+    "errors": {
+      "TITLE_REQUIRED": "请输入标题。",
+      "DESCRIPTION_REQUIRED": "请输入详细说明。",
+      "INVALID": "部分资料无效，请检查后重试。",
+      "NOT_ALLOWED": "你没有权限执行此操作。",
+      "UNKNOWN": "出错了，请重试。",
+      "tooManyPhotos": "最多 {max} 张照片，多出的未添加。",
+      "photo": {
+        "type": "请使用 JPEG、PNG、WebP 或 HEIC 照片。",
+        "size": "每张照片不能超过 10 MB。",
+        "convert": "无法转换这张 HEIC 照片，请改用 JPEG。",
+        "upload": "照片上传失败，请重试。"
+      }
+    },
+    "manage": "状态与回复",
+    "statusLabel": "状态",
+    "replyLabel": "回复",
+    "replyPlaceholder": "可选。提交这份回报的人会看到。",
+    "noReply": "还没有回复。",
+    "save": "保存",
+    "saving": "保存中…",
+    "photoAlt": "照片 {n}",
+    "info": {
+      "title": "详情",
+      "submittedBy": "提交人",
+      "outlets": "分店",
+      "submittedAt": "提交时间",
+      "page": "页面",
+      "device": "设备",
+      "language": "语言",
+      "browser": "浏览器"
+    },
+    "csv": {
+      "report": "报表",
+      "generatedAt": "生成时间",
+      "submittedAt": "提交时间",
+      "kind": "类型",
+      "status": "状态",
+      "title": "标题",
+      "description": "详细说明",
+      "submittedBy": "提交人",
+      "email": "电邮",
+      "outlets": "分店",
+      "page": "页面",
+      "device": "设备",
+      "language": "语言",
+      "photos": "照片",
+      "reply": "回复",
+      "repliedAt": "回复时间"
+    }
   }
 }
