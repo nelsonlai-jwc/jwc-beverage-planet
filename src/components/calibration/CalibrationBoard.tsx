@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "./BeanTargetForm";
 import { CalibrationForm } from "./CalibrationForm";
 import { ShotList } from "./ShotList";
+import { SurveyPanel, type Survey, type SurveyResponse } from "@/components/tasting/SurveyPanel";
 import type { Bean, BeanTarget, CalibrationRecord, CalibrationShot, Grinder, Machine } from "./types";
 
 /** Which form is open: a new record of a bean, an existing record, or a bean's targets. */
@@ -39,6 +40,8 @@ export function CalibrationBoard({
   records,
   previous,
   shots,
+  surveys,
+  responses,
 }: {
   outlets: Outlet[];
   outletId: string;
@@ -53,6 +56,8 @@ export function CalibrationBoard({
   records: CalibrationRecord[];
   previous: CalibrationRecord[];
   shots: CalibrationShot[];
+  surveys: Survey[];
+  responses: SurveyResponse[];
 }) {
   const t = useTranslations("Calibration");
   const format = useFormatter();
@@ -330,6 +335,21 @@ export function CalibrationBoard({
                         )}
                       </div>
                     )}
+
+                    {!isOpen && (() => {
+                      const survey = surveys.find((s) => s.calibration_id === record.id) ?? null;
+                      return deleted && !survey ? null : (
+                        <SurveyPanel
+                          calibrationId={record.id}
+                          date={date}
+                          yieldG={record.yield_g}
+                          survey={survey}
+                          responses={survey ? responses.filter((r) => r.survey_id === survey.id) : []}
+                          canManage={canManage}
+                          editable={editable && !deleted}
+                        />
+                      );
+                    })()}
 
                     {deleteFor === record.id && (
                       <div className="flex flex-col gap-2">

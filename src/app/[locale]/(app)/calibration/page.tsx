@@ -69,6 +69,22 @@ export default async function CalibrationPage({
       .order("created_at"),
   ]);
 
+  const recordIds = (records ?? []).map((r) => r.id);
+  const { data: surveys } = recordIds.length
+    ? await supabase
+        .from("tasting_surveys")
+        .select("id, calibration_id, token, serves_espresso, serves_milk, milk_espresso_g, milk_ml, closes_at, closed_at, max_responses, revision")
+        .in("calibration_id", recordIds)
+    : { data: [] };
+  const surveyIds = (surveys ?? []).map((s) => s.id);
+  const { data: responses } = surveyIds.length
+    ? await supabase
+        .from("tasting_responses")
+        .select("id, survey_id, drink, visual, taste_balance, tactile, flavor, flavor_tags, milk_amount, comment, hidden, created_at")
+        .in("survey_id", surveyIds)
+        .order("created_at")
+    : { data: [] };
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} note={t("note")} />
@@ -93,6 +109,8 @@ export default async function CalibrationPage({
           records={records ?? []}
           previous={previous ?? []}
           shots={shots ?? []}
+          surveys={surveys ?? []}
+          responses={responses ?? []}
         />
       )}
     </div>
