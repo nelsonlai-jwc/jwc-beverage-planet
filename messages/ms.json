@@ -24,6 +24,7 @@
     "menus": "Menu",
     "calibration": "Kalibrasi Kopi Harian",
     "reports": "Laporan",
+    "feedback": "Maklum Balas",
     "settings": "Tetapan"
   },
   "Toast": {
@@ -41,7 +42,8 @@
     "copied": "Disalin sebagai draf",
     "invited": "Jemputan dihantar",
     "undone": "Kelulusan dibatalkan",
-    "withdrawn": "Ditarik balik"
+    "withdrawn": "Ditarik balik",
+    "reported": "Laporan dihantar"
   },
   "Shell": {
     "loading": "Memuatkan…",
@@ -61,7 +63,8 @@
       "ADMIN": "Admin",
       "MANAGER": "Pengurus",
       "BARISTA": "Barista"
-    }
+    },
+    "feedback": "Maklum balas"
   },
   "Placeholder": {
     "comingSoon": "Halaman ini belum siap."
@@ -1521,6 +1524,116 @@
       "REQUIRED": "Isi ketiga-tiga bahasa.",
       "NOT_ALLOWED": "Hanya Admin boleh membetulkan terjemahan.",
       "UNKNOWN": "Tidak dapat menyimpan. Sila cuba lagi."
+    }
+  },
+  "Feedback": {
+    "title": "Maklum Balas",
+    "note": "Laporkan pepijat atau kongsi idea untuk menambah baik aplikasi. Anda boleh ikuti status laporan anda di sini.",
+    "noteAdmin": "Semua laporan pepijat dan idea daripada setiap pengguna. Tetapkan status dan balas untuk merancang naik taraf.",
+    "newReport": "Laporan baharu",
+    "newTitle": "Laporan baharu",
+    "newNote": "Beritahu kami apa yang tidak kena atau apa yang boleh menjadikan aplikasi lebih baik.",
+    "back": "Maklum Balas",
+    "exportCsv": "Eksport CSV",
+    "filterKind": "Tapis mengikut jenis",
+    "filterStatus": "Tapis mengikut status",
+    "allKinds": "Semua jenis",
+    "allStatuses": "Semua status",
+    "empty": "Anda belum menghantar sebarang laporan.",
+    "emptyAdmin": "Tiada laporan yang sepadan.",
+    "replied": "Dibalas",
+    "noAccess": "Hanya Super Admin boleh melakukan ini.",
+    "kind": {
+      "BUG": "Pepijat",
+      "IDEA": "Idea"
+    },
+    "kindHint": {
+      "BUG": "Sesuatu tidak betul atau tidak berfungsi",
+      "IDEA": "Ciri baharu atau cara menambah baik aplikasi"
+    },
+    "status": {
+      "NEW": "Baharu",
+      "PLANNED": "Dirancang",
+      "IN_PROGRESS": "Sedang dibuat",
+      "DONE": "Selesai",
+      "WONT_DO": "Tidak akan dibuat"
+    },
+    "device": {
+      "PHONE": "Telefon",
+      "TABLET": "Tablet",
+      "DESKTOP": "Komputer"
+    },
+    "form": {
+      "kind": "Jenis",
+      "title": "Tajuk",
+      "titlePlaceholder": {
+        "BUG": "cth. Halaman menu kosong",
+        "IDEA": "cth. Tunjukkan kos dalam senarai resipi"
+      },
+      "description": "Butiran",
+      "descriptionPlaceholder": {
+        "BUG": "Apa yang anda buat, apa yang berlaku, dan apa yang anda jangkakan?",
+        "IDEA": "Apa yang anda mahu, dan bagaimana ia membantu kerja anda?"
+      },
+      "photos": "Foto",
+      "addPhotos": "Tambah foto",
+      "uploading": "Memuat naik…",
+      "removePhoto": "Buang foto",
+      "photosHint": "Pilihan. Sehingga {max} foto atau tangkapan skrin, JPEG, PNG, WebP atau HEIC, 10 MB setiap satu.",
+      "page": "Halaman",
+      "send": "Hantar laporan",
+      "sending": "Menghantar…",
+      "cancel": "Batal"
+    },
+    "errors": {
+      "TITLE_REQUIRED": "Masukkan tajuk.",
+      "DESCRIPTION_REQUIRED": "Masukkan butiran.",
+      "INVALID": "Sesetengah butiran tidak sah. Semak dan cuba lagi.",
+      "NOT_ALLOWED": "Anda tidak dibenarkan melakukan ini.",
+      "UNKNOWN": "Ada masalah. Cuba lagi.",
+      "tooManyPhotos": "Sehingga {max} foto. Foto tambahan tidak ditambah.",
+      "photo": {
+        "type": "Gunakan foto JPEG, PNG, WebP atau HEIC.",
+        "size": "Setiap foto mestilah 10 MB atau kurang.",
+        "convert": "Foto HEIC ini tidak dapat ditukar. Cuba JPEG.",
+        "upload": "Muat naik foto gagal. Cuba lagi."
+      }
+    },
+    "manage": "Status dan balasan",
+    "statusLabel": "Status",
+    "replyLabel": "Balasan",
+    "replyPlaceholder": "Pilihan. Orang yang menghantar laporan ini akan melihatnya.",
+    "noReply": "Belum ada balasan.",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "photoAlt": "Foto {n}",
+    "info": {
+      "title": "Butiran",
+      "submittedBy": "Dihantar oleh",
+      "outlets": "Cawangan",
+      "submittedAt": "Dihantar pada",
+      "page": "Halaman",
+      "device": "Peranti",
+      "language": "Bahasa",
+      "browser": "Pelayar"
+    },
+    "csv": {
+      "report": "Laporan",
+      "generatedAt": "Dijana pada",
+      "submittedAt": "Dihantar pada",
+      "kind": "Jenis",
+      "status": "Status",
+      "title": "Tajuk",
+      "description": "Butiran",
+      "submittedBy": "Dihantar oleh",
+      "email": "E-mel",
+      "outlets": "Cawangan",
+      "page": "Halaman",
+      "device": "Peranti",
+      "language": "Bahasa",
+      "photos": "Foto",
+      "reply": "Balasan",
+      "repliedAt": "Dibalas pada"
     }
   }
 }
