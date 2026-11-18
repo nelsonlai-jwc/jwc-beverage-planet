@@ -1,6 +1,6 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { isKind, isPriority, isStatus } from "@/lib/feedback/types";
+import { CLOSED_STATUSES, OPEN_STATUSES, isKind, isPriority, isStatus } from "@/lib/feedback/types";
 import { toCsv } from "@/lib/reports/csv";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,6 +17,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   const status = search.get("status");
   const supabase = await createClient();
   let query = supabase.from("feedback_reports").select("*").order("created_at", { ascending: false });
+  const tab = search.get("tab");
+  if (tab === "bug" || tab === "idea") query = query.eq("kind", tab === "bug" ? "BUG" : "IDEA").in("status", [...OPEN_STATUSES]);
+  if (tab === "closed") query = query.in("status", [...CLOSED_STATUSES]);
   if (isKind(kind)) query = query.eq("kind", kind);
   if (isStatus(status)) query = query.eq("status", status);
   const { data: reports } = await query;

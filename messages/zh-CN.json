@@ -1896,7 +1896,42 @@
     "copyAcceptedHint": "共 {count} 则已接受的回报。一次复制成一个任务，贴到 Claude Code。",
     "sortBy": "排序",
     "sortNewest": "最新",
-    "sortPriority": "优先度"
+    "sortPriority": "优先度",
+    "tabs": {
+      "label": "回报分组",
+      "bug": "Bug",
+      "idea": "想法",
+      "closed": "已结束",
+      "bugCount": "{count} 则待处理",
+      "ideaCount": "{count} 则待处理",
+      "closedCount": "{count} 则"
+    },
+    "filter": "筛选",
+    "typeLabel": "类型",
+    "allOpen": "全部待处理",
+    "allClosed": "全部已结束",
+    "table": {
+      "title": "标题",
+      "sentBy": "提交人",
+      "status": "状态",
+      "priority": "优先度",
+      "sentAt": "提交时间"
+    },
+    "emptyTab": {
+      "bug": {
+        "title": "没有待处理的 Bug",
+        "text": "目前没有需要修复的问题。"
+      },
+      "idea": {
+        "title": "没有待处理的想法",
+        "text": "目前没有等待处理的想法。"
+      },
+      "closed": {
+        "title": "还没有已结束的回报",
+        "text": "已完成和不处理的回报会显示在这里。"
+      }
+    },
+    "emptyFiltered": "没有符合筛选条件的回报。"
   },
   "Surveys": {
     "title": "问卷",

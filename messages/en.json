@@ -1896,7 +1896,42 @@
     "copyAcceptedHint": "{count, plural, one {# accepted report} other {# accepted reports}}. Copy them as one task and paste it into Claude Code.",
     "sortBy": "Sort by",
     "sortNewest": "Newest",
-    "sortPriority": "Priority"
+    "sortPriority": "Priority",
+    "tabs": {
+      "label": "Report groups",
+      "bug": "Bugs",
+      "idea": "Ideas",
+      "closed": "Closed",
+      "bugCount": "{count, plural, one {# open bug} other {# open bugs}}",
+      "ideaCount": "{count, plural, one {# open idea} other {# open ideas}}",
+      "closedCount": "{count, plural, one {# report} other {# reports}}"
+    },
+    "filter": "Filter",
+    "typeLabel": "Type",
+    "allOpen": "All open",
+    "allClosed": "All closed",
+    "table": {
+      "title": "Title",
+      "sentBy": "Sent by",
+      "status": "Status",
+      "priority": "Priority",
+      "sentAt": "Sent at"
+    },
+    "emptyTab": {
+      "bug": {
+        "title": "No open bugs",
+        "text": "Nothing to fix right now."
+      },
+      "idea": {
+        "title": "No open ideas",
+        "text": "No ideas waiting right now."
+      },
+      "closed": {
+        "title": "Nothing closed yet",
+        "text": "Done and not-taken-up reports show here."
+      }
+    },
+    "emptyFiltered": "No reports match this filter."
   },
   "Surveys": {
     "title": "Survey",

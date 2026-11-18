@@ -1896,7 +1896,42 @@
     "copyAcceptedHint": "{count} laporan diterima. Salin sebagai satu tugasan dan tampal ke Claude Code.",
     "sortBy": "Susun ikut",
     "sortNewest": "Terbaharu",
-    "sortPriority": "Keutamaan"
+    "sortPriority": "Keutamaan",
+    "tabs": {
+      "label": "Kumpulan laporan",
+      "bug": "Pepijat",
+      "idea": "Idea",
+      "closed": "Ditutup",
+      "bugCount": "{count} belum selesai",
+      "ideaCount": "{count} belum selesai",
+      "closedCount": "{count} laporan"
+    },
+    "filter": "Tapis",
+    "typeLabel": "Jenis",
+    "allOpen": "Semua belum selesai",
+    "allClosed": "Semua ditutup",
+    "table": {
+      "title": "Tajuk",
+      "sentBy": "Dihantar oleh",
+      "status": "Status",
+      "priority": "Keutamaan",
+      "sentAt": "Dihantar pada"
+    },
+    "emptyTab": {
+      "bug": {
+        "title": "Tiada pepijat belum selesai",
+        "text": "Tiada apa-apa untuk dibaiki sekarang."
+      },
+      "idea": {
+        "title": "Tiada idea belum selesai",
+        "text": "Tiada idea yang menunggu sekarang."
+      },
+      "closed": {
+        "title": "Belum ada laporan ditutup",
+        "text": "Laporan selesai dan tidak diteruskan dipaparkan di sini."
+      }
+    },
+    "emptyFiltered": "Tiada laporan yang sepadan dengan penapis ini."
   },
   "Surveys": {
     "title": "Soal Selidik",

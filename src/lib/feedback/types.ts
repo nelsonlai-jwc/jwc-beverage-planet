@@ -3,6 +3,9 @@ export type FeedbackKind = (typeof FEEDBACK_KINDS)[number];
 
 export const FEEDBACK_STATUSES = ["NEW", "ACCEPTED", "REJECTED", "WITH_CLAUDE", "DONE"] as const;
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
+/** Still to do (Bug / Idea tabs) and finished (Closed tab). */
+export const OPEN_STATUSES = ["NEW", "ACCEPTED", "WITH_CLAUDE"] as const;
+export const CLOSED_STATUSES = ["DONE", "REJECTED"] as const;
 
 export const FEEDBACK_DEVICES = ["PHONE", "TABLET", "DESKTOP"] as const;
 export type FeedbackDevice = (typeof FEEDBACK_DEVICES)[number];
