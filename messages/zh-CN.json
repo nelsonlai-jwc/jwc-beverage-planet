@@ -1957,8 +1957,8 @@
       "MANAGER": "Manager",
       "BARISTA": "Barista"
     },
-    "deadline": "截止时间（马来西亚时间，选填）",
-    "deadlineHint": "没设的话，24 小时后自动关闭。",
+    "deadline": "开放多久",
+    "deadlineHint": "从建立问卷那一刻开始算。不设时限的话，24 小时后自动关闭。",
     "noteLabel": "给填写者的说明（选填）",
     "create": "建立问卷",
     "cancel": "取消",
@@ -1966,7 +1966,6 @@
     "pickDrinks": "请至少选择一种饮品。",
     "pickOutlet": "请选择分店。",
     "pickPeople": "请至少勾选一个人。",
-    "deadlineFuture": "截止时间必须晚于现在。",
     "saveFailed": "无法保存，请重试。",
     "notFound": "找不到这份问卷。",
     "resultsTitle": "问卷结果",
@@ -1990,6 +1989,13 @@
       "FILTER": "扫码为 Filter 咖啡评分",
       "RECIPE": "扫码为饮品评分"
     },
-    "closeQr": "关闭"
+    "closeQr": "关闭",
+    "duration": {
+      "15": "15 分钟",
+      "30": "30 分钟",
+      "60": "1 小时",
+      "300": "5 小时",
+      "none": "不设时限"
+    }
   }
 }

@@ -1957,8 +1957,8 @@
       "MANAGER": "Pengurus",
       "BARISTA": "Barista"
     },
-    "deadline": "Tarikh akhir (waktu Malaysia, pilihan)",
-    "deadlineHint": "Tanpa tarikh akhir, soal selidik ditutup 24 jam selepas dibuka.",
+    "deadline": "Dibuka selama",
+    "deadlineHint": "Dikira dari masa soal selidik dibuka. Tanpa had, ia ditutup selepas 24 jam.",
     "noteLabel": "Nota untuk penjawab (pilihan)",
     "create": "Buka soal selidik",
     "cancel": "Batal",
@@ -1966,7 +1966,6 @@
     "pickDrinks": "Pilih sekurang-kurangnya satu minuman.",
     "pickOutlet": "Pilih cawangan.",
     "pickPeople": "Tanda sekurang-kurangnya seorang.",
-    "deadlineFuture": "Tarikh akhir mesti pada masa hadapan.",
     "saveFailed": "Tidak dapat menyimpan. Sila cuba lagi.",
     "notFound": "Soal selidik ini tidak dijumpai.",
     "resultsTitle": "Keputusan soal selidik",
@@ -1990,6 +1989,13 @@
       "FILTER": "Imbas untuk menilai kopi tapis",
       "RECIPE": "Imbas untuk menilai minuman"
     },
-    "closeQr": "Tutup"
+    "closeQr": "Tutup",
+    "duration": {
+      "15": "15 minit",
+      "30": "30 minit",
+      "60": "1 jam",
+      "300": "5 jam",
+      "none": "Tiada had"
+    }
   }
 }

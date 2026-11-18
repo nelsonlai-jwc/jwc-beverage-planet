@@ -1957,8 +1957,8 @@
       "MANAGER": "Manager",
       "BARISTA": "Barista"
     },
-    "deadline": "Deadline (Malaysia time, optional)",
-    "deadlineHint": "Without a deadline the survey closes 24 hours after it opens.",
+    "deadline": "Open for",
+    "deadlineHint": "How long from when you open it. No limit closes the survey after 24 hours.",
     "noteLabel": "Note for those answering (optional)",
     "create": "Open survey",
     "cancel": "Cancel",
@@ -1966,7 +1966,6 @@
     "pickDrinks": "Choose at least one drink.",
     "pickOutlet": "Choose an outlet.",
     "pickPeople": "Tick at least one person.",
-    "deadlineFuture": "The deadline must be in the future.",
     "saveFailed": "Could not save. Please try again.",
     "notFound": "This survey was not found.",
     "resultsTitle": "Survey results",
@@ -1990,6 +1989,13 @@
       "FILTER": "Scan to rate the filter coffee",
       "RECIPE": "Scan to rate the drink"
     },
-    "closeQr": "Close"
+    "closeQr": "Close",
+    "duration": {
+      "15": "15 min",
+      "30": "30 min",
+      "60": "1 hour",
+      "300": "5 hours",
+      "none": "No limit"
+    }
   }
 }
