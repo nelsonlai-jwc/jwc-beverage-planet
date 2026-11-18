@@ -116,6 +116,11 @@
         "label": "咖啡机",
         "rule": "各分店使用的咖啡机。",
         "adminRule": "新增咖啡机并分配到分店。咖啡机不能删除，只能停用，以保留旧记录。"
+      },
+      "brewers": {
+        "label": "冲煮器具",
+        "rule": "各分店使用的手冲/批量冲煮器具。",
+        "adminRule": "添加手冲或批量冲煮器具并指定分店。器具不能删除，只能停用，旧记录会保留。"
       }
     },
     "values": {
@@ -222,7 +227,15 @@
         "NUMBER": "请检查数字（咖啡机：1–6 头、80–100 °C、最多 20 bar）。",
         "SCALE_RANGE": "刻度最小值须小于最大值。",
         "DUPLICATE": "本分店已有同名设备。"
-      }
+      },
+      "brewerTypeLabel": "器具类型",
+      "brewerType": {
+        "POUR_OVER": "手冲",
+        "BATCH": "批量萃取机"
+      },
+      "brewerPlaceholder": "例如 V60 #1",
+      "noBrewers": "还没有冲煮器具。",
+      "addBrewer": "添加冲煮器具"
     }
   },
   "Invite": {
@@ -481,7 +494,41 @@
     "targetRange": "目标 {min}–{max} {unit}",
     "min": "最小",
     "max": "最大",
-    "espressoNav": "Espresso"
+    "espressoNav": "Espresso",
+    "filterNav": "Filter",
+    "ratioWater": "粉水比 (1:x)"
+  },
+  "FilterCalibration": {
+    "title": "Filter 校准",
+    "note": "每个分店、每天、每支咖啡豆、每个冲煮器具只有一份最终记录。",
+    "noEquipment": "这个分店至少需要一个冲煮器具和一台磨豆机。请 Admin 在设置中添加。",
+    "invalid": "粉量、水量和总时间必须大于零，并且必须选择冲煮器具、磨豆机和填写研磨刻度。",
+    "invalidOptional": "请检查数字：水温 70–100 °C，注水 1–20 次，TDS 最多 25%，不能是负数。",
+    "alreadyRecorded": "这支豆今天在这个冲煮器具上已经有记录（可能已删除）。页面已重新加载。",
+    "brewer": "冲煮器具",
+    "recipe": "配方",
+    "water": "水量",
+    "waterG": "水量 (g)",
+    "targetRatio": "目标 1:{min}–1:{max}",
+    "waterTempC": "水温 (°C)",
+    "pouring": "注水",
+    "bloom": "闷蒸",
+    "bloomWaterG": "闷蒸水量 (g)",
+    "bloomS": "闷蒸时间 (s)",
+    "pours": "注水次数",
+    "pourCount": "注水次数",
+    "totalTime": "总时间",
+    "totalTimeS": "总时间 (s)",
+    "beverage": "咖啡液",
+    "beverageG": "咖啡液重量 (g)",
+    "eyHint": "填写咖啡液重量和 TDS 后显示萃取率 (EY)。",
+    "saveBrew": "保存为测试冲煮",
+    "brewHint": "测试冲煮会保留调整过程中的每一次尝试。把选定的那一次保存为最终记录。",
+    "testBrews": "测试冲煮（{count}）",
+    "bloomShort": "闷蒸 {water} g / {seconds} s",
+    "poursShort": "注水 {count} 次",
+    "targetSummary": "目标：粉量 {dose} g · 粉水比 1:{ratio} · 时间 {time}",
+    "recordAnotherBrewer": "在另一个冲煮器具上记录"
   },
   "Users": {
     "title": "用户",

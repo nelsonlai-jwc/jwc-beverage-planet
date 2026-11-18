@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SettingResult } from "./actions";
 
-export type EquipmentKind = "GRINDER" | "MACHINE";
+export type EquipmentKind = "GRINDER" | "MACHINE" | "BREWER";
 
 /** Form values as typed; blank optional fields are saved as empty. */
 export type EquipmentInput = {
@@ -24,6 +24,8 @@ export type EquipmentInput = {
   groupCount?: string;
   defaultWaterTempC?: string;
   defaultPressureBar?: string;
+  // Filter brewer
+  brewerType?: string;
 };
 
 const text = (value: string | undefined, max: number) => {
@@ -70,6 +72,11 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
     ({ error } = id
       ? await supabase.from("grinders").update(values).eq("id", id)
       : await supabase.from("grinders").insert(values));
+  } else if (kind === "BREWER") {
+    const values = { ...common, brewer_type: input.brewerType === "BATCH" ? "BATCH" : "POUR_OVER" };
+    ({ error } = id
+      ? await supabase.from("brewers").update(values).eq("id", id)
+      : await supabase.from("brewers").insert(values));
   } else {
     const groups = num(input.groupCount);
     const temp = num(input.defaultWaterTempC);
@@ -91,7 +98,7 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
 /** Equipment is never deleted (records point at it); it is disabled instead. */
 export async function setEquipmentActive(kind: EquipmentKind, id: string, active: boolean): Promise<SettingResult> {
   const supabase = await createClient();
-  const table = kind === "GRINDER" ? "grinders" : "espresso_machines";
+  const table = kind === "GRINDER" ? "grinders" : kind === "BREWER" ? "brewers" : "espresso_machines";
   const { data, error } = await supabase.from(table).update({ is_active: active }).eq("id", id).select("id");
   revalidatePath("/", "layout");
   if (error) return { ok: false, error: "UNKNOWN" };
