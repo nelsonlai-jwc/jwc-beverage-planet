@@ -1,6 +1,6 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/currentUser";
-import { isKind, isStatus } from "@/lib/feedback/types";
+import { isKind, isPriority, isStatus } from "@/lib/feedback/types";
 import { toCsv } from "@/lib/reports/csv";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,12 +22,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   const { data: reports } = await query;
 
   const ids = [...new Set((reports ?? []).flatMap((r) => [r.created_by]))];
-  const [{ data: people }, { data: links }] = ids.length
+  const reportIds = (reports ?? []).map((r) => r.id);
+  const [{ data: people }, { data: links }, { data: triage }] = ids.length
     ? await Promise.all([
         supabase.from("profiles").select("id, full_name, email").in("id", ids),
         supabase.from("user_outlets").select("user_id, outlets(name)").in("user_id", ids),
+        supabase.from("feedback_triage").select("report_id, priority, note").in("report_id", reportIds),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
+  const triageOf = new Map((triage ?? []).map((row) => [row.report_id, row]));
   const person = new Map((people ?? []).map((p) => [p.id, p]));
   const outletsOf = new Map<string, string[]>();
   for (const link of links ?? []) {
@@ -38,9 +41,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     value ? format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" }) : "";
 
   const header = [
+    t("csv.number"),
     t("csv.submittedAt"),
     t("csv.kind"),
     t("csv.status"),
+    t("csv.priority"),
     t("csv.title"),
     t("csv.description"),
     t("csv.submittedBy"),
@@ -50,13 +55,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     t("csv.device"),
     t("csv.language"),
     t("csv.photos"),
+    t("csv.rejectReasons"),
     t("csv.reply"),
     t("csv.repliedAt"),
+    t("csv.note"),
   ];
   const rows = (reports ?? []).map((r) => [
+    `#${r.number}`,
     when(r.created_at),
     isKind(r.kind) ? t(`kind.${r.kind}`) : r.kind,
     isStatus(r.status) ? t(`status.${r.status}`) : r.status,
+    isPriority(triageOf.get(r.id)?.priority) ? t(`priority.${triageOf.get(r.id)!.priority}`) : "",
     r.title,
     r.description,
     person.get(r.created_by)?.full_name ?? "",
@@ -66,8 +75,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     r.device ? t(`device.${r.device}`) : "",
     r.locale,
     r.photo_paths.length,
+    r.reject_reasons.map((reason) => (t.has(`reasons.${reason}.label`) ? t(`reasons.${reason}.label`) : reason)).join("; "),
     r.admin_reply,
     when(r.replied_at),
+    triageOf.get(r.id)?.note ?? "",
   ]);
   const meta: [string, string][] = [
     [t("csv.report"), t("title")],
