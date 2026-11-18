@@ -20,7 +20,8 @@ export type ToastKey =
   | "copied"
   | "invited"
   | "undone"
-  | "withdrawn";
+  | "withdrawn"
+  | "reported";
 
 type Item = { id: number; key: ToastKey };
 

@@ -25,6 +25,7 @@
     "calibration": "Coffee Calibration",
     "surveys": "Survey",
     "reports": "Report",
+    "feedback": "Feedback",
     "settings": "Setting"
   },
   "Toast": {
@@ -42,7 +43,8 @@
     "copied": "Copied as a draft",
     "invited": "Invitation sent",
     "undone": "Approval undone",
-    "withdrawn": "Withdrawn"
+    "withdrawn": "Withdrawn",
+    "reported": "Report sent"
   },
   "Shell": {
     "loading": "Loading…",
@@ -62,7 +64,8 @@
       "ADMIN": "Admin",
       "MANAGER": "Manager",
       "BARISTA": "Barista"
-    }
+    },
+    "feedback": "Feedback"
   },
   "Placeholder": {
     "comingSoon": "This page is not built yet."
@@ -1697,6 +1700,116 @@
       "RECIPE": "Drink tasting"
     },
     "opinion": "Your opinion (optional)"
+  },
+  "Feedback": {
+    "title": "Feedback",
+    "note": "Report a bug or share an idea to improve the app. You can follow the status of your reports here.",
+    "noteAdmin": "All bug reports and ideas from every user. Set the status and reply to plan upgrades.",
+    "newReport": "New report",
+    "newTitle": "New report",
+    "newNote": "Tell us what went wrong or what would make the app better.",
+    "back": "Feedback",
+    "exportCsv": "Export CSV",
+    "filterKind": "Filter by type",
+    "filterStatus": "Filter by status",
+    "allKinds": "All types",
+    "allStatuses": "All statuses",
+    "empty": "You have not sent any reports yet.",
+    "emptyAdmin": "No reports match.",
+    "replied": "Replied",
+    "noAccess": "Only the Super Admin can do this.",
+    "kind": {
+      "BUG": "Bug",
+      "IDEA": "Idea"
+    },
+    "kindHint": {
+      "BUG": "Something is wrong or not working",
+      "IDEA": "A new feature or a way to improve the app"
+    },
+    "status": {
+      "NEW": "New",
+      "PLANNED": "Planned",
+      "IN_PROGRESS": "In progress",
+      "DONE": "Done",
+      "WONT_DO": "Won't do"
+    },
+    "device": {
+      "PHONE": "Phone",
+      "TABLET": "Tablet",
+      "DESKTOP": "Computer"
+    },
+    "form": {
+      "kind": "Type",
+      "title": "Title",
+      "titlePlaceholder": {
+        "BUG": "e.g. Menu page is blank",
+        "IDEA": "e.g. Show cost on the recipe list"
+      },
+      "description": "Details",
+      "descriptionPlaceholder": {
+        "BUG": "What did you do, what happened, and what did you expect?",
+        "IDEA": "What would you like, and how would it help your work?"
+      },
+      "photos": "Photos",
+      "addPhotos": "Add photos",
+      "uploading": "Uploading…",
+      "removePhoto": "Remove photo",
+      "photosHint": "Optional. Up to {max} photos or screenshots, JPEG, PNG, WebP or HEIC, 10 MB each.",
+      "page": "Page",
+      "send": "Send report",
+      "sending": "Sending…",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "TITLE_REQUIRED": "Enter a title.",
+      "DESCRIPTION_REQUIRED": "Enter the details.",
+      "INVALID": "Some details are not valid. Check and try again.",
+      "NOT_ALLOWED": "You are not allowed to do this.",
+      "UNKNOWN": "Something went wrong. Try again.",
+      "tooManyPhotos": "Up to {max} photos. The extra ones were not added.",
+      "photo": {
+        "type": "Use a JPEG, PNG, WebP or HEIC photo.",
+        "size": "Each photo must be 10 MB or smaller.",
+        "convert": "This HEIC photo could not be converted. Try a JPEG.",
+        "upload": "Photo upload failed. Try again."
+      }
+    },
+    "manage": "Status and reply",
+    "statusLabel": "Status",
+    "replyLabel": "Reply",
+    "replyPlaceholder": "Optional. The person who sent this report will see it.",
+    "noReply": "No reply yet.",
+    "save": "Save",
+    "saving": "Saving…",
+    "photoAlt": "Photo {n}",
+    "info": {
+      "title": "Details",
+      "submittedBy": "Sent by",
+      "outlets": "Outlets",
+      "submittedAt": "Sent at",
+      "page": "Page",
+      "device": "Device",
+      "language": "Language",
+      "browser": "Browser"
+    },
+    "csv": {
+      "report": "Report",
+      "generatedAt": "Generated at",
+      "submittedAt": "Sent at",
+      "kind": "Type",
+      "status": "Status",
+      "title": "Title",
+      "description": "Details",
+      "submittedBy": "Sent by",
+      "email": "Email",
+      "outlets": "Outlets",
+      "page": "Page",
+      "device": "Device",
+      "language": "Language",
+      "photos": "Photos",
+      "reply": "Reply",
+      "repliedAt": "Replied at"
+    }
   },
   "Surveys": {
     "title": "Survey",

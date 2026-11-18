@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageSquareText } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
@@ -33,6 +34,21 @@ export function BottomBar() {
       >
         <div id={TRANSLATION_SLOT_ID} className="flex min-w-0 items-center" />
         <div className="ml-auto flex shrink-0 items-center gap-[0.5em]">
+          {/* Report a bug or idea about the page the user is on. */}
+          {pathname !== "/feedback/new" && (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  `/feedback/new?from=${encodeURIComponent(window.location.pathname + window.location.search)}`,
+                )
+              }
+              className="inline-flex shrink-0 items-center gap-[0.35em] rounded-full border-[1.5px] border-white/40 px-[0.8em] py-0.5 font-semibold whitespace-nowrap hover:bg-white/15"
+            >
+              <MessageSquareText aria-hidden className="size-[1.1em]" />
+              {t("feedback")}
+            </button>
+          )}
           {/* Shows only the current language (so it stays narrow); the native select over it opens the list. */}
           <label className="relative inline-flex items-center gap-[0.4em] rounded-full border-[1.5px] border-white/40 px-[0.8em] py-0.5 font-semibold whitespace-nowrap">
             <span className="sr-only">{t("language")}</span>

@@ -907,6 +907,81 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_reports: {
+        Row: {
+          admin_reply: string | null
+          created_at: string
+          created_by: string
+          description: string
+          device: string | null
+          id: string
+          kind: string
+          locale: string | null
+          page_url: string | null
+          photo_paths: string[]
+          replied_at: string | null
+          replied_by: string | null
+          revision: number
+          status: string
+          title: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          admin_reply?: string | null
+          created_at?: string
+          created_by?: string
+          description: string
+          device?: string | null
+          id?: string
+          kind: string
+          locale?: string | null
+          page_url?: string | null
+          photo_paths?: string[]
+          replied_at?: string | null
+          replied_by?: string | null
+          revision?: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          admin_reply?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          device?: string | null
+          id?: string
+          kind?: string
+          locale?: string | null
+          page_url?: string | null
+          photo_paths?: string[]
+          replied_at?: string | null
+          replied_by?: string | null
+          revision?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_reports_replied_by_fkey"
+            columns: ["replied_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filter_calibration_brews: {
         Row: {
           purpose: string
