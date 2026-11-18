@@ -406,7 +406,7 @@
     "failed": "Berlaku ralat. Sila cuba lagi."
   },
   "Calibration": {
-    "title": "Kalibrasi Espresso",
+    "title": "Kalibrasi Espresso · Harian",
     "note": "Satu rekod muktamad bagi setiap biji kopi bagi setiap pengisar bagi setiap cawangan setiap hari.",
     "noOutlet": "Akaun anda belum mempunyai cawangan.",
     "outlet": "Cawangan",
@@ -484,7 +484,7 @@
     "testShots": "Syot ujian ({count})",
     "useShot": "Guna nilai ini",
     "recordAnotherGrinder": "Rekod pada pengisar lain",
-    "targetSummary": "Sasaran: dos {dose} g · hasil {yield} g · masa {time} s",
+    "targetSummary": "{drink}: dos {dose} g · hasil {yield} g · masa {time} s",
     "noTarget": "Tiada sasaran untuk biji kopi ini.",
     "setTarget": "Tetapkan sasaran",
     "editTarget": "Sunting sasaran",
@@ -494,12 +494,34 @@
     "targetRange": "Sasaran {min}–{max} {unit}",
     "min": "Min",
     "max": "Maks",
-    "espressoNav": "Espresso",
-    "filterNav": "Filter",
-    "ratioWater": "Nisbah air (1:x)"
+    "ratioWater": "Nisbah air (1:x)",
+    "espressoDailyNav": "Espresso · Harian",
+    "espressoCustomNav": "Espresso · Peribadi",
+    "filterDailyNav": "Filter · Harian",
+    "filterCustomNav": "Filter · Peribadi",
+    "customTitle": "Kalibrasi Espresso · Peribadi",
+    "customNote": "Rekod anda sendiri. Hanya anda dan Super Admin boleh melihatnya.",
+    "customWindow": "Rekod pada mana-mana hari, seberapa banyak kali. Hanya anda boleh mengubah rekod anda.",
+    "date": "Tarikh",
+    "otherEquipment": "Lain-lain (taip nama)",
+    "equipmentNameLabel": "Nama",
+    "invalidShared": "Pengisar dan tetapan kisaran diperlukan (taip nama apabila memilih Lain-lain).",
+    "invalidDrink": "{drink}: dos, hasil dan masa mesti lebih daripada sifar.",
+    "needDrink": "Hidupkan sekurang-kurangnya satu minuman.",
+    "drinksTitle": "Minuman",
+    "drinksHint": "Hidupkan minuman yang anda laraskan. Tetapan kisaran dan mesin dikongsi.",
+    "drink": {
+      "BLACK_HOT": "Kopi hitam (Panas)",
+      "BLACK_ICED": "Kopi hitam (Ais)",
+      "MILK_HOT": "Kopi susu (Panas)",
+      "MILK_ICED": "Kopi susu (Ais)"
+    },
+    "useLast": "Guna nilai terakhir saya",
+    "createdBy": "Oleh {name}",
+    "recordAnother": "Rekod lagi"
   },
   "FilterCalibration": {
-    "title": "Kalibrasi Filter",
+    "title": "Kalibrasi Filter · Harian",
     "note": "Satu rekod muktamad bagi setiap biji kopi, setiap alat bancuhan, setiap cawangan, setiap hari.",
     "noEquipment": "Cawangan ini memerlukan sekurang-kurangnya satu alat bancuhan dan satu pengisar. Admin menambahnya dalam Tetapan.",
     "invalid": "Dos, air dan jumlah masa mesti lebih daripada sifar, dan alat bancuhan, pengisar serta tetapan kisaran diperlukan.",
@@ -528,7 +550,8 @@
     "bloomShort": "bloom {water} g / {seconds} s",
     "poursShort": "{count} tuangan",
     "targetSummary": "Sasaran: dos {dose} g · nisbah 1:{ratio} · masa {time}",
-    "recordAnotherBrewer": "Rekod pada alat bancuhan lain"
+    "recordAnotherBrewer": "Rekod pada alat bancuhan lain",
+    "customTitle": "Kalibrasi Filter · Peribadi"
   },
   "Users": {
     "title": "Pengguna",

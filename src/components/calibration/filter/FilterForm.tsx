@@ -8,13 +8,16 @@ import { useRouter } from "@/i18n/navigation";
 import { checkRange, daysOffRoast, type RangeCheck } from "@/lib/calibration/calc";
 import { filterExtractionYield, waterRatio } from "@/lib/calibration/filterCalc";
 import { createClient } from "@/lib/supabase/client";
-import type { Grinder, TasteBalance } from "../types";
+import { EquipmentSelect, OTHER, equipmentColumns } from "../EquipmentSelect";
+import type { Grinder, Purpose, TasteBalance } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
 import type { Brewer, FilterBrew, FilterRecord, FilterTarget, FilterValues } from "./types";
 
 type FormState = {
   brewerId: string;
+  brewerName: string;
   grinderId: string;
+  grinderName: string;
   grind: string;
   dose: string;
   water: string;
@@ -35,7 +38,8 @@ const str = (value: number | string | null | undefined) => (value == null ? "" :
 function fromValues(v: Partial<FilterValues> & { roast_date?: string | null }, base: FormState): FormState {
   return {
     ...base,
-    grinderId: v.grinder_id ?? base.grinderId,
+    grinderId: v.grinder_id ?? (v.grinder_name ? OTHER : base.grinderId),
+    grinderName: v.grinder_name ?? base.grinderName,
     grind: v.grind_setting ?? "",
     dose: str(v.dose_g),
     water: str(v.water_g),
@@ -61,6 +65,7 @@ function optionalNumber(value: string): number | null | undefined {
 const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
 
 export function FilterForm({
+  purpose,
   outletId,
   date,
   beanId,
@@ -73,7 +78,9 @@ export function FilterForm({
   brewerNames,
   onClose,
 }: {
-  outletId: string;
+  purpose: Purpose;
+  /** Daily records only. */
+  outletId: string | null;
   date: string;
   beanId: string;
   record: FilterRecord | null;
@@ -81,7 +88,7 @@ export function FilterForm({
   brewers: Brewer[];
   grinders: Grinder[];
   target: FilterTarget | undefined;
-  /** Yesterday's final records of this bean, by brewer id. */
+  /** Values to reuse: daily by brewer id (yesterday), custom under "*" (the last record). */
   yesterday: Map<string, FilterRecord>;
   brews: FilterBrew[];
   brewerNames: Map<string, string>;
@@ -90,12 +97,15 @@ export function FilterForm({
   const t = useTranslations("Calibration");
   const tf = useTranslations("FilterCalibration");
   const router = useRouter();
+  const custom = purpose === "CUSTOM";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(() => {
     const base: FormState = {
-      brewerId: record?.brewer_id ?? brewers[0]?.id ?? "",
-      grinderId: record?.grinder_id ?? grinders[0]?.id ?? "",
+      brewerId: record ? (record.brewer_id ?? OTHER) : (brewers[0]?.id ?? (custom ? OTHER : "")),
+      brewerName: record?.brewer_name ?? "",
+      grinderId: grinders[0]?.id ?? (custom ? OTHER : ""),
+      grinderName: "",
       grind: "",
       dose: "",
       water: "",
@@ -115,7 +125,7 @@ export function FilterForm({
   const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
-  const prev = yesterday.get(form.brewerId);
+  const prev = yesterday.get(custom ? "*" : form.brewerId);
   const dose = Number(form.dose);
   const water = Number(form.water);
   const time = Number(form.time);
@@ -139,7 +149,9 @@ export function FilterForm({
       beverage_g: optionalNumber(form.beverage),
       tds_percent: optionalNumber(form.tds),
     };
-    if (!(dose > 0 && water > 0 && time > 0) || !form.grind.trim() || !form.brewerId || !form.grinderId) {
+    const b = equipmentColumns(form.brewerId, form.brewerName);
+    const g = equipmentColumns(form.grinderId, form.grinderName);
+    if (!(dose > 0 && water > 0 && time > 0) || !form.grind.trim() || (!b.id && !b.name) || (!g.id && !g.name)) {
       setError(tf("invalid"));
       return null;
     }
@@ -160,8 +172,10 @@ export function FilterForm({
     }
     return {
       coffee_bean_material_id: beanId,
-      brewer_id: form.brewerId,
-      grinder_id: form.grinderId,
+      brewer_id: b.id,
+      brewer_name: b.name,
+      grinder_id: g.id,
+      grinder_name: g.name,
       grind_setting: form.grind.trim(),
       dose_g: dose,
       water_g: water,
@@ -187,9 +201,12 @@ export function FilterForm({
     setError(null);
     const supabase = createClient();
     if (record) {
-      const { coffee_bean_material_id: _bean, brewer_id: _brewer, ...changes } = v;
+      // A daily record keeps its bean and brewer.
+      const { coffee_bean_material_id: _bean, brewer_id: _brewer, brewer_name: _brewerName, ...rest } = v;
       void _bean;
       void _brewer;
+      void _brewerName;
+      const changes = custom ? v : rest;
       const { data, error: updateError } = await supabase
         .from("filter_calibrations")
         .update(changes)
@@ -205,7 +222,7 @@ export function FilterForm({
     } else {
       const { error: insertError } = await supabase
         .from("filter_calibrations")
-        .insert({ ...v, outlet_id: outletId, business_date: date });
+        .insert({ ...v, purpose, outlet_id: outletId, business_date: date });
       if (insertError) {
         setError(insertError.code === "23505" ? tf("alreadyRecorded") : t("saveFailed"));
         setBusy(false);
@@ -229,7 +246,7 @@ export function FilterForm({
     void _roast;
     const { error: insertError } = await createClient()
       .from("filter_calibration_brews")
-      .insert({ ...brew, outlet_id: outletId, business_date: date });
+      .insert({ ...brew, purpose, outlet_id: outletId, business_date: date });
     setBusy(false);
     if (insertError) {
       setError(t("saveFailed"));
@@ -271,35 +288,30 @@ export function FilterForm({
   return (
     <form onSubmit={saveFinal} className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <label htmlFor="fc-brewer" className={labelClass}>
-            {tf("brewer")}
-          </label>
-          <select id="fc-brewer" value={form.brewerId} disabled={!!record} onChange={set("brewerId")} className={inputClass}>
-            {brewers.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <label htmlFor="fc-grinder" className={labelClass}>
-            {t("grinder")}
-          </label>
-          <select id="fc-grinder" value={form.grinderId} onChange={set("grinderId")} className={inputClass}>
-            {grinders.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <EquipmentSelect
+          id="fc-brewer"
+          label={tf("brewer")}
+          options={brewers}
+          value={form.brewerId}
+          typed={form.brewerName}
+          allowOther={custom}
+          disabled={!!record && !custom}
+          onChange={(value, typed) => setForm({ ...form, brewerId: value, brewerName: typed })}
+        />
+        <EquipmentSelect
+          id="fc-grinder"
+          label={t("grinder")}
+          options={grinders}
+          value={form.grinderId}
+          typed={form.grinderName}
+          allowOther={custom}
+          onChange={(value, typed) => setForm({ ...form, grinderId: value, grinderName: typed })}
+        />
       </div>
 
       {!record && prev && (
         <button type="button" className={`${secondaryButton} self-start`} onClick={() => setForm(fromValues(prev, form))}>
-          {t("useYesterday")}
+          {custom ? t("useLast") : t("useYesterday")}
         </button>
       )}
 
@@ -421,7 +433,16 @@ export function FilterForm({
         <FilterBrewList
           brews={brews}
           brewerNames={brewerNames}
-          onUse={(brew) => setForm(fromValues(brew, { ...form, brewerId: record ? form.brewerId : brew.brewer_id }))}
+          onUse={(brew) =>
+            setForm(
+              fromValues(
+                brew,
+                record && !custom
+                  ? form
+                  : { ...form, brewerId: brew.brewer_id ?? OTHER, brewerName: brew.brewer_name ?? "" },
+              ),
+            )
+          }
         />
       )}
     </form>

@@ -1,7 +1,9 @@
 export type FilterValues = {
   coffee_bean_material_id: string;
-  brewer_id: string;
-  grinder_id: string;
+  brewer_id: string | null;
+  brewer_name: string | null;
+  grinder_id: string | null;
+  grinder_name: string | null;
   grind_setting: string;
   dose_g: number;
   water_g: number;
@@ -18,6 +20,8 @@ export type FilterValues = {
 
 export type FilterRecord = FilterValues & {
   id: string;
+  business_date: string;
+  created_by: string;
   roast_date: string | null;
   deleted_at: string | null;
   delete_reason: string | null;

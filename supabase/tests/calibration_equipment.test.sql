@@ -71,30 +71,23 @@ declare
   v_count integer;
 begin
   insert into public.calibrations (outlet_id, coffee_bean_material_id, grinder_id, espresso_machine_id,
-                                   dose_g, yield_g, extraction_time_seconds, grind_setting,
-                                   water_temp_c, pressure_bar, tds_percent, taste_balance, roast_date)
+                                   grind_setting, water_temp_c, pressure_bar, roast_date)
   values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1',
-          '00000000-0000-0000-0000-0000000000e1', 18, 36, 28, '12', 93, 9, 9.5, 'BALANCED',
-          public.my_business_date() - 10);
+          '00000000-0000-0000-0000-0000000000e1', '12', 93, 9, public.my_business_date() - 10);
   insert into public.calibrations (outlet_id, coffee_bean_material_id, grinder_id,
-                                   dose_g, yield_g, extraction_time_seconds, grind_setting)
-  values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a2',
-          18, 38, 30, '3.5');
+                                   grind_setting)
+  values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a2', '3.5');
   begin
-    insert into public.calibrations (outlet_id, coffee_bean_material_id, grinder_id,
-                                     dose_g, yield_g, extraction_time_seconds, grind_setting)
-    values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1',
-            18, 36, 28, '13');
+    insert into public.calibrations (outlet_id, coffee_bean_material_id, grinder_id, grind_setting)
+    values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1', '13');
     raise exception 'same bean and grinder twice a day should fail';
   exception when unique_violation then
     null;
   end;
   -- A grinder of another outlet cannot be used.
   begin
-    insert into public.calibrations (outlet_id, coffee_bean_material_id, grinder_id,
-                                     dose_g, yield_g, extraction_time_seconds, grind_setting)
-    values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a3',
-            18, 36, 28, '13');
+    insert into public.calibrations (outlet_id, coffee_bean_material_id, grinder_id, grind_setting)
+    values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a3', '13');
     raise exception 'grinder of another outlet should fail';
   exception when check_violation then
     null;
@@ -117,9 +110,9 @@ begin
   end;
 
   -- Test shots: insert only, never changed.
-  insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id,
+  insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id, drink_type,
                                         dose_g, yield_g, extraction_time_seconds, grind_setting, taste_balance)
-  values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1',
+  values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1', 'BLACK_HOT',
           18, 40, 22, '14', 'SOUR');
   begin
     update public.calibration_shots set dose_g = 19;
@@ -128,10 +121,10 @@ begin
     null;
   end;
   begin
-    insert into public.calibration_shots (outlet_id, business_date, coffee_bean_material_id, grinder_id,
+    insert into public.calibration_shots (outlet_id, business_date, coffee_bean_material_id, grinder_id, drink_type,
                                           dose_g, yield_g, extraction_time_seconds, grind_setting)
     values (v_outlet, public.my_business_date() - 1, '00000000-0000-0000-0000-0000000000b1',
-            '00000000-0000-0000-0000-0000000000a1', 18, 40, 22, '14');
+            '00000000-0000-0000-0000-0000000000a1', 'BLACK_HOT', 18, 40, 22, '14');
     raise exception 'barista shots are for today only';
   exception when insufficient_privilege then
     null;
@@ -139,9 +132,9 @@ begin
 
   -- Barista cannot set bean targets.
   begin
-    insert into public.coffee_bean_targets (material_id, dose_min_g, dose_max_g, yield_min_g, yield_max_g,
+    insert into public.coffee_bean_targets (material_id, drink_type, dose_min_g, dose_max_g, yield_min_g, yield_max_g,
                                             time_min_seconds, time_max_seconds)
-    values ('00000000-0000-0000-0000-0000000000b1', 18, 18.5, 36, 40, 25, 32);
+    values ('00000000-0000-0000-0000-0000000000b1', 'BLACK_HOT', 18, 18.5, 36, 40, 25, 32);
     raise exception 'barista should not set targets';
   exception when insufficient_privilege then
     null;
@@ -151,9 +144,9 @@ $$;
 
 -- Manager sets bean targets; a disabled grinder is no longer offered for new records.
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', true);
-insert into public.coffee_bean_targets (material_id, dose_min_g, dose_max_g, yield_min_g, yield_max_g,
+insert into public.coffee_bean_targets (material_id, drink_type, dose_min_g, dose_max_g, yield_min_g, yield_max_g,
                                         time_min_seconds, time_max_seconds)
-values ('00000000-0000-0000-0000-0000000000b1', 18, 18.5, 36, 40, 25, 32);
+values ('00000000-0000-0000-0000-0000000000b1', 'BLACK_HOT', 18, 18.5, 36, 40, 25, 32);
 do $$
 begin
   assert (select updated_by from public.coffee_bean_targets) = '00000000-0000-0000-0000-00000000000b',
@@ -172,13 +165,13 @@ update public.grinders set is_active = false where id = '00000000-0000-0000-0000
 do $$
 begin
   -- Existing record on the disabled grinder can still be edited.
-  update public.calibrations set taste_notes = 'ok' where grinder_id = '00000000-0000-0000-0000-0000000000a2';
-  assert (select taste_notes from public.calibrations where grinder_id = '00000000-0000-0000-0000-0000000000a2') = 'ok',
+  update public.calibrations set grind_setting = '4' where grinder_id = '00000000-0000-0000-0000-0000000000a2';
+  assert (select grind_setting from public.calibrations where grinder_id = '00000000-0000-0000-0000-0000000000a2') = '4',
     'edit on disabled grinder';
   begin
-    insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id,
+    insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id, drink_type,
                                           dose_g, yield_g, extraction_time_seconds, grind_setting)
-    select id, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a2', 18, 36, 28, '3'
+    select id, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a2', 'BLACK_HOT', 18, 36, 28, '3'
       from public.outlets where code = 'JB-BROOOS';
     raise exception 'disabled grinder should fail';
   exception when check_violation then

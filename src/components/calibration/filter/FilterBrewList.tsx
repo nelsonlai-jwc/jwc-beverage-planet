@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { smallButton } from "@/components/recipes/ui";
 import { mutedText } from "@/components/ui/styles";
 import { filterExtractionYield, minutes, waterRatio } from "@/lib/calibration/filterCalc";
+import { equipmentName } from "../types";
 import type { FilterBrew } from "./types";
 
 /** Test brews of one bean for the day, oldest first. */
@@ -43,7 +44,7 @@ export function FilterBrewList({
               <div className="flex min-w-0 flex-col gap-0.5 text-sm">
                 <span className="font-semibold">
                   #{index + 1} · {format.dateTime(new Date(brew.created_at), { timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" })} ·{" "}
-                  {brewerNames.get(brew.brewer_id) ?? "—"}
+                  {equipmentName(brew.brewer_id, brew.brewer_name, brewerNames)}
                 </span>
                 <span>{parts.join(" · ")}</span>
                 {brew.taste_notes && <span className={mutedText}>{brew.taste_notes}</span>}
