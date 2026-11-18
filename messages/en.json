@@ -23,6 +23,7 @@
     "recipes": "Beverage Recipe",
     "menus": "Menu",
     "calibration": "Coffee Calibration",
+    "surveys": "Survey",
     "reports": "Report",
     "settings": "Setting"
   },
@@ -1595,16 +1596,17 @@
     }
   },
   "Tasting": {
-    "title": "Tasting survey",
     "notFound": "This survey link is not valid.",
     "closed": "This survey is closed. Thank you!",
     "whichDrink": "Which drink did you taste?",
     "drink": {
-      "ESPRESSO": "Espresso",
-      "MILK": "Milk drink (latte)"
+      "BLACK_HOT": "Black (Hot)",
+      "BLACK_ICED": "Black (Iced)",
+      "MILK_HOT": "Milk (Hot)",
+      "MILK_ICED": "Milk (Iced)",
+      "FILTER": "Filter coffee",
+      "RECIPE": "Drink"
     },
-    "milkRecipe": "Recipe: espresso {espresso} g + milk {milk} ml (ratio {ratio})",
-    "milkRecipeShort": "espresso {espresso} g + milk {milk} ml",
     "scaleHint": "Score 0–6 in steps of 0.5, as in barista championships.",
     "scale": {
       "0": "Unacceptable",
@@ -1619,20 +1621,41 @@
       "visual": "Visual",
       "taste_balance": "Taste balance",
       "tactile": "Tactile",
-      "flavor": "Flavour"
+      "flavor": "Flavour",
+      "aroma": "Aroma",
+      "aftertaste": "Aftertaste",
+      "acidity": "Acidity",
+      "body": "Body",
+      "balance": "Balance",
+      "overall": "Overall"
     },
     "help": {
-      "ESPRESSO": {
-        "taste_balance": "Sweet, sour and bitter in harmony",
-        "tactile": "Body, texture and finish in the mouth",
-        "flavor": "Clarity and quality of the flavours",
-        "visual": ""
-      },
       "MILK": {
         "visual": "Look of the drink and latte art",
         "taste_balance": "Milk and espresso in harmony",
         "tactile": "Milk texture and mouthfeel",
         "flavor": "Coffee flavour coming through the milk"
+      },
+      "BLACK": {
+        "taste_balance": "Sweet, sour and bitter in harmony",
+        "tactile": "Body, texture and finish in the mouth",
+        "flavor": "Clarity and quality of the flavours"
+      },
+      "FILTER": {
+        "aroma": "Smell of the coffee, dry and brewed",
+        "flavor": "Clarity and quality of the flavours",
+        "aftertaste": "How long and pleasant the finish is",
+        "acidity": "Quality of the brightness, not just how much",
+        "body": "Weight and texture in the mouth",
+        "balance": "How the flavour, acidity and body fit together",
+        "overall": "Your overall impression of the cup"
+      },
+      "RECIPE": {
+        "visual": "Look of the drink as served",
+        "taste_balance": "Sweet, sour, bitter and other tastes in harmony",
+        "tactile": "Texture and mouthfeel",
+        "flavor": "Clarity and quality of the flavours",
+        "overall": "Your overall impression of the drink"
       }
     },
     "milkAmount": "Milk ratio",
@@ -1668,34 +1691,105 @@
       "NOT_FOUND": "This survey link is not valid.",
       "UNKNOWN": "Could not send. Please try again."
     },
-    "openSurvey": "Open tasting survey",
-    "openTitle": "Tasting survey: which drinks are served?",
-    "milkEspressoG": "Espresso in the latte (g)",
-    "milkMl": "Milk (ml)",
-    "ratio": "Ratio {ratio}",
-    "closesAt": "Closes at (Malaysia time)",
-    "openHint": "Anyone with the QR code can answer without signing in; one answer per phone per drink, up to 200 answers.",
-    "openButton": "Open and create QR code",
-    "cancel": "Cancel",
-    "pickDrink": "Choose at least one drink.",
-    "milkRecipeRequired": "Enter the espresso and milk amounts.",
-    "closesFuture": "The closing time must be in the future.",
-    "saveFailed": "Could not save. Please try again.",
-    "surveyTitle": "Tasting survey",
+    "subjectTitle": {
+      "ESPRESSO": "Espresso tasting",
+      "FILTER": "Filter coffee tasting",
+      "RECIPE": "Drink tasting"
+    },
+    "opinion": "Your opinion (optional)"
+  },
+  "Surveys": {
+    "title": "Survey",
+    "note": "Answer the surveys waiting for you; Managers and Admins open surveys and read the results.",
+    "pendingTitle": "Waiting for your answer ({count})",
+    "noPending": "No survey is waiting for you.",
+    "answer": "Answer",
+    "closesAt": "Closes {time}",
+    "runTitle": "Surveys you run",
+    "newSurvey": "New survey",
+    "noRun": "No surveys yet.",
     "openUntil": "Open until {time}",
-    "closedBadge": "Closed",
-    "responses": "{count, plural, one {# answer} other {# answers}}",
+    "closed": "Closed",
+    "answers": "{count, plural, one {# answer} other {# answers}}",
+    "answersOf": "{count} of {max} answers",
+    "results": "Results",
+    "back": "Back to surveys",
+    "subject": {
+      "ESPRESSO": "Espresso",
+      "FILTER": "Filter",
+      "RECIPE": "Beverage recipe"
+    },
+    "audience": {
+      "OUTLET": "Outlet staff",
+      "PUBLIC": "Public (QR)"
+    },
+    "noPermission": "Only Managers and Admins can open surveys.",
+    "newTitle": "New survey",
+    "newNote": "Choose what to rate and who answers. Scores are 0–6 in steps of 0.5.",
+    "subjectLabel": "What to rate",
+    "subjectHint": {
+      "ESPRESSO": "An espresso calibration record: black drinks use the espresso score sheet, milk drinks the milk drink sheet.",
+      "FILTER": "A filter calibration record, scored on the 7 Brewers Cup items.",
+      "RECIPE": "An approved drink recipe of an outlet: visual, taste balance, tactile, flavour, overall and an opinion."
+    },
+    "record": "Calibration record",
+    "recordHint": "Daily records of your outlets from the last 14 days, and your own Custom records.",
+    "noRecords": "No records to survey yet.",
+    "customRecord": "Custom",
+    "choose": "Choose…",
+    "outlet": "Outlet",
+    "recipe": "Drink recipe",
+    "noRecipes": "This outlet has no approved drink recipe.",
+    "drinksLabel": "Drinks to rate",
+    "drinksHint": "Only drink types recorded in this record can be chosen.",
+    "audienceLabel": "Who answers",
+    "audienceHint": {
+      "OUTLET": "Ticked staff see it in Survey after signing in. The results show who has not answered.",
+      "PUBLIC": "Anyone with the QR code answers without signing in; one answer per phone per drink, up to 200 answers."
+    },
+    "peopleLabel": "Who must answer ({count})",
+    "tickAll": "Tick all",
+    "tickNone": "Untick all",
+    "loading": "Loading…",
+    "noPeople": "No active staff in this outlet.",
+    "role": {
+      "ADMIN": "Admin",
+      "MANAGER": "Manager",
+      "BARISTA": "Barista"
+    },
+    "deadline": "Deadline (Malaysia time, optional)",
+    "deadlineHint": "Without a deadline the survey closes 24 hours after it opens.",
+    "noteLabel": "Note for those answering (optional)",
+    "create": "Open survey",
+    "cancel": "Cancel",
+    "pickSubject": "Choose what to rate.",
+    "pickDrinks": "Choose at least one drink.",
+    "pickOutlet": "Choose an outlet.",
+    "pickPeople": "Tick at least one person.",
+    "deadlineFuture": "The deadline must be in the future.",
+    "saveFailed": "Could not save. Please try again.",
+    "notFound": "This survey was not found.",
+    "resultsTitle": "Survey results",
+    "closeNow": "Close survey",
+    "reopen": "Reopen",
+    "publicHint": "Show or print the QR code; anyone can answer without signing in.",
     "showQr": "Show QR code",
     "downloadQr": "Download QR",
     "copyLink": "Copy link",
-    "closeNow": "Close survey",
-    "reopen": "Reopen",
+    "notFilledTitle": "Not answered yet: {count} of {total}",
+    "filled": "Answered",
     "average": "Average",
+    "flavours": "Flavours",
+    "allAnswers": "All answers",
+    "noAnswers": "No answers yet.",
     "hide": "Hide",
     "unhide": "Show",
-    "hiddenNote": "Hidden answers are left out of the scores.",
-    "scanTitle": "Scan to rate today's coffee",
-    "closeQr": "Close",
-    "tagsResult": "Flavours"
+    "hiddenNote": "Hidden answers are left out of the averages.",
+    "scanTitle": {
+      "ESPRESSO": "Scan to rate the espresso",
+      "FILTER": "Scan to rate the filter coffee",
+      "RECIPE": "Scan to rate the drink"
+    },
+    "closeQr": "Close"
   }
 }

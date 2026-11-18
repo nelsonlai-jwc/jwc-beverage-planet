@@ -2899,103 +2899,121 @@ export type Database = {
           },
         ]
       }
-      tasting_responses: {
+      survey_invitees: {
+        Row: {
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      survey_responses: {
         Row: {
           comment: string | null
           created_at: string
-          device_id: string
+          device_id: string | null
           drink: string
-          flavor: number
           flavor_tags: string[]
           hidden: boolean
           id: string
           ip_hash: string | null
           milk_amount: string | null
+          respondent_id: string | null
+          scores: Json
           survey_id: string
-          tactile: number
-          taste_balance: number
-          visual: number | null
         }
         Insert: {
           comment?: string | null
           created_at?: string
-          device_id: string
+          device_id?: string | null
           drink: string
-          flavor: number
           flavor_tags?: string[]
           hidden?: boolean
           id?: string
           ip_hash?: string | null
           milk_amount?: string | null
+          respondent_id?: string | null
+          scores: Json
           survey_id: string
-          tactile: number
-          taste_balance: number
-          visual?: number | null
         }
         Update: {
           comment?: string | null
           created_at?: string
-          device_id?: string
+          device_id?: string | null
           drink?: string
-          flavor?: number
           flavor_tags?: string[]
           hidden?: boolean
           id?: string
           ip_hash?: string | null
           milk_amount?: string | null
+          respondent_id?: string | null
+          scores?: Json
           survey_id?: string
-          tactile?: number
-          taste_balance?: number
-          visual?: number | null
         }
         Relationships: []
       }
-      tasting_surveys: {
+      surveys: {
         Row: {
-          calibration_id: string
+          audience: string
+          calibration_id: string | null
           closed_at: string | null
           closes_at: string
           created_at: string
           created_by: string
+          drinks: string[]
+          filter_calibration_id: string | null
           id: string
           max_responses: number
-          milk_espresso_g: number | null
-          milk_ml: number | null
+          note: string | null
+          outlet_id: string | null
+          recipe_id: string | null
           revision: number
-          serves_espresso: boolean
-          serves_milk: boolean
+          subject_type: string
           token: string
           updated_at: string
         }
         Insert: {
-          calibration_id: string
-          closed_at?: string | null
-          closes_at: string
-          created_at?: string
-          created_by?: string
-          id?: string
-          max_responses?: number
-          milk_espresso_g?: number | null
-          milk_ml?: number | null
-          revision?: number
-          serves_espresso?: boolean
-          serves_milk?: boolean
-          token?: string
-          updated_at?: string
-        }
-        Update: {
-          calibration_id?: string
+          audience: string
+          calibration_id?: string | null
           closed_at?: string | null
           closes_at?: string
           created_at?: string
           created_by?: string
+          drinks: string[]
+          filter_calibration_id?: string | null
           id?: string
           max_responses?: number
-          milk_espresso_g?: number | null
-          milk_ml?: number | null
+          note?: string | null
+          outlet_id?: string | null
+          recipe_id?: string | null
           revision?: number
-          serves_espresso?: boolean
-          serves_milk?: boolean
+          subject_type: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          calibration_id?: string | null
+          closed_at?: string | null
+          closes_at?: string
+          created_at?: string
+          created_by?: string
+          drinks?: string[]
+          filter_calibration_id?: string | null
+          id?: string
+          max_responses?: number
+          note?: string | null
+          outlet_id?: string | null
+          recipe_id?: string | null
+          revision?: number
+          subject_type?: string
           token?: string
           updated_at?: string
         }
@@ -3160,22 +3178,27 @@ export type Database = {
         Returns: string
       }
       create_recipe_version: { Args: { p_recipe_id: string }; Returns: string }
-      get_tasting_survey: { Args: { p_token: string }; Returns: Json }
-      submit_tasting_response: {
+      get_survey: { Args: { p_token: string; p_device_id?: string | null }; Returns: Json }
+      submit_survey_response: {
         Args: {
           p_comment: string | null
-          p_device_id: string
+          p_device_id: string | null
           p_drink: string
-          p_flavor: number
           p_flavor_tags: string[]
           p_ip_hash: string | null
           p_milk_amount: string | null
-          p_tactile: number
-          p_taste_balance: number
+          p_scores: Json
           p_token: string
-          p_visual: number | null
         }
         Returns: undefined
+      }
+      survey_invitee_status: {
+        Args: { p_survey_id: string }
+        Returns: { id: string; full_name: string; answered: boolean }[]
+      }
+      survey_outlet_people: {
+        Args: { p_outlet_id: string }
+        Returns: { id: string; full_name: string; role: Database["public"]["Enums"]["user_role"] }[]
       }
       get_invitation: {
         Args: { p_token: string }

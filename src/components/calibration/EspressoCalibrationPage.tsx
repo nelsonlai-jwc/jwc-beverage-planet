@@ -100,23 +100,6 @@ export async function EspressoCalibrationPage({
   const withDrinks = (list: typeof rows): CalibrationRecord[] =>
     (list ?? []).map((r) => ({ ...r, drinks: drinksOf.get(r.id) ?? [] }));
 
-  const todayIds = (rows ?? []).map((r) => r.id);
-  const { data: surveys } =
-    !custom && todayIds.length
-      ? await supabase
-          .from("tasting_surveys")
-          .select("id, calibration_id, token, serves_espresso, serves_milk, milk_espresso_g, milk_ml, closes_at, closed_at, max_responses, revision")
-          .in("calibration_id", todayIds)
-      : { data: [] };
-  const surveyIds = (surveys ?? []).map((s) => s.id);
-  const { data: responses } = surveyIds.length
-    ? await supabase
-        .from("tasting_responses")
-        .select("id, survey_id, drink, visual, taste_balance, tactile, flavor, flavor_tags, milk_amount, comment, hidden, created_at")
-        .in("survey_id", surveyIds)
-        .order("created_at")
-    : { data: [] };
-
   // Custom: equipment of every outlet, so the outlet goes in the name.
   const outletNames = new Map((outlets ?? []).map((o) => [o.id, o.name]));
   const named = <T extends { name: string; outlet_id: string }>(list: T[] | null) =>
@@ -153,8 +136,6 @@ export async function EspressoCalibrationPage({
           records={withDrinks(rows)}
           previous={withDrinks(previousRows)}
           shots={shots ?? []}
-          surveys={surveys ?? []}
-          responses={responses ?? []}
           creatorNames={new Map((people ?? []).map((p) => [p.id, p.full_name || p.email]))}
         />
       )}
