@@ -1,0 +1,429 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useState, type FormEvent } from "react";
+import { toast } from "@/components/ui/toast";
+import { errorText, inputClass, labelClass, mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
+import { useRouter } from "@/i18n/navigation";
+import { checkRange, daysOffRoast, type RangeCheck } from "@/lib/calibration/calc";
+import { filterExtractionYield, waterRatio } from "@/lib/calibration/filterCalc";
+import { createClient } from "@/lib/supabase/client";
+import type { Grinder, TasteBalance } from "../types";
+import { FilterBrewList } from "./FilterBrewList";
+import type { Brewer, FilterBrew, FilterRecord, FilterTarget, FilterValues } from "./types";
+
+type FormState = {
+  brewerId: string;
+  grinderId: string;
+  grind: string;
+  dose: string;
+  water: string;
+  temp: string;
+  bloomWater: string;
+  bloomSeconds: string;
+  pours: string;
+  time: string;
+  beverage: string;
+  tds: string;
+  roastDate: string;
+  balance: string;
+  notes: string;
+};
+
+const str = (value: number | string | null | undefined) => (value == null ? "" : String(value));
+
+function fromValues(v: Partial<FilterValues> & { roast_date?: string | null }, base: FormState): FormState {
+  return {
+    ...base,
+    grinderId: v.grinder_id ?? base.grinderId,
+    grind: v.grind_setting ?? "",
+    dose: str(v.dose_g),
+    water: str(v.water_g),
+    temp: str(v.water_temp_c),
+    bloomWater: str(v.bloom_water_g),
+    bloomSeconds: str(v.bloom_seconds),
+    pours: str(v.pour_count),
+    time: str(v.total_time_seconds),
+    beverage: str(v.beverage_g),
+    tds: str(v.tds_percent),
+    roastDate: v.roast_date !== undefined ? str(v.roast_date) : base.roastDate,
+    balance: v.taste_balance ?? "",
+    notes: v.taste_notes ?? "",
+  };
+}
+
+function optionalNumber(value: string): number | null | undefined {
+  if (!value.trim()) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
+
+export function FilterForm({
+  outletId,
+  date,
+  beanId,
+  record,
+  brewers,
+  grinders,
+  target,
+  yesterday,
+  brews,
+  brewerNames,
+  onClose,
+}: {
+  outletId: string;
+  date: string;
+  beanId: string;
+  record: FilterRecord | null;
+  /** New record: brewers still free for this bean today. Edit: the record's brewer. */
+  brewers: Brewer[];
+  grinders: Grinder[];
+  target: FilterTarget | undefined;
+  /** Yesterday's final records of this bean, by brewer id. */
+  yesterday: Map<string, FilterRecord>;
+  brews: FilterBrew[];
+  brewerNames: Map<string, string>;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Calibration");
+  const tf = useTranslations("FilterCalibration");
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(() => {
+    const base: FormState = {
+      brewerId: record?.brewer_id ?? brewers[0]?.id ?? "",
+      grinderId: record?.grinder_id ?? grinders[0]?.id ?? "",
+      grind: "",
+      dose: "",
+      water: "",
+      temp: "",
+      bloomWater: "",
+      bloomSeconds: "",
+      pours: "",
+      time: "",
+      beverage: "",
+      tds: "",
+      roastDate: "",
+      balance: "",
+      notes: "",
+    };
+    return record ? fromValues(record, base) : base;
+  });
+  const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
+
+  const grinder = grinders.find((g) => g.id === form.grinderId);
+  const prev = yesterday.get(form.brewerId);
+  const dose = Number(form.dose);
+  const water = Number(form.water);
+  const time = Number(form.time);
+  const ratio = waterRatio(dose, water);
+  const ey = filterExtractionYield(dose, Number(form.beverage) || null, Number(form.tds) || null);
+  const age = daysOffRoast(form.roastDate || null, date);
+  const grindNumber = Number(form.grind);
+  const grindOutOfRange =
+    !!form.grind.trim() &&
+    grinder?.scale_min != null &&
+    grinder?.scale_max != null &&
+    Number.isFinite(grindNumber) &&
+    (grindNumber < grinder.scale_min || grindNumber > grinder.scale_max);
+
+  function values(): (FilterValues & { roast_date: string | null }) | null {
+    const optional = {
+      water_temp_c: optionalNumber(form.temp),
+      bloom_water_g: optionalNumber(form.bloomWater),
+      bloom_seconds: optionalNumber(form.bloomSeconds),
+      pour_count: optionalNumber(form.pours),
+      beverage_g: optionalNumber(form.beverage),
+      tds_percent: optionalNumber(form.tds),
+    };
+    if (!(dose > 0 && water > 0 && time > 0) || !form.grind.trim() || !form.brewerId || !form.grinderId) {
+      setError(tf("invalid"));
+      return null;
+    }
+    const { water_temp_c: temp, pour_count: pours, tds_percent: tds, beverage_g: beverage } = optional;
+    if (
+      Object.values(optional).some((v) => v === undefined || (v !== null && v < 0)) ||
+      (temp != null && (temp < 70 || temp > 100)) ||
+      (pours != null && (pours < 1 || pours > 20 || !Number.isInteger(pours))) ||
+      (tds != null && (tds <= 0 || tds > 25)) ||
+      (beverage != null && beverage <= 0)
+    ) {
+      setError(tf("invalidOptional"));
+      return null;
+    }
+    if (form.roastDate && form.roastDate > date) {
+      setError(t("roastFuture"));
+      return null;
+    }
+    return {
+      coffee_bean_material_id: beanId,
+      brewer_id: form.brewerId,
+      grinder_id: form.grinderId,
+      grind_setting: form.grind.trim(),
+      dose_g: dose,
+      water_g: water,
+      water_temp_c: temp ?? null,
+      bloom_water_g: optional.bloom_water_g ?? null,
+      bloom_seconds: optional.bloom_seconds ?? null,
+      pour_count: pours ?? null,
+      total_time_seconds: time,
+      beverage_g: beverage ?? null,
+      tds_percent: tds ?? null,
+      taste_balance: form.balance || null,
+      taste_notes: form.notes.trim() || null,
+      roast_date: form.roastDate || null,
+    };
+  }
+
+  async function saveFinal(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    const v = values();
+    if (!v) return;
+    setBusy(true);
+    setError(null);
+    const supabase = createClient();
+    if (record) {
+      const { coffee_bean_material_id: _bean, brewer_id: _brewer, ...changes } = v;
+      void _bean;
+      void _brewer;
+      const { data, error: updateError } = await supabase
+        .from("filter_calibrations")
+        .update(changes)
+        .eq("id", record.id)
+        .eq("revision", record.revision)
+        .select("id");
+      if (updateError || !data?.length) {
+        setError(updateError ? t("saveFailed") : t("conflict"));
+        setBusy(false);
+        router.refresh();
+        return;
+      }
+    } else {
+      const { error: insertError } = await supabase
+        .from("filter_calibrations")
+        .insert({ ...v, outlet_id: outletId, business_date: date });
+      if (insertError) {
+        setError(insertError.code === "23505" ? tf("alreadyRecorded") : t("saveFailed"));
+        setBusy(false);
+        router.refresh();
+        return;
+      }
+    }
+    setBusy(false);
+    toast("saved");
+    onClose();
+    router.refresh();
+  }
+
+  async function saveBrew() {
+    if (busy) return;
+    const v = values();
+    if (!v) return;
+    setBusy(true);
+    setError(null);
+    const { roast_date: _roast, ...brew } = v;
+    void _roast;
+    const { error: insertError } = await createClient()
+      .from("filter_calibration_brews")
+      .insert({ ...brew, outlet_id: outletId, business_date: date });
+    setBusy(false);
+    if (insertError) {
+      setError(t("saveFailed"));
+      return;
+    }
+    toast("saved");
+    router.refresh();
+  }
+
+  const hint = (value: number | null, min: number, max: number, label: string) => {
+    const check = value != null ? checkRange(value, min, max) : null;
+    return (
+      <span className={check && check !== "OK" ? "font-semibold text-[#c4161c]" : ""}>
+        {label} {check ? rangeMark[check] : ""}
+      </span>
+    );
+  };
+
+  const numberField = (key: keyof FormState, label: string, opts: { required?: boolean; step?: string; hint?: React.ReactNode } = {}) => (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={`fc-${key}`} className={labelClass}>
+        {label}
+      </label>
+      <input
+        id={`fc-${key}`}
+        type="number"
+        inputMode="decimal"
+        min="0"
+        step={opts.step ?? "any"}
+        required={opts.required}
+        value={form[key]}
+        onChange={set(key)}
+        className={inputClass}
+      />
+      {opts.hint && <span className={mutedText}>{opts.hint}</span>}
+    </div>
+  );
+
+  return (
+    <form onSubmit={saveFinal} className="flex flex-col gap-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor="fc-brewer" className={labelClass}>
+            {tf("brewer")}
+          </label>
+          <select id="fc-brewer" value={form.brewerId} disabled={!!record} onChange={set("brewerId")} className={inputClass}>
+            {brewers.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor="fc-grinder" className={labelClass}>
+            {t("grinder")}
+          </label>
+          <select id="fc-grinder" value={form.grinderId} onChange={set("grinderId")} className={inputClass}>
+            {grinders.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {!record && prev && (
+        <button type="button" className={`${secondaryButton} self-start`} onClick={() => setForm(fromValues(prev, form))}>
+          {t("useYesterday")}
+        </button>
+      )}
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-sm font-semibold">{tf("recipe")}</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {numberField("dose", t("doseG"), {
+            required: true,
+            hint: target ? hint(dose || null, target.dose_min_g, target.dose_max_g, t("targetRange", { min: target.dose_min_g, max: target.dose_max_g, unit: "g" })) : undefined,
+          })}
+          {numberField("water", tf("waterG"), {
+            required: true,
+            hint: target
+              ? hint(ratio, target.ratio_min, target.ratio_max, tf("targetRatio", { min: target.ratio_min, max: target.ratio_max }))
+              : undefined,
+          })}
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor="fc-grind" className={labelClass}>
+              {t("grind")}
+            </label>
+            <input id="fc-grind" required maxLength={50} inputMode="decimal" value={form.grind} onChange={set("grind")} className={inputClass} />
+            {grinder?.scale_min != null && grinder?.scale_max != null && (
+              <span className={grindOutOfRange ? "text-[13px] font-semibold text-[#c4161c]" : mutedText}>
+                {grindOutOfRange
+                  ? t("grindOutOfRange", { min: grinder.scale_min, max: grinder.scale_max })
+                  : t("grindRange", { min: grinder.scale_min, max: grinder.scale_max })}
+              </span>
+            )}
+          </div>
+          {numberField("temp", tf("waterTempC"))}
+        </div>
+        <p className="text-sm">
+          <span className={mutedText}>{t("ratio")}: </span>
+          <span className="font-semibold">{ratio ? `1:${ratio}` : "—"}</span>
+        </p>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-sm font-semibold">{tf("pouring")}</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {numberField("bloomWater", tf("bloomWaterG"))}
+          {numberField("bloomSeconds", tf("bloomS"))}
+          {numberField("pours", tf("pours"), { step: "1" })}
+          {numberField("time", tf("totalTimeS"), {
+            required: true,
+            hint: target
+              ? hint(time || null, target.time_min_seconds, target.time_max_seconds, t("targetRange", { min: target.time_min_seconds, max: target.time_max_seconds, unit: "s" }))
+              : undefined,
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-sm font-semibold">{t("beanAndTaste")}</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {numberField("beverage", tf("beverageG"))}
+          {numberField("tds", t("tdsPercent"), { hint: ey != null ? t("eyValue", { value: ey }) : tf("eyHint") })}
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor="fc-roast" className={labelClass}>
+              {t("roastDate")}
+            </label>
+            <input id="fc-roast" type="date" max={date} value={form.roastDate} onChange={set("roastDate")} className={inputClass} />
+            {age != null && age >= 0 && <span className={mutedText}>{t("daysOffRoast", { days: age })}</span>}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className={labelClass}>{t("tasteBalance")}</span>
+          <div role="radiogroup" aria-label={t("tasteBalance")} className="flex flex-wrap gap-2">
+            {(["SOUR", "BALANCED", "BITTER"] as TasteBalance[]).map((b) => (
+              <button
+                key={b}
+                type="button"
+                role="radio"
+                aria-checked={form.balance === b}
+                onClick={() => setForm({ ...form, balance: form.balance === b ? "" : b })}
+                className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
+                  form.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
+                }`}
+              >
+                {t(`balance.${b}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="fc-notes" className={labelClass}>
+            {t("tasteNotes")}
+          </label>
+          <textarea
+            id="fc-notes"
+            rows={2}
+            maxLength={1000}
+            value={form.notes}
+            onChange={set("notes")}
+            className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
+          />
+        </div>
+      </fieldset>
+
+      {error && (
+        <p role="alert" className={errorText}>
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button type="submit" disabled={busy} className={primaryButton}>
+          {busy ? t("saving") : t("saveFinal")}
+        </button>
+        <button type="button" disabled={busy} onClick={saveBrew} className={secondaryButton}>
+          {tf("saveBrew")}
+        </button>
+        <button type="button" onClick={onClose} className={secondaryButton}>
+          {t("cancel")}
+        </button>
+      </div>
+      <p className={mutedText}>{tf("brewHint")}</p>
+
+      {brews.length > 0 && (
+        <FilterBrewList
+          brews={brews}
+          brewerNames={brewerNames}
+          onUse={(brew) => setForm(fromValues(brew, { ...form, brewerId: record ? form.brewerId : brew.brewer_id }))}
+        />
+      )}
+    </form>
+  );
+}

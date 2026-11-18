@@ -119,6 +119,11 @@
         "label": "Mesin espresso",
         "rule": "Mesin espresso yang digunakan di setiap cawangan.",
         "adminRule": "Tambah mesin espresso dan tetapkan setiap satu kepada cawangan. Mesin tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+      },
+      "brewers": {
+        "label": "Alat bancuhan",
+        "rule": "Alat bancuhan penapis yang digunakan di setiap cawangan.",
+        "adminRule": "Tambah alat pour-over atau batch dan tetapkan setiap satu kepada cawangan. Alat tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
       }
     },
     "values": {
@@ -225,7 +230,15 @@
         "NUMBER": "Semak nombor (mesin: 1–6 kumpulan, 80–100 °C, hingga 20 bar).",
         "SCALE_RANGE": "Skala 'Dari' mesti lebih kecil daripada 'Hingga'.",
         "DUPLICATE": "Cawangan ini sudah mempunyai peralatan dengan nama itu."
-      }
+      },
+      "brewerTypeLabel": "Jenis alat",
+      "brewerType": {
+        "POUR_OVER": "Pour-over",
+        "BATCH": "Pembancuh batch"
+      },
+      "brewerPlaceholder": "cth. V60 #1",
+      "noBrewers": "Belum ada alat bancuhan.",
+      "addBrewer": "Tambah alat bancuhan"
     }
   },
   "Invite": {
@@ -484,7 +497,41 @@
     "targetRange": "Sasaran {min}–{max} {unit}",
     "min": "Min",
     "max": "Maks",
-    "espressoNav": "Espresso"
+    "espressoNav": "Espresso",
+    "filterNav": "Filter",
+    "ratioWater": "Nisbah air (1:x)"
+  },
+  "FilterCalibration": {
+    "title": "Kalibrasi Filter",
+    "note": "Satu rekod muktamad bagi setiap biji kopi, setiap alat bancuhan, setiap cawangan, setiap hari.",
+    "noEquipment": "Cawangan ini memerlukan sekurang-kurangnya satu alat bancuhan dan satu pengisar. Admin menambahnya dalam Tetapan.",
+    "invalid": "Dos, air dan jumlah masa mesti lebih daripada sifar, dan alat bancuhan, pengisar serta tetapan kisaran diperlukan.",
+    "invalidOptional": "Semak nombor: air 70–100 °C, tuangan 1–20, TDS sehingga 25%, tiada nilai negatif.",
+    "alreadyRecorded": "Biji ini sudah mempunyai rekod pada alat bancuhan ini untuk hari ini (mungkin telah dipadam). Halaman telah dimuat semula.",
+    "brewer": "Alat bancuhan",
+    "recipe": "Resipi",
+    "water": "Air",
+    "waterG": "Air (g)",
+    "targetRatio": "Sasaran 1:{min}–1:{max}",
+    "waterTempC": "Suhu air (°C)",
+    "pouring": "Tuangan",
+    "bloom": "Bloom",
+    "bloomWaterG": "Air bloom (g)",
+    "bloomS": "Masa bloom (s)",
+    "pours": "Bilangan tuangan",
+    "pourCount": "Tuangan",
+    "totalTime": "Jumlah masa",
+    "totalTimeS": "Jumlah masa (s)",
+    "beverage": "Minuman",
+    "beverageG": "Berat minuman (g)",
+    "eyHint": "Masukkan berat minuman dan TDS untuk melihat hasil ekstraksi (EY).",
+    "saveBrew": "Simpan sebagai bancuhan ujian",
+    "brewHint": "Bancuhan ujian menyimpan setiap cubaan semasa melaras. Simpan bancuhan yang dipilih sebagai muktamad.",
+    "testBrews": "Bancuhan ujian ({count})",
+    "bloomShort": "bloom {water} g / {seconds} s",
+    "poursShort": "{count} tuangan",
+    "targetSummary": "Sasaran: dos {dose} g · nisbah 1:{ratio} · masa {time}",
+    "recordAnotherBrewer": "Rekod pada alat bancuhan lain"
   },
   "Users": {
     "title": "Pengguna",

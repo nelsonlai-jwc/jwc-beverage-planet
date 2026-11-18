@@ -130,6 +130,51 @@ export type Database = {
         }
         Relationships: []
       }
+      brewers: {
+        Row: {
+          brand: string | null
+          brewer_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          model: string | null
+          name: string
+          notes: string | null
+          outlet_id: string
+          revision: number
+          serial_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          brewer_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name: string
+          notes?: string | null
+          outlet_id: string
+          revision?: number
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          brewer_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name?: string
+          notes?: string | null
+          outlet_id?: string
+          revision?: number
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calibration_history: {
         Row: {
           calibration_id: string
@@ -483,6 +528,48 @@ export type Database = {
           updated_by?: string | null
           yield_max_g?: number
           yield_min_g?: number
+        }
+        Relationships: []
+      }
+      coffee_bean_filter_targets: {
+        Row: {
+          created_at: string
+          dose_max_g: number
+          dose_min_g: number
+          material_id: string
+          ratio_max: number
+          ratio_min: number
+          revision: number
+          time_max_seconds: number
+          time_min_seconds: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          dose_max_g: number
+          dose_min_g: number
+          material_id: string
+          ratio_max: number
+          ratio_min: number
+          revision?: number
+          time_max_seconds: number
+          time_min_seconds: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          dose_max_g?: number
+          dose_min_g?: number
+          material_id?: string
+          ratio_max?: number
+          ratio_min?: number
+          revision?: number
+          time_max_seconds?: number
+          time_min_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -852,6 +939,165 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      filter_calibration_brews: {
+        Row: {
+          beverage_g: number | null
+          bloom_seconds: number | null
+          bloom_water_g: number | null
+          brewer_id: string
+          business_date: string
+          coffee_bean_material_id: string
+          created_at: string
+          created_by: string
+          dose_g: number
+          grind_setting: string
+          grinder_id: string
+          id: string
+          outlet_id: string
+          pour_count: number | null
+          taste_balance: string | null
+          taste_notes: string | null
+          tds_percent: number | null
+          total_time_seconds: number
+          water_g: number
+          water_temp_c: number | null
+        }
+        Insert: {
+          beverage_g?: number | null
+          bloom_seconds?: number | null
+          bloom_water_g?: number | null
+          brewer_id: string
+          business_date?: string
+          coffee_bean_material_id: string
+          created_at?: string
+          created_by?: string
+          dose_g: number
+          grind_setting: string
+          grinder_id: string
+          id?: string
+          outlet_id: string
+          pour_count?: number | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          total_time_seconds: number
+          water_g: number
+          water_temp_c?: number | null
+        }
+        Update: {
+          beverage_g?: number | null
+          bloom_seconds?: number | null
+          bloom_water_g?: number | null
+          brewer_id?: string
+          business_date?: string
+          coffee_bean_material_id?: string
+          created_at?: string
+          created_by?: string
+          dose_g?: number
+          grind_setting?: string
+          grinder_id?: string
+          id?: string
+          outlet_id?: string
+          pour_count?: number | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          total_time_seconds?: number
+          water_g?: number
+          water_temp_c?: number | null
+        }
+        Relationships: []
+      }
+      filter_calibrations: {
+        Row: {
+          beverage_g: number | null
+          bloom_seconds: number | null
+          bloom_water_g: number | null
+          brewer_id: string
+          business_date: string
+          coffee_bean_material_id: string
+          created_at: string
+          created_by: string
+          delete_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dose_g: number
+          grind_setting: string
+          grinder_id: string
+          id: string
+          outlet_id: string
+          pour_count: number | null
+          revision: number
+          roast_date: string | null
+          taste_balance: string | null
+          taste_notes: string | null
+          tds_percent: number | null
+          total_time_seconds: number
+          updated_at: string
+          updated_by: string | null
+          water_g: number
+          water_temp_c: number | null
+        }
+        Insert: {
+          beverage_g?: number | null
+          bloom_seconds?: number | null
+          bloom_water_g?: number | null
+          brewer_id: string
+          business_date?: string
+          coffee_bean_material_id: string
+          created_at?: string
+          created_by?: string
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dose_g: number
+          grind_setting: string
+          grinder_id: string
+          id?: string
+          outlet_id: string
+          pour_count?: number | null
+          revision?: number
+          roast_date?: string | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          total_time_seconds: number
+          updated_at?: string
+          updated_by?: string | null
+          water_g: number
+          water_temp_c?: number | null
+        }
+        Update: {
+          beverage_g?: number | null
+          bloom_seconds?: number | null
+          bloom_water_g?: number | null
+          brewer_id?: string
+          business_date?: string
+          coffee_bean_material_id?: string
+          created_at?: string
+          created_by?: string
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dose_g?: number
+          grind_setting?: string
+          grinder_id?: string
+          id?: string
+          outlet_id?: string
+          pour_count?: number | null
+          revision?: number
+          roast_date?: string | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          total_time_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
+          water_g?: number
+          water_temp_c?: number | null
+        }
+        Relationships: []
       }
       grinders: {
         Row: {

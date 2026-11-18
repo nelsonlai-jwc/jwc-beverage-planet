@@ -105,8 +105,14 @@ export const navItems: readonly NavItem[] = [
     key: "calibration",
     icon: Coffee,
     roles: ["ADMIN", "MANAGER", "BARISTA"],
-    // Filter calibration is added here later.
-    children: [{ href: "/calibration", label: "Calibration.espressoNav", match: (p) => p.startsWith("/calibration") }],
+    children: [
+      {
+        href: "/calibration",
+        label: "Calibration.espressoNav",
+        match: (p) => p.startsWith("/calibration") && !p.startsWith("/calibration/filter"),
+      },
+      { href: "/calibration/filter", label: "Calibration.filterNav", match: (p) => p.startsWith("/calibration/filter") },
+    ],
   },
   {
     href: "/reports",

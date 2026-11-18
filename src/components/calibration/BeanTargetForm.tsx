@@ -6,26 +6,39 @@ import { toast } from "@/components/ui/toast";
 import { errorText, inputClass, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { FilterTarget } from "./filter/types";
 import type { BeanTarget } from "./types";
 
-const KEYS = [
+const ESPRESSO_KEYS = [
   ["dose_min_g", "dose_max_g", "doseG"],
   ["yield_min_g", "yield_max_g", "yieldG"],
   ["time_min_seconds", "time_max_seconds", "timeS"],
 ] as const;
+const FILTER_KEYS = [
+  ["dose_min_g", "dose_max_g", "doseG"],
+  ["ratio_min", "ratio_max", "ratioWater"],
+  ["time_min_seconds", "time_max_seconds", "timeS"],
+] as const;
 
-type TargetKey = (typeof KEYS)[number][0] | (typeof KEYS)[number][1];
+type TargetKey = string;
+type Target = Record<string, number> & { revision: number };
 
 /** Manager or Admin sets the target ranges of one coffee bean (all outlets). */
 export function BeanTargetForm({
   beanId,
   target,
   onClose,
+  filter = false,
 }: {
   beanId: string;
-  target: BeanTarget | undefined;
+  target: BeanTarget | FilterTarget | undefined;
   onClose: () => void;
+  /** Filter targets (dose, water ratio, time) instead of espresso ones. */
+  filter?: boolean;
 }) {
+  const KEYS = filter ? FILTER_KEYS : ESPRESSO_KEYS;
+  const table = filter ? "coffee_bean_filter_targets" : "coffee_bean_targets";
+  const current = target as Target | undefined;
   const t = useTranslations("Calibration");
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -33,8 +46,8 @@ export function BeanTargetForm({
   const [form, setForm] = useState<Record<TargetKey, string>>(() =>
     Object.fromEntries(
       KEYS.flatMap(([min, max]) => [
-        [min, target ? String(target[min]) : ""],
-        [max, target ? String(target[max]) : ""],
+        [min, current ? String(current[min]) : ""],
+        [max, current ? String(current[max]) : ""],
       ]),
     ) as Record<TargetKey, string>,
   );
@@ -48,14 +61,15 @@ export function BeanTargetForm({
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const { data, error: saveError } = target
-      ? await supabase
-          .from("coffee_bean_targets")
-          .update(values)
+    // Same shape in both tables apart from the second range.
+    const rows = supabase.from(table as "coffee_bean_targets");
+    const { data, error: saveError } = current
+      ? await rows
+          .update(values as never)
           .eq("material_id", beanId)
-          .eq("revision", target.revision)
+          .eq("revision", current.revision)
           .select("material_id")
-      : await supabase.from("coffee_bean_targets").insert({ ...values, material_id: beanId }).select("material_id");
+      : await rows.insert({ ...values, material_id: beanId } as never).select("material_id");
     setBusy(false);
     if (saveError || !data?.length) {
       setError(saveError && saveError.code !== "23505" ? t("saveFailed") : t("conflict"));
