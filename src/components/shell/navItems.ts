@@ -100,7 +100,14 @@ export const navItems: readonly NavItem[] = [
     ],
   },
   { href: "/menus", key: "menus", icon: BookOpenText, roles: ["ADMIN", "MANAGER", "BARISTA"] },
-  { href: "/calibration", key: "calibration", icon: Coffee, roles: ["ADMIN", "MANAGER", "BARISTA"] },
+  {
+    href: "/calibration",
+    key: "calibration",
+    icon: Coffee,
+    roles: ["ADMIN", "MANAGER", "BARISTA"],
+    // Filter calibration is added here later.
+    children: [{ href: "/calibration", label: "Calibration.espressoNav", match: (p) => p.startsWith("/calibration") }],
+  },
   {
     href: "/reports",
     key: "reports",

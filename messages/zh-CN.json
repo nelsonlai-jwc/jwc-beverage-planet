@@ -22,7 +22,7 @@
     "rawMaterials": "原料",
     "recipes": "饮料配方",
     "menus": "菜单",
-    "calibration": "每日咖啡校准",
+    "calibration": "咖啡校准",
     "reports": "报表",
     "feedback": "问题与建议",
     "settings": "设置"
@@ -220,7 +220,7 @@
       "disable": "停用",
       "disabledNotice": "已停用，新校准中不再显示。",
       "cancel": "取消",
-      "hint": "在每日咖啡校准选择咖啡机时，会自动填入常用水温和压力。",
+      "hint": "在 Espresso 校准选择咖啡机时，会自动填入常用水温和压力。",
       "errors": {
         "NUMBER": "请检查数字（咖啡机：1–6 头、80–100 °C、最多 20 bar）。",
         "SCALE_RANGE": "刻度最小值须小于最大值。",
@@ -396,7 +396,7 @@
     "failed": "出错了，请再试一次。"
   },
   "Calibration": {
-    "title": "每日咖啡校准",
+    "title": "Espresso 校准",
     "note": "每间分店每天、每支咖啡豆在每台磨豆机只有一份最终记录。",
     "noOutlet": "你的账号尚未分配分店。",
     "outlet": "分店",
@@ -483,7 +483,8 @@
     "targetInvalid": "请填写所有最小值和最大值；最小值须大于零且不大于最大值。",
     "targetRange": "目标 {min}–{max} {unit}",
     "min": "最小",
-    "max": "最大"
+    "max": "最大",
+    "espressoNav": "Espresso"
   },
   "Users": {
     "title": "用户",
@@ -645,7 +646,7 @@
       "abv": "ABV",
       "bx": "Bx",
       "percentHint": "0 至 100，未知请留空。",
-      "coffeeBean": "咖啡豆（用于每日咖啡校准）",
+      "coffeeBean": "咖啡豆（用于咖啡校准）",
       "unitCostPreview": "单位成本",
       "toBeFilled": "待填写",
       "packInvalid": "包装容量必须大于 0",
@@ -1525,6 +1526,110 @@
       "NOT_ALLOWED": "只有 Admin 可以修正翻译。",
       "UNKNOWN": "保存失败，请再试一次。"
     }
+  },
+  "Tasting": {
+    "title": "试饮问卷",
+    "notFound": "此问卷链接无效。",
+    "closed": "此问卷已结束，谢谢！",
+    "whichDrink": "你喝的是哪一杯？",
+    "drink": {
+      "ESPRESSO": "Espresso",
+      "MILK": "奶咖（拿铁）"
+    },
+    "milkRecipe": "配方：浓缩 {espresso} g + 牛奶 {milk} ml（比例 {ratio}）",
+    "milkRecipeShort": "浓缩 {espresso} g + 牛奶 {milk} ml",
+    "scaleHint": "按咖啡师大赛方式，每项 0–6 分，每格 0.5。",
+    "scale": {
+      "0": "不可接受",
+      "1": "可接受",
+      "2": "普通",
+      "3": "好",
+      "4": "很好",
+      "5": "优秀",
+      "6": "非凡"
+    },
+    "criteria": {
+      "visual": "外观",
+      "taste_balance": "味道平衡",
+      "tactile": "口感",
+      "flavor": "风味"
+    },
+    "help": {
+      "ESPRESSO": {
+        "taste_balance": "甜、酸、苦是否和谐",
+        "tactile": "醇厚度、质地与收尾",
+        "flavor": "风味的清晰度与质量",
+        "visual": ""
+      },
+      "MILK": {
+        "visual": "饮品外观与拉花",
+        "taste_balance": "牛奶与咖啡是否和谐",
+        "tactile": "奶泡质地与口感",
+        "flavor": "咖啡风味能否透过牛奶"
+      }
+    },
+    "milkAmount": "牛奶比例",
+    "milk": {
+      "TOO_MUCH": "牛奶太多",
+      "RIGHT": "刚好",
+      "TOO_LITTLE": "牛奶太少"
+    },
+    "milkAmountRequired": "请选择牛奶比例。",
+    "flavorTags": "尝到的风味（选填）",
+    "tags": {
+      "FRUITY": "果香",
+      "BERRY": "莓果",
+      "CITRUS": "柑橘",
+      "STONE_FRUIT": "核果",
+      "FLORAL": "花香",
+      "CHOCOLATE": "巧克力",
+      "CARAMEL": "焦糖",
+      "NUTTY": "坚果",
+      "SPICY": "香料",
+      "ROASTED": "烘烤"
+    },
+    "comment": "简短意见（选填）",
+    "submit": "提交",
+    "sending": "正在提交…",
+    "thanks": "谢谢！评分已提交。",
+    "rateAlso": "也为{drink}评分",
+    "errors": {
+      "INVALID": "请检查你的答案。",
+      "CLOSED": "此问卷已结束。",
+      "ALREADY": "你已用这支手机为这杯评过分。",
+      "TOO_MANY": "此网络提交次数过多，请稍后再试。",
+      "NOT_FOUND": "此问卷链接无效。",
+      "UNKNOWN": "无法提交，请重试。"
+    },
+    "openSurvey": "开放试饮问卷",
+    "openTitle": "试饮问卷：提供哪些饮品？",
+    "milkEspressoG": "拿铁中的浓缩 (g)",
+    "milkMl": "牛奶 (ml)",
+    "ratio": "比例 {ratio}",
+    "closesAt": "截止时间（马来西亚时间）",
+    "openHint": "任何人扫 QR code 即可免登入填写；每支手机每杯一次，最多 200 份。",
+    "openButton": "开放并产生 QR code",
+    "cancel": "取消",
+    "pickDrink": "请至少选择一种饮品。",
+    "milkRecipeRequired": "请填写浓缩和牛奶的分量。",
+    "closesFuture": "截止时间必须晚于现在。",
+    "saveFailed": "无法保存，请重试。",
+    "surveyTitle": "试饮问卷",
+    "openUntil": "开放至 {time}",
+    "closedBadge": "已结束",
+    "responses": "{count} 份回复",
+    "showQr": "显示 QR code",
+    "downloadQr": "下载 QR",
+    "copyLink": "复制链接",
+    "closeNow": "结束问卷",
+    "reopen": "重新开放",
+    "average": "平均",
+    "hide": "隐藏",
+    "unhide": "显示",
+    "hiddenNote": "已隐藏的回复不计入分数。",
+    "scanTitle": "扫码为今天的咖啡评分",
+    "closeQr": "关闭",
+    "tagsResult": "风味"
   },
   "Feedback": {
     "title": "问题与建议",
