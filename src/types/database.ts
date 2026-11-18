@@ -169,8 +169,83 @@ export type Database = {
           },
         ]
       }
+      calibration_shots: {
+        Row: {
+          basket_g: number | null
+          business_date: string
+          coffee_bean_material_id: string
+          created_at: string
+          created_by: string
+          dose_g: number
+          espresso_machine_id: string | null
+          extraction_time_seconds: number
+          grind_setting: string
+          grinder_id: string
+          id: string
+          outlet_id: string
+          preinfusion_seconds: number | null
+          pressure_bar: number | null
+          taste_balance: string | null
+          taste_notes: string | null
+          tds_percent: number | null
+          water_temp_c: number | null
+          yield_g: number
+        }
+        Insert: {
+          basket_g?: number | null
+          business_date?: string
+          coffee_bean_material_id: string
+          created_at?: string
+          created_by?: string
+          dose_g: number
+          espresso_machine_id?: string | null
+          extraction_time_seconds: number
+          grind_setting: string
+          grinder_id: string
+          id?: string
+          outlet_id: string
+          preinfusion_seconds?: number | null
+          pressure_bar?: number | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          water_temp_c?: number | null
+          yield_g: number
+        }
+        Update: {
+          basket_g?: number | null
+          business_date?: string
+          coffee_bean_material_id?: string
+          created_at?: string
+          created_by?: string
+          dose_g?: number
+          espresso_machine_id?: string | null
+          extraction_time_seconds?: number
+          grind_setting?: string
+          grinder_id?: string
+          id?: string
+          outlet_id?: string
+          preinfusion_seconds?: number | null
+          pressure_bar?: number | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          tds_percent?: number | null
+          water_temp_c?: number | null
+          yield_g?: number
+        }
+        Relationships: []
+      }
       calibrations: {
         Row: {
+          grinder_id: string
+          water_temp_c: number | null
+          pressure_bar: number | null
+          preinfusion_seconds: number | null
+          basket_g: number | null
+          tds_percent: number | null
+          taste_balance: string | null
+          espresso_machine_id: string | null
+          roast_date: string | null
           business_date: string
           coffee_bean_material_id: string
           created_at: string
@@ -190,6 +265,15 @@ export type Database = {
           yield_g: number
         }
         Insert: {
+          grinder_id: string
+          water_temp_c?: number | null
+          pressure_bar?: number | null
+          preinfusion_seconds?: number | null
+          basket_g?: number | null
+          tds_percent?: number | null
+          taste_balance?: string | null
+          espresso_machine_id?: string | null
+          roast_date?: string | null
           business_date?: string
           coffee_bean_material_id: string
           created_at?: string
@@ -209,6 +293,15 @@ export type Database = {
           yield_g: number
         }
         Update: {
+          grinder_id?: string
+          water_temp_c?: number | null
+          pressure_bar?: number | null
+          preinfusion_seconds?: number | null
+          basket_g?: number | null
+          tds_percent?: number | null
+          taste_balance?: string | null
+          espresso_machine_id?: string | null
+          roast_date?: string | null
           business_date?: string
           coffee_bean_material_id?: string
           created_at?: string
@@ -350,6 +443,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      coffee_bean_targets: {
+        Row: {
+          created_at: string
+          dose_max_g: number
+          dose_min_g: number
+          material_id: string
+          revision: number
+          time_max_seconds: number
+          time_min_seconds: number
+          updated_at: string
+          updated_by: string | null
+          yield_max_g: number
+          yield_min_g: number
+        }
+        Insert: {
+          created_at?: string
+          dose_max_g: number
+          dose_min_g: number
+          material_id: string
+          revision?: number
+          time_max_seconds: number
+          time_min_seconds: number
+          updated_at?: string
+          updated_by?: string | null
+          yield_max_g: number
+          yield_min_g: number
+        }
+        Update: {
+          created_at?: string
+          dose_max_g?: number
+          dose_min_g?: number
+          material_id?: string
+          revision?: number
+          time_max_seconds?: number
+          time_min_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
+          yield_max_g?: number
+          yield_min_g?: number
+        }
+        Relationships: []
       }
       content_translations: {
         Row: {
@@ -591,6 +726,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      espresso_machines: {
+        Row: {
+          brand: string | null
+          created_at: string
+          default_pressure_bar: number | null
+          default_water_temp_c: number | null
+          group_count: number | null
+          id: string
+          is_active: boolean
+          model: string | null
+          name: string
+          notes: string | null
+          outlet_id: string
+          revision: number
+          serial_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          default_pressure_bar?: number | null
+          default_water_temp_c?: number | null
+          group_count?: number | null
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name: string
+          notes?: string | null
+          outlet_id: string
+          revision?: number
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          default_pressure_bar?: number | null
+          default_water_temp_c?: number | null
+          group_count?: number | null
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name?: string
+          notes?: string | null
+          outlet_id?: string
+          revision?: number
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      grinders: {
+        Row: {
+          brand: string | null
+          burr_size_mm: number | null
+          burr_type: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          model: string | null
+          name: string
+          notes: string | null
+          outlet_id: string
+          revision: number
+          scale_max: number | null
+          scale_min: number | null
+          scale_type: string
+          serial_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          burr_size_mm?: number | null
+          burr_type?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name: string
+          notes?: string | null
+          outlet_id: string
+          revision?: number
+          scale_max?: number | null
+          scale_min?: number | null
+          scale_type?: string
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          burr_size_mm?: number | null
+          burr_type?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name?: string
+          notes?: string | null
+          outlet_id?: string
+          revision?: number
+          scale_max?: number | null
+          scale_min?: number | null
+          scale_type?: string
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       identity_access_log: {
         Row: {
