@@ -23,6 +23,7 @@
     "recipes": "饮料配方",
     "menus": "菜单",
     "calibration": "咖啡校准",
+    "surveys": "问卷",
     "reports": "报表",
     "feedback": "问题与建议",
     "settings": "设置"
@@ -1598,16 +1599,17 @@
     }
   },
   "Tasting": {
-    "title": "试饮问卷",
     "notFound": "此问卷链接无效。",
     "closed": "此问卷已结束，谢谢！",
     "whichDrink": "你喝的是哪一杯？",
     "drink": {
-      "ESPRESSO": "Espresso",
-      "MILK": "奶咖（拿铁）"
+      "BLACK_HOT": "黑咖啡（热）",
+      "BLACK_ICED": "黑咖啡（冰）",
+      "MILK_HOT": "牛奶咖啡（热）",
+      "MILK_ICED": "牛奶咖啡（冰）",
+      "FILTER": "手冲／滤泡咖啡",
+      "RECIPE": "饮品"
     },
-    "milkRecipe": "配方：浓缩 {espresso} g + 牛奶 {milk} ml（比例 {ratio}）",
-    "milkRecipeShort": "浓缩 {espresso} g + 牛奶 {milk} ml",
     "scaleHint": "按咖啡师大赛方式，每项 0–6 分，每格 0.5。",
     "scale": {
       "0": "不可接受",
@@ -1622,20 +1624,41 @@
       "visual": "外观",
       "taste_balance": "味道平衡",
       "tactile": "口感",
-      "flavor": "风味"
+      "flavor": "风味",
+      "aroma": "香气",
+      "aftertaste": "余韵",
+      "acidity": "酸质",
+      "body": "醇厚度",
+      "balance": "平衡度",
+      "overall": "整体"
     },
     "help": {
-      "ESPRESSO": {
-        "taste_balance": "甜、酸、苦是否和谐",
-        "tactile": "醇厚度、质地与收尾",
-        "flavor": "风味的清晰度与质量",
-        "visual": ""
-      },
       "MILK": {
         "visual": "饮品外观与拉花",
         "taste_balance": "牛奶与咖啡是否和谐",
         "tactile": "奶泡质地与口感",
         "flavor": "咖啡风味能否透过牛奶"
+      },
+      "BLACK": {
+        "taste_balance": "甜、酸、苦是否和谐",
+        "tactile": "醇厚度、质地与收尾",
+        "flavor": "风味的清晰度与质量"
+      },
+      "FILTER": {
+        "aroma": "咖啡粉和咖啡液的香气",
+        "flavor": "风味的清晰度与质量",
+        "aftertaste": "收尾的长度与舒适度",
+        "acidity": "酸的质量，不只是强弱",
+        "body": "口中的重量与质地",
+        "balance": "风味、酸质与醇厚度是否协调",
+        "overall": "对这杯的整体印象"
+      },
+      "RECIPE": {
+        "visual": "饮品出品时的外观",
+        "taste_balance": "甜、酸、苦等味道是否和谐",
+        "tactile": "质地与口感",
+        "flavor": "风味的清晰度与质量",
+        "overall": "对这杯饮品的整体印象"
       }
     },
     "milkAmount": "牛奶比例",
@@ -1671,35 +1694,12 @@
       "NOT_FOUND": "此问卷链接无效。",
       "UNKNOWN": "无法提交，请重试。"
     },
-    "openSurvey": "开放试饮问卷",
-    "openTitle": "试饮问卷：提供哪些饮品？",
-    "milkEspressoG": "拿铁中的浓缩 (g)",
-    "milkMl": "牛奶 (ml)",
-    "ratio": "比例 {ratio}",
-    "closesAt": "截止时间（马来西亚时间）",
-    "openHint": "任何人扫 QR code 即可免登入填写；每支手机每杯一次，最多 200 份。",
-    "openButton": "开放并产生 QR code",
-    "cancel": "取消",
-    "pickDrink": "请至少选择一种饮品。",
-    "milkRecipeRequired": "请填写浓缩和牛奶的分量。",
-    "closesFuture": "截止时间必须晚于现在。",
-    "saveFailed": "无法保存，请重试。",
-    "surveyTitle": "试饮问卷",
-    "openUntil": "开放至 {time}",
-    "closedBadge": "已结束",
-    "responses": "{count} 份回复",
-    "showQr": "显示 QR code",
-    "downloadQr": "下载 QR",
-    "copyLink": "复制链接",
-    "closeNow": "结束问卷",
-    "reopen": "重新开放",
-    "average": "平均",
-    "hide": "隐藏",
-    "unhide": "显示",
-    "hiddenNote": "已隐藏的回复不计入分数。",
-    "scanTitle": "扫码为今天的咖啡评分",
-    "closeQr": "关闭",
-    "tagsResult": "风味"
+    "subjectTitle": {
+      "ESPRESSO": "Espresso 试饮",
+      "FILTER": "Filter 咖啡试饮",
+      "RECIPE": "饮品试饮"
+    },
+    "opinion": "你的意见（选填）"
   },
   "Feedback": {
     "title": "问题与建议",
@@ -1897,5 +1897,99 @@
     "sortBy": "排序",
     "sortNewest": "最新",
     "sortPriority": "优先度"
+  },
+  "Surveys": {
+    "title": "问卷",
+    "note": "填写等你回答的问卷；Manager 和 Admin 可以建立问卷并查看结果。",
+    "pendingTitle": "待填问卷（{count}）",
+    "noPending": "目前没有待填的问卷。",
+    "answer": "填写",
+    "closesAt": "截止 {time}",
+    "runTitle": "我管理的问卷",
+    "newSurvey": "建立问卷",
+    "noRun": "还没有问卷。",
+    "openUntil": "开放至 {time}",
+    "closed": "已结束",
+    "answers": "{count} 份回答",
+    "answersOf": "{count} / {max} 份回答",
+    "results": "查看结果",
+    "back": "返回问卷",
+    "subject": {
+      "ESPRESSO": "Espresso",
+      "FILTER": "Filter",
+      "RECIPE": "饮品配方"
+    },
+    "audience": {
+      "OUTLET": "分店",
+      "PUBLIC": "公开（QR）"
+    },
+    "noPermission": "只有 Manager 和 Admin 可以建立问卷。",
+    "newTitle": "建立问卷",
+    "newNote": "选择要评分的对象和谁来填。分数 0–6 分，每格 0.5。",
+    "subjectLabel": "评分对象",
+    "subjectHint": {
+      "ESPRESSO": "Espresso 校准纪录：黑咖啡用 Espresso 评分表，牛奶咖啡用 Milk Drinks 评分表。",
+      "FILTER": "Filter 校准纪录，用 Brewers Cup 的 7 项评分。",
+      "RECIPE": "分店已核准的饮品配方：外观、味道平衡、口感、风味、整体，再加一栏意见。"
+    },
+    "record": "校准纪录",
+    "recordHint": "你分店最近 14 天的 Daily 纪录，以及你自己的 Custom 纪录。",
+    "noRecords": "目前没有可以开问卷的纪录。",
+    "customRecord": "Custom",
+    "choose": "请选择…",
+    "outlet": "分店",
+    "recipe": "饮品配方",
+    "noRecipes": "这间分店没有已核准的饮品配方。",
+    "drinksLabel": "要评分的饮品",
+    "drinksHint": "只能选这份纪录里有记录的饮品类型。",
+    "audienceLabel": "谁可以填",
+    "audienceHint": {
+      "OUTLET": "被勾选的人登入后会在「问卷」看到；结果会显示谁还没填。",
+      "PUBLIC": "任何人扫 QR 码免登入就能填；每支手机每种饮品一次，最多 200 份。"
+    },
+    "peopleLabel": "要填的人（{count}）",
+    "tickAll": "全选",
+    "tickNone": "全不选",
+    "loading": "载入中…",
+    "noPeople": "这间分店没有在职的人员。",
+    "role": {
+      "ADMIN": "Admin",
+      "MANAGER": "Manager",
+      "BARISTA": "Barista"
+    },
+    "deadline": "截止时间（马来西亚时间，选填）",
+    "deadlineHint": "没设的话，24 小时后自动关闭。",
+    "noteLabel": "给填写者的说明（选填）",
+    "create": "建立问卷",
+    "cancel": "取消",
+    "pickSubject": "请选择评分对象。",
+    "pickDrinks": "请至少选择一种饮品。",
+    "pickOutlet": "请选择分店。",
+    "pickPeople": "请至少勾选一个人。",
+    "deadlineFuture": "截止时间必须晚于现在。",
+    "saveFailed": "无法保存，请重试。",
+    "notFound": "找不到这份问卷。",
+    "resultsTitle": "问卷结果",
+    "closeNow": "结束问卷",
+    "reopen": "重新开放",
+    "publicHint": "显示或打印 QR 码，任何人免登入就能填。",
+    "showQr": "显示 QR 码",
+    "downloadQr": "下载 QR",
+    "copyLink": "复制链接",
+    "notFilledTitle": "还没填：{count} / {total} 人",
+    "filled": "已填",
+    "average": "平均",
+    "flavours": "风味",
+    "allAnswers": "所有回答",
+    "noAnswers": "还没有回答。",
+    "hide": "隐藏",
+    "unhide": "显示",
+    "hiddenNote": "已隐藏的回答不计入平均分。",
+    "scanTitle": {
+      "ESPRESSO": "扫码为 Espresso 评分",
+      "FILTER": "扫码为 Filter 咖啡评分",
+      "RECIPE": "扫码为饮品评分"
+    },
+    "closeQr": "关闭"
   }
 }

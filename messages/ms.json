@@ -23,6 +23,7 @@
     "recipes": "Resipi Minuman",
     "menus": "Menu",
     "calibration": "Kalibrasi Kopi",
+    "surveys": "Soal Selidik",
     "reports": "Laporan",
     "feedback": "Maklum Balas",
     "settings": "Tetapan"
@@ -1598,16 +1599,17 @@
     }
   },
   "Tasting": {
-    "title": "Soal selidik rasa",
     "notFound": "Pautan soal selidik ini tidak sah.",
     "closed": "Soal selidik ini telah ditutup. Terima kasih!",
     "whichDrink": "Minuman yang mana anda rasa?",
     "drink": {
-      "ESPRESSO": "Espresso",
-      "MILK": "Minuman susu (latte)"
+      "BLACK_HOT": "Kopi hitam (Panas)",
+      "BLACK_ICED": "Kopi hitam (Ais)",
+      "MILK_HOT": "Kopi susu (Panas)",
+      "MILK_ICED": "Kopi susu (Ais)",
+      "FILTER": "Kopi tapis",
+      "RECIPE": "Minuman"
     },
-    "milkRecipe": "Resipi: espresso {espresso} g + susu {milk} ml (nisbah {ratio})",
-    "milkRecipeShort": "espresso {espresso} g + susu {milk} ml",
     "scaleHint": "Skor 0–6 dalam langkah 0.5, seperti pertandingan barista.",
     "scale": {
       "0": "Tidak boleh diterima",
@@ -1622,20 +1624,41 @@
       "visual": "Visual",
       "taste_balance": "Keseimbangan rasa",
       "tactile": "Taktil",
-      "flavor": "Perisa"
+      "flavor": "Perisa",
+      "aroma": "Aroma",
+      "aftertaste": "Rasa akhir",
+      "acidity": "Keasidan",
+      "body": "Badan",
+      "balance": "Keseimbangan",
+      "overall": "Keseluruhan"
     },
     "help": {
-      "ESPRESSO": {
-        "taste_balance": "Manis, masam dan pahit seimbang",
-        "tactile": "Badan, tekstur dan kesudahan di mulut",
-        "flavor": "Kejelasan dan kualiti perisa",
-        "visual": ""
-      },
       "MILK": {
         "visual": "Rupa minuman dan seni latte",
         "taste_balance": "Susu dan espresso seimbang",
         "tactile": "Tekstur susu dan rasa di mulut",
         "flavor": "Perisa kopi terasa melalui susu"
+      },
+      "BLACK": {
+        "taste_balance": "Manis, masam dan pahit seimbang",
+        "tactile": "Badan, tekstur dan kesudahan di mulut",
+        "flavor": "Kejelasan dan kualiti perisa"
+      },
+      "FILTER": {
+        "aroma": "Bau kopi, kering dan selepas dibancuh",
+        "flavor": "Kejelasan dan kualiti perisa",
+        "aftertaste": "Berapa lama dan sedap kesudahannya",
+        "acidity": "Kualiti kecerahan, bukan sekadar banyaknya",
+        "body": "Berat dan tekstur di mulut",
+        "balance": "Sejauh mana perisa, keasidan dan badan sepadan",
+        "overall": "Tanggapan keseluruhan anda terhadap cawan ini"
+      },
+      "RECIPE": {
+        "visual": "Rupa minuman semasa dihidang",
+        "taste_balance": "Manis, masam, pahit dan rasa lain seimbang",
+        "tactile": "Tekstur dan rasa di mulut",
+        "flavor": "Kejelasan dan kualiti perisa",
+        "overall": "Tanggapan keseluruhan anda terhadap minuman ini"
       }
     },
     "milkAmount": "Nisbah susu",
@@ -1671,35 +1694,12 @@
       "NOT_FOUND": "Pautan soal selidik ini tidak sah.",
       "UNKNOWN": "Tidak dapat menghantar. Sila cuba lagi."
     },
-    "openSurvey": "Buka soal selidik rasa",
-    "openTitle": "Soal selidik rasa: minuman apa dihidangkan?",
-    "milkEspressoG": "Espresso dalam latte (g)",
-    "milkMl": "Susu (ml)",
-    "ratio": "Nisbah {ratio}",
-    "closesAt": "Ditutup pada (waktu Malaysia)",
-    "openHint": "Sesiapa dengan kod QR boleh menjawab tanpa log masuk; satu jawapan setiap telefon setiap minuman, hingga 200 jawapan.",
-    "openButton": "Buka dan cipta kod QR",
-    "cancel": "Batal",
-    "pickDrink": "Pilih sekurang-kurangnya satu minuman.",
-    "milkRecipeRequired": "Masukkan jumlah espresso dan susu.",
-    "closesFuture": "Masa tutup mesti pada masa hadapan.",
-    "saveFailed": "Tidak dapat menyimpan. Sila cuba lagi.",
-    "surveyTitle": "Soal selidik rasa",
-    "openUntil": "Dibuka hingga {time}",
-    "closedBadge": "Ditutup",
-    "responses": "{count} jawapan",
-    "showQr": "Papar kod QR",
-    "downloadQr": "Muat turun QR",
-    "copyLink": "Salin pautan",
-    "closeNow": "Tutup soal selidik",
-    "reopen": "Buka semula",
-    "average": "Purata",
-    "hide": "Sembunyi",
-    "unhide": "Papar",
-    "hiddenNote": "Jawapan tersembunyi tidak dikira dalam skor.",
-    "scanTitle": "Imbas untuk menilai kopi hari ini",
-    "closeQr": "Tutup",
-    "tagsResult": "Perisa"
+    "subjectTitle": {
+      "ESPRESSO": "Rasa espresso",
+      "FILTER": "Rasa kopi tapis",
+      "RECIPE": "Rasa minuman"
+    },
+    "opinion": "Pendapat anda (pilihan)"
   },
   "Feedback": {
     "title": "Maklum Balas",
@@ -1897,5 +1897,99 @@
     "sortBy": "Susun ikut",
     "sortNewest": "Terbaharu",
     "sortPriority": "Keutamaan"
+  },
+  "Surveys": {
+    "title": "Soal Selidik",
+    "note": "Jawab soal selidik yang menunggu anda; Pengurus dan Admin membuka soal selidik dan membaca keputusan.",
+    "pendingTitle": "Menunggu jawapan anda ({count})",
+    "noPending": "Tiada soal selidik menunggu anda.",
+    "answer": "Jawab",
+    "closesAt": "Ditutup {time}",
+    "runTitle": "Soal selidik anda",
+    "newSurvey": "Soal selidik baharu",
+    "noRun": "Belum ada soal selidik.",
+    "openUntil": "Dibuka hingga {time}",
+    "closed": "Ditutup",
+    "answers": "{count} jawapan",
+    "answersOf": "{count} daripada {max} jawapan",
+    "results": "Keputusan",
+    "back": "Kembali ke soal selidik",
+    "subject": {
+      "ESPRESSO": "Espresso",
+      "FILTER": "Tapis",
+      "RECIPE": "Resipi minuman"
+    },
+    "audience": {
+      "OUTLET": "Kakitangan cawangan",
+      "PUBLIC": "Awam (QR)"
+    },
+    "noPermission": "Hanya Pengurus dan Admin boleh membuka soal selidik.",
+    "newTitle": "Soal selidik baharu",
+    "newNote": "Pilih apa yang dinilai dan siapa menjawab. Skor 0–6 dalam langkah 0.5.",
+    "subjectLabel": "Apa yang dinilai",
+    "subjectHint": {
+      "ESPRESSO": "Rekod kalibrasi espresso: kopi hitam guna borang espresso, kopi susu guna borang minuman susu.",
+      "FILTER": "Rekod kalibrasi tapis, dinilai pada 7 perkara Brewers Cup.",
+      "RECIPE": "Resipi minuman cawangan yang diluluskan: visual, keseimbangan rasa, taktil, perisa, keseluruhan dan pendapat."
+    },
+    "record": "Rekod kalibrasi",
+    "recordHint": "Rekod Harian cawangan anda dalam 14 hari lepas, dan rekod Tersuai anda sendiri.",
+    "noRecords": "Belum ada rekod untuk soal selidik.",
+    "customRecord": "Tersuai",
+    "choose": "Pilih…",
+    "outlet": "Cawangan",
+    "recipe": "Resipi minuman",
+    "noRecipes": "Cawangan ini tiada resipi minuman yang diluluskan.",
+    "drinksLabel": "Minuman untuk dinilai",
+    "drinksHint": "Hanya jenis minuman dalam rekod ini boleh dipilih.",
+    "audienceLabel": "Siapa menjawab",
+    "audienceHint": {
+      "OUTLET": "Kakitangan yang ditanda melihatnya dalam Soal Selidik selepas log masuk. Keputusan menunjukkan siapa belum menjawab.",
+      "PUBLIC": "Sesiapa dengan kod QR menjawab tanpa log masuk; satu jawapan setiap telefon setiap minuman, hingga 200 jawapan."
+    },
+    "peopleLabel": "Siapa perlu menjawab ({count})",
+    "tickAll": "Tanda semua",
+    "tickNone": "Nyahtanda semua",
+    "loading": "Memuatkan…",
+    "noPeople": "Tiada kakitangan aktif di cawangan ini.",
+    "role": {
+      "ADMIN": "Admin",
+      "MANAGER": "Pengurus",
+      "BARISTA": "Barista"
+    },
+    "deadline": "Tarikh akhir (waktu Malaysia, pilihan)",
+    "deadlineHint": "Tanpa tarikh akhir, soal selidik ditutup 24 jam selepas dibuka.",
+    "noteLabel": "Nota untuk penjawab (pilihan)",
+    "create": "Buka soal selidik",
+    "cancel": "Batal",
+    "pickSubject": "Pilih apa yang dinilai.",
+    "pickDrinks": "Pilih sekurang-kurangnya satu minuman.",
+    "pickOutlet": "Pilih cawangan.",
+    "pickPeople": "Tanda sekurang-kurangnya seorang.",
+    "deadlineFuture": "Tarikh akhir mesti pada masa hadapan.",
+    "saveFailed": "Tidak dapat menyimpan. Sila cuba lagi.",
+    "notFound": "Soal selidik ini tidak dijumpai.",
+    "resultsTitle": "Keputusan soal selidik",
+    "closeNow": "Tutup soal selidik",
+    "reopen": "Buka semula",
+    "publicHint": "Tunjuk atau cetak kod QR; sesiapa boleh menjawab tanpa log masuk.",
+    "showQr": "Tunjuk kod QR",
+    "downloadQr": "Muat turun QR",
+    "copyLink": "Salin pautan",
+    "notFilledTitle": "Belum menjawab: {count} daripada {total}",
+    "filled": "Sudah menjawab",
+    "average": "Purata",
+    "flavours": "Perisa",
+    "allAnswers": "Semua jawapan",
+    "noAnswers": "Belum ada jawapan.",
+    "hide": "Sembunyi",
+    "unhide": "Tunjuk",
+    "hiddenNote": "Jawapan tersembunyi tidak dikira dalam purata.",
+    "scanTitle": {
+      "ESPRESSO": "Imbas untuk menilai espresso",
+      "FILTER": "Imbas untuk menilai kopi tapis",
+      "RECIPE": "Imbas untuk menilai minuman"
+    },
+    "closeQr": "Tutup"
   }
 }

@@ -20,7 +20,6 @@ import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "./BeanTargetForm";
 import { CalibrationForm } from "./CalibrationForm";
 import { ShotList } from "./ShotList";
-import { SurveyPanel, type Survey, type SurveyResponse } from "@/components/tasting/SurveyPanel";
 import {
   DRINK_TYPES,
   equipmentName,
@@ -52,8 +51,6 @@ export function CalibrationBoard({
   records,
   previous,
   shots,
-  surveys,
-  responses,
   creatorNames,
 }: {
   purpose: Purpose;
@@ -75,8 +72,6 @@ export function CalibrationBoard({
   /** Daily: yesterday's records. Custom: my last record of each bean before this date. */
   previous: CalibrationRecord[];
   shots: CalibrationShot[];
-  surveys: Survey[];
-  responses: SurveyResponse[];
   /** Custom (Super Admin): who made each record. */
   creatorNames: Map<string, string>;
 }) {
@@ -287,7 +282,6 @@ export function CalibrationBoard({
                 const drinks = DRINK_TYPES.map((type) => record.drinks.find((d) => d.drink_type === type)).filter(
                   (d): d is CalibrationRecord["drinks"][number] => !!d,
                 );
-                const milk = drinks.find((d) => d.drink_type.startsWith("MILK")) ?? drinks[0];
                 return (
                   <div key={record.id} className="flex flex-col gap-3 rounded-[12px] border border-black/15 p-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -395,21 +389,6 @@ export function CalibrationBoard({
                         )}
                       </div>
                     )}
-
-                    {!custom && !isOpen && milk && (() => {
-                      const survey = surveys.find((s) => s.calibration_id === record.id) ?? null;
-                      return deleted && !survey ? null : (
-                        <SurveyPanel
-                          calibrationId={record.id}
-                          date={date}
-                          yieldG={milk.yield_g}
-                          survey={survey}
-                          responses={survey ? responses.filter((r) => r.survey_id === survey.id) : []}
-                          canManage={canManage}
-                          editable={editable && !deleted}
-                        />
-                      );
-                    })()}
 
                     {deleteFor === record.id && (
                       <div className="flex flex-col gap-2">

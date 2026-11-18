@@ -1,4 +1,4 @@
-import { BarChart3, BookOpenText, Coffee, CupSoda, MessageSquareText, Package, Settings, Users } from "lucide-react";
+import { BarChart3, BookOpenText, ClipboardList, Coffee, CupSoda, MessageSquareText, Package, Settings, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "@/lib/auth/currentUser";
 
@@ -20,7 +20,16 @@ export type NavChild = {
   show?: (viewer: NavViewer) => boolean;
 };
 
-export type NavKey = "users" | "rawMaterials" | "recipes" | "menus" | "calibration" | "reports" | "feedback" | "settings";
+export type NavKey =
+  | "users"
+  | "rawMaterials"
+  | "recipes"
+  | "menus"
+  | "calibration"
+  | "surveys"
+  | "reports"
+  | "feedback"
+  | "settings";
 
 export type NavItem = {
   href: string;
@@ -120,6 +129,7 @@ export const navItems: readonly NavItem[] = [
       },
     ],
   },
+  { href: "/surveys", key: "surveys", icon: ClipboardList, roles: ["ADMIN", "MANAGER", "BARISTA"] },
   {
     href: "/reports",
     key: "reports",
