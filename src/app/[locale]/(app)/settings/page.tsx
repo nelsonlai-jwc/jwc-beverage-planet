@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
+import { EquipmentEditor, type EquipmentItem } from "@/components/settings/EquipmentEditor";
 import { Chevron, ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { settingGroups } from "@/lib/settings/defaults";
@@ -18,11 +19,13 @@ export default async function SettingsPage({
   setRequestLocale(locale);
   const t = await getTranslations("Settings");
   const supabase = await createClient();
-  const [user, labels, { data: types }, { data: outlets }] = await Promise.all([
+  const [user, labels, { data: types }, { data: outlets }, { data: grinders }, { data: machines }] = await Promise.all([
     getCurrentUser(),
     getOptionLabels(),
     supabase.from("material_types").select("id, name, is_active").order("sort_order"),
     supabase.from("outlets").select("id, code, name, is_active").order("sort_order"),
+    supabase.from("grinders").select("*").order("name"),
+    supabase.from("espresso_machines").select("*").order("name"),
   ]);
   const isAdmin = user?.role === "ADMIN";
 
@@ -37,6 +40,41 @@ export default async function SettingsPage({
     if (items.length) return items.map((i) => optionName(i, locale));
     return fallback.map((value) => (t.has(`values.${value}`) ? t(`values.${value}`) : value));
   };
+
+  const grinderItems: EquipmentItem[] = (grinders ?? []).map((g) => ({
+    id: g.id,
+    outletId: g.outlet_id,
+    name: g.name,
+    brand: g.brand,
+    model: g.model,
+    serialNumber: g.serial_number,
+    notes: g.notes,
+    active: g.is_active,
+    burrType: g.burr_type,
+    burrSizeMm: g.burr_size_mm,
+    scaleType: g.scale_type,
+    scaleMin: g.scale_min,
+    scaleMax: g.scale_max,
+  }));
+  const machineItems: EquipmentItem[] = (machines ?? []).map((m) => ({
+    id: m.id,
+    outletId: m.outlet_id,
+    name: m.name,
+    brand: m.brand,
+    model: m.model,
+    serialNumber: m.serial_number,
+    notes: m.notes,
+    active: m.is_active,
+    groupCount: m.group_count,
+    defaultWaterTempC: m.default_water_temp_c,
+    defaultPressureBar: m.default_pressure_bar,
+  }));
+  const outletOptions = (outlets ?? []).filter((o) => o.is_active).map((o) => ({ id: o.id, name: o.name }));
+  const outletName = new Map((outlets ?? []).map((o) => [o.id, o.name]));
+  const equipmentCards = [
+    { key: "grinders", kind: "GRINDER" as const, items: grinderItems },
+    { key: "machines", kind: "MACHINE" as const, items: machineItems },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,6 +130,38 @@ export default async function SettingsPage({
             </details>
           );
         })}
+        {equipmentCards.map((card) => (
+          <details
+            key={card.key}
+            aria-labelledby={`setting-${card.key}`}
+            className="group flex flex-col rounded-[20px] bg-white p-5 sm:p-6 [&[open]>summary]:mb-3"
+          >
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+              <div className="flex flex-col gap-1">
+                <h2 id={`setting-${card.key}`} className="text-base font-semibold">
+                  {t(`groups.${card.key}.label`)}
+                </h2>
+                <p className="text-[13px] text-[#3d3f3a]">
+                  {isAdmin ? t(`groups.${card.key}.adminRule`) : t(`groups.${card.key}.rule`)}
+                </p>
+              </div>
+              <Chevron className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            {isAdmin ? (
+              <EquipmentEditor kind={card.kind} items={card.items} outlets={outletOptions} />
+            ) : (
+              <ul className="flex flex-wrap gap-2">
+                {card.items
+                  .filter((item) => item.active)
+                  .map((item) => (
+                    <li key={item.id} className="rounded-full border-[1.5px] border-black px-3 py-1 text-sm">
+                      {item.name} · {outletName.get(item.outletId) ?? "—"}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </details>
+        ))}
       </div>
     </div>
   );

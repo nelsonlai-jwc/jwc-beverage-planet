@@ -106,6 +106,16 @@
         "label": "Bahasa",
         "rule": "Bahasa Inggeris, Bahasa Cina Ringkas dan Bahasa Melayu diaktifkan.",
         "adminRule": "Tetap: Bahasa Inggeris, Bahasa Cina Ringkas dan Bahasa Melayu."
+      },
+      "grinders": {
+        "label": "Pengisar",
+        "rule": "Pengisar yang digunakan di setiap cawangan.",
+        "adminRule": "Tambah pengisar dan tetapkan setiap satu kepada cawangan. Pengisar tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+      },
+      "machines": {
+        "label": "Mesin espresso",
+        "rule": "Mesin espresso yang digunakan di setiap cawangan.",
+        "adminRule": "Tambah mesin espresso dan tetapkan setiap satu kepada cawangan. Mesin tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
       }
     },
     "values": {
@@ -169,6 +179,49 @@
         "INVALID": "Nama itu terlalu panjang.",
         "NOT_ALLOWED": "Hanya Admin boleh mengubah ini.",
         "UNKNOWN": "Berlaku ralat. Sila cuba lagi."
+      }
+    },
+    "equipment": {
+      "name": "Nama",
+      "outlet": "Cawangan",
+      "brand": "Jenama",
+      "model": "Model",
+      "serial": "Nombor siri",
+      "notes": "Nota",
+      "burrType": "Jenis burr",
+      "burr": {
+        "FLAT": "Rata",
+        "CONICAL": "Kon",
+        "OTHER": "Lain-lain"
+      },
+      "burrSize": "Saiz burr (mm)",
+      "scaleType": "Pelarasan kisaran",
+      "scale": {
+        "STEPPED": "Berperingkat",
+        "STEPLESS": "Tanpa peringkat"
+      },
+      "scaleRange": "Julat skala kisaran",
+      "scaleMin": "Dari",
+      "scaleMax": "Hingga",
+      "scaleShort": "skala {min}–{max}",
+      "groupCount": "Kumpulan",
+      "groupsShort": "{count} kumpulan",
+      "defaultTemp": "Suhu air biasa (°C)",
+      "defaultPressure": "Tekanan biasa (bar)",
+      "grinderPlaceholder": "cth. Pengisar 1",
+      "machinePlaceholder": "cth. Mesin utama",
+      "addGrinder": "Tambah pengisar",
+      "addMachine": "Tambah mesin espresso",
+      "noGrinders": "Belum ada pengisar.",
+      "noMachines": "Belum ada mesin espresso.",
+      "disable": "Nyahaktif",
+      "disabledNotice": "Dinyahaktifkan. Tidak lagi dipaparkan dalam kalibrasi baharu.",
+      "cancel": "Batal",
+      "hint": "Suhu dan tekanan biasa diisi apabila mesin dipilih dalam Kalibrasi Kopi Harian.",
+      "errors": {
+        "NUMBER": "Semak nombor (mesin: 1–6 kumpulan, 80–100 °C, hingga 20 bar).",
+        "SCALE_RANGE": "Skala 'Dari' mesti lebih kecil daripada 'Hingga'.",
+        "DUPLICATE": "Cawangan ini sudah mempunyai peralatan dengan nama itu."
       }
     }
   },
@@ -341,7 +394,7 @@
   },
   "Calibration": {
     "title": "Kalibrasi Kopi Harian",
-    "note": "Satu rekod muktamad bagi setiap biji kopi bagi setiap cawangan setiap hari.",
+    "note": "Satu rekod muktamad bagi setiap biji kopi bagi setiap pengisar bagi setiap cawangan setiap hari.",
     "noOutlet": "Akaun anda belum mempunyai cawangan.",
     "outlet": "Cawangan",
     "businessDate": "Tarikh perniagaan (waktu Malaysia)",
@@ -375,7 +428,59 @@
     "invalid": "Dos, hasil dan masa mesti lebih daripada sifar, dan tetapan kisaran diperlukan.",
     "saveFailed": "Tidak dapat menyimpan. Sila cuba lagi.",
     "conflict": "Orang lain telah mengubah rekod ini. Versi terkini kini dipaparkan; sila semak dan sunting semula.",
-    "alreadyRecorded": "Biji kopi ini sudah mempunyai rekod untuk hari ini (mungkin telah dipadam). Halaman telah dimuat semula."
+    "alreadyRecorded": "Biji kopi ini sudah mempunyai rekod pada pengisar ini untuk hari ini (mungkin telah dipadam). Halaman telah dimuat semula.",
+    "equipment": "Peralatan di cawangan ini",
+    "noGrinders": "Cawangan ini belum mempunyai pengisar. Admin menambah pengisar dan mesin espresso dalam Tetapan.",
+    "grinder": "Pengisar",
+    "machine": "Mesin espresso",
+    "shot": "Syot",
+    "machineSettings": "Tetapan mesin",
+    "beanAndTaste": "Biji kopi dan rasa",
+    "ratio": "Nisbah bancuhan",
+    "waterTemp": "Suhu air",
+    "waterTempC": "Suhu air (°C)",
+    "pressure": "Tekanan",
+    "pressureBar": "Tekanan (bar)",
+    "preinfusion": "Pra-infusi",
+    "preinfusionS": "Pra-infusi (s)",
+    "preinfusionShort": "pra-infusi {value} s",
+    "basket": "Bakul",
+    "basketG": "Saiz bakul (g)",
+    "basketShort": "bakul {value} g",
+    "tdsPercent": "TDS (%)",
+    "eyHint": "Masukkan TDS untuk melihat hasil pengekstrakan (EY).",
+    "eyValue": "Hasil pengekstrakan (EY): {value}%",
+    "roastDate": "Tarikh panggang",
+    "roastAge": "Hari selepas panggang",
+    "daysOffRoast": "{days} hari selepas panggang",
+    "daysShort": "{days} hari",
+    "roastFuture": "Tarikh panggang tidak boleh selepas tarikh perniagaan.",
+    "tasteBalance": "Rasa",
+    "balance": {
+      "SOUR": "Masam",
+      "BALANCED": "Seimbang",
+      "BITTER": "Pahit"
+    },
+    "grindRange": "Julat pengisar {min}–{max}",
+    "grindOutOfRange": "Di luar julat pengisar ini {min}–{max}",
+    "invalidOptional": "Semak nombor: air 80–100 °C, tekanan hingga 20 bar, TDS hingga 25%, tiada nilai negatif.",
+    "useYesterday": "Guna nilai semalam",
+    "saveFinal": "Simpan sebagai muktamad",
+    "saveShot": "Simpan sebagai syot ujian",
+    "shotHint": "Syot ujian menyimpan setiap cubaan semasa melaras. Simpan syot pilihan anda sebagai muktamad.",
+    "testShots": "Syot ujian ({count})",
+    "useShot": "Guna nilai ini",
+    "recordAnotherGrinder": "Rekod pada pengisar lain",
+    "targetSummary": "Sasaran: dos {dose} g · hasil {yield} g · masa {time} s",
+    "noTarget": "Tiada sasaran untuk biji kopi ini.",
+    "setTarget": "Tetapkan sasaran",
+    "editTarget": "Sunting sasaran",
+    "targetTitle": "Julat sasaran biji kopi ini (semua cawangan)",
+    "targetHint": "Nilai di luar julat ini dipaparkan dengan warna merah.",
+    "targetInvalid": "Masukkan setiap minimum dan maksimum; minimum mesti melebihi sifar dan tidak melebihi maksimum.",
+    "targetRange": "Sasaran {min}–{max} {unit}",
+    "min": "Min",
+    "max": "Maks"
   },
   "Users": {
     "title": "Pengguna",

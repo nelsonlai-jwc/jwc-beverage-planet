@@ -106,6 +106,16 @@
         "label": "Language",
         "rule": "English, Simplified Chinese and Malay enabled.",
         "adminRule": "Fixed: English, Simplified Chinese and Malay."
+      },
+      "grinders": {
+        "label": "Grinders",
+        "rule": "Grinders used at each outlet.",
+        "adminRule": "Add grinders and assign each one to an outlet. A grinder cannot be deleted, only disabled, so past records keep it."
+      },
+      "machines": {
+        "label": "Espresso machines",
+        "rule": "Espresso machines used at each outlet.",
+        "adminRule": "Add espresso machines and assign each one to an outlet. A machine cannot be deleted, only disabled, so past records keep it."
       }
     },
     "values": {
@@ -169,6 +179,49 @@
         "INVALID": "That name is too long.",
         "NOT_ALLOWED": "Only an Admin can change this.",
         "UNKNOWN": "Something went wrong. Please try again."
+      }
+    },
+    "equipment": {
+      "name": "Name",
+      "outlet": "Outlet",
+      "brand": "Brand",
+      "model": "Model",
+      "serial": "Serial number",
+      "notes": "Notes",
+      "burrType": "Burr type",
+      "burr": {
+        "FLAT": "Flat",
+        "CONICAL": "Conical",
+        "OTHER": "Other"
+      },
+      "burrSize": "Burr size (mm)",
+      "scaleType": "Grind adjustment",
+      "scale": {
+        "STEPPED": "Stepped",
+        "STEPLESS": "Stepless"
+      },
+      "scaleRange": "Grind scale range",
+      "scaleMin": "From",
+      "scaleMax": "To",
+      "scaleShort": "scale {min}–{max}",
+      "groupCount": "Groups",
+      "groupsShort": "{count, plural, one {# group} other {# groups}}",
+      "defaultTemp": "Usual water temp (°C)",
+      "defaultPressure": "Usual pressure (bar)",
+      "grinderPlaceholder": "e.g. Grinder 1",
+      "machinePlaceholder": "e.g. Main machine",
+      "addGrinder": "Add grinder",
+      "addMachine": "Add espresso machine",
+      "noGrinders": "No grinders yet.",
+      "noMachines": "No espresso machines yet.",
+      "disable": "Disable",
+      "disabledNotice": "Disabled. It no longer appears in new calibrations.",
+      "cancel": "Cancel",
+      "hint": "The usual temperature and pressure are filled in when the machine is chosen in Daily Coffee Calibration.",
+      "errors": {
+        "NUMBER": "Check the numbers (machine: 1–6 groups, 80–100 °C, up to 20 bar).",
+        "SCALE_RANGE": "The scale 'From' must be below 'To'.",
+        "DUPLICATE": "This outlet already has one with that name."
       }
     }
   },
@@ -341,7 +394,7 @@
   },
   "Calibration": {
     "title": "Daily Coffee Calibration",
-    "note": "One final record per coffee bean per outlet per day.",
+    "note": "One final record per coffee bean per grinder per outlet per day.",
     "noOutlet": "Your account has no outlet yet.",
     "outlet": "Outlet",
     "businessDate": "Business date (Malaysia time)",
@@ -375,7 +428,59 @@
     "invalid": "Dose, yield and time must be greater than zero, and grind setting is required.",
     "saveFailed": "Could not save. Please try again.",
     "conflict": "Someone else changed this record. The latest version is now shown; please check and edit again.",
-    "alreadyRecorded": "This bean already has a record for this day (it may have been deleted). The page has been reloaded."
+    "alreadyRecorded": "This bean already has a record on this grinder for this day (it may have been deleted). The page has been reloaded.",
+    "equipment": "Equipment at this outlet",
+    "noGrinders": "This outlet has no grinder yet. An Admin adds grinders and espresso machines in Settings.",
+    "grinder": "Grinder",
+    "machine": "Espresso machine",
+    "shot": "Shot",
+    "machineSettings": "Machine settings",
+    "beanAndTaste": "Bean and taste",
+    "ratio": "Brew ratio",
+    "waterTemp": "Water temp",
+    "waterTempC": "Water temp (°C)",
+    "pressure": "Pressure",
+    "pressureBar": "Pressure (bar)",
+    "preinfusion": "Pre-infusion",
+    "preinfusionS": "Pre-infusion (s)",
+    "preinfusionShort": "pre-infusion {value} s",
+    "basket": "Basket",
+    "basketG": "Basket size (g)",
+    "basketShort": "basket {value} g",
+    "tdsPercent": "TDS (%)",
+    "eyHint": "Enter TDS to see extraction yield (EY).",
+    "eyValue": "Extraction yield (EY): {value}%",
+    "roastDate": "Roast date",
+    "roastAge": "Days off roast",
+    "daysOffRoast": "{days} days off roast",
+    "daysShort": "{days} d",
+    "roastFuture": "Roast date cannot be after the business date.",
+    "tasteBalance": "Taste",
+    "balance": {
+      "SOUR": "Sour",
+      "BALANCED": "Balanced",
+      "BITTER": "Bitter"
+    },
+    "grindRange": "Grinder range {min}–{max}",
+    "grindOutOfRange": "Outside this grinder's range {min}–{max}",
+    "invalidOptional": "Check the numbers: water 80–100 °C, pressure up to 20 bar, TDS up to 25%, no negative values.",
+    "useYesterday": "Use yesterday's values",
+    "saveFinal": "Save as final",
+    "saveShot": "Save as test shot",
+    "shotHint": "Test shots keep every try while dialling in. Save the shot you choose as final.",
+    "testShots": "Test shots ({count})",
+    "useShot": "Use these values",
+    "recordAnotherGrinder": "Record on another grinder",
+    "targetSummary": "Target: dose {dose} g · yield {yield} g · time {time} s",
+    "noTarget": "No target set for this bean.",
+    "setTarget": "Set target",
+    "editTarget": "Edit target",
+    "targetTitle": "Target ranges for this bean (all outlets)",
+    "targetHint": "Records outside these ranges are shown in red.",
+    "targetInvalid": "Enter every minimum and maximum; each minimum must be above zero and not above its maximum.",
+    "targetRange": "Target {min}–{max} {unit}",
+    "min": "Min",
+    "max": "Max"
   },
   "Users": {
     "title": "Users",

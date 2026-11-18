@@ -106,6 +106,16 @@
         "label": "语言",
         "rule": "已启用英文、简体中文和马来文。",
         "adminRule": "固定：英文、简体中文和马来文。"
+      },
+      "grinders": {
+        "label": "磨豆机",
+        "rule": "各分店使用的磨豆机。",
+        "adminRule": "新增磨豆机并分配到分店。磨豆机不能删除，只能停用，以保留旧记录。"
+      },
+      "machines": {
+        "label": "咖啡机",
+        "rule": "各分店使用的咖啡机。",
+        "adminRule": "新增咖啡机并分配到分店。咖啡机不能删除，只能停用，以保留旧记录。"
       }
     },
     "values": {
@@ -169,6 +179,49 @@
         "INVALID": "名称太长。",
         "NOT_ALLOWED": "只有 Admin 可以修改。",
         "UNKNOWN": "出错了，请重试。"
+      }
+    },
+    "equipment": {
+      "name": "名称",
+      "outlet": "分店",
+      "brand": "品牌",
+      "model": "型号",
+      "serial": "序号",
+      "notes": "备注",
+      "burrType": "刀盘类型",
+      "burr": {
+        "FLAT": "平刀",
+        "CONICAL": "锥刀",
+        "OTHER": "其他"
+      },
+      "burrSize": "刀盘尺寸 (mm)",
+      "scaleType": "刻度方式",
+      "scale": {
+        "STEPPED": "段数",
+        "STEPLESS": "无段"
+      },
+      "scaleRange": "刻度范围",
+      "scaleMin": "最小",
+      "scaleMax": "最大",
+      "scaleShort": "刻度 {min}–{max}",
+      "groupCount": "冲煮头数量",
+      "groupsShort": "{count} 头",
+      "defaultTemp": "常用水温 (°C)",
+      "defaultPressure": "常用压力 (bar)",
+      "grinderPlaceholder": "例：1号磨豆机",
+      "machinePlaceholder": "例：主咖啡机",
+      "addGrinder": "新增磨豆机",
+      "addMachine": "新增咖啡机",
+      "noGrinders": "尚无磨豆机。",
+      "noMachines": "尚无咖啡机。",
+      "disable": "停用",
+      "disabledNotice": "已停用，新校准中不再显示。",
+      "cancel": "取消",
+      "hint": "在每日咖啡校准选择咖啡机时，会自动填入常用水温和压力。",
+      "errors": {
+        "NUMBER": "请检查数字（咖啡机：1–6 头、80–100 °C、最多 20 bar）。",
+        "SCALE_RANGE": "刻度最小值须小于最大值。",
+        "DUPLICATE": "本分店已有同名设备。"
       }
     }
   },
@@ -341,7 +394,7 @@
   },
   "Calibration": {
     "title": "每日咖啡校准",
-    "note": "每间分店每天每支咖啡豆只有一份最终记录。",
+    "note": "每间分店每天、每支咖啡豆在每台磨豆机只有一份最终记录。",
     "noOutlet": "你的账号尚未分配分店。",
     "outlet": "分店",
     "businessDate": "营业日（马来西亚时间）",
@@ -375,7 +428,59 @@
     "invalid": "粉量、萃取量和时间必须大于零，研磨刻度必填。",
     "saveFailed": "无法保存，请重试。",
     "conflict": "其他人已修改此记录。已显示最新内容，请确认后再修改。",
-    "alreadyRecorded": "这支豆今天已有记录（可能已被删除）。页面已重新载入。"
+    "alreadyRecorded": "这支豆今天在这台磨豆机已有记录（可能已被删除）。页面已重新载入。",
+    "equipment": "本分店设备",
+    "noGrinders": "本分店尚未设定磨豆机。请 Admin 在设置中新增磨豆机和咖啡机。",
+    "grinder": "磨豆机",
+    "machine": "咖啡机",
+    "shot": "萃取",
+    "machineSettings": "咖啡机参数",
+    "beanAndTaste": "咖啡豆与风味",
+    "ratio": "粉水比",
+    "waterTemp": "水温",
+    "waterTempC": "水温 (°C)",
+    "pressure": "压力",
+    "pressureBar": "压力 (bar)",
+    "preinfusion": "预浸泡",
+    "preinfusionS": "预浸泡 (秒)",
+    "preinfusionShort": "预浸泡 {value} 秒",
+    "basket": "粉碗",
+    "basketG": "粉碗尺寸 (g)",
+    "basketShort": "粉碗 {value} g",
+    "tdsPercent": "TDS (%)",
+    "eyHint": "输入 TDS 可显示萃取率 (EY)。",
+    "eyValue": "萃取率 (EY)：{value}%",
+    "roastDate": "烘焙日期",
+    "roastAge": "养豆天数",
+    "daysOffRoast": "养豆 {days} 天",
+    "daysShort": "{days} 天",
+    "roastFuture": "烘焙日期不能晚于营业日。",
+    "tasteBalance": "口感",
+    "balance": {
+      "SOUR": "偏酸",
+      "BALANCED": "平衡",
+      "BITTER": "偏苦"
+    },
+    "grindRange": "磨豆机刻度范围 {min}–{max}",
+    "grindOutOfRange": "超出这台磨豆机的刻度范围 {min}–{max}",
+    "invalidOptional": "请检查数字：水温 80–100 °C，压力最多 20 bar，TDS 最多 25%，不能为负数。",
+    "useYesterday": "沿用昨天数值",
+    "saveFinal": "保存为最终记录",
+    "saveShot": "保存为试萃",
+    "shotHint": "试萃会保留调试时的每一杯；选定后再保存为最终记录。",
+    "testShots": "试萃记录（{count}）",
+    "useShot": "套用这杯",
+    "recordAnotherGrinder": "记录另一台磨豆机",
+    "targetSummary": "目标：粉量 {dose} g · 萃取量 {yield} g · 时间 {time} 秒",
+    "noTarget": "这支豆尚未设定目标。",
+    "setTarget": "设定目标",
+    "editTarget": "修改目标",
+    "targetTitle": "这支豆的目标范围（所有分店通用）",
+    "targetHint": "超出范围的数值会以红色显示。",
+    "targetInvalid": "请填写所有最小值和最大值；最小值须大于零且不大于最大值。",
+    "targetRange": "目标 {min}–{max} {unit}",
+    "min": "最小",
+    "max": "最大"
   },
   "Users": {
     "title": "用户",

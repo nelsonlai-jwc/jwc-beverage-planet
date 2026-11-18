@@ -5,6 +5,10 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { addDays, isIsoDate, malaysiaToday } from "@/lib/calibration/dates";
 import { createClient } from "@/lib/supabase/server";
 
+const RECORD_COLUMNS = `id, coffee_bean_material_id, grinder_id, espresso_machine_id, dose_g, yield_g,
+  extraction_time_seconds, grind_setting, water_temp_c, pressure_bar, preinfusion_seconds, basket_g,
+  tds_percent, roast_date, taste_balance, taste_notes, deleted_at, delete_reason, updated_at, revision`;
+
 export default async function CalibrationPage({
   params,
   searchParams,
@@ -27,22 +31,43 @@ export default async function CalibrationPage({
   const editable = canManage ? date >= addDays(today, -7) : date === today;
 
   const supabase = await createClient();
-  const { data: beans } = await supabase
-    .from("materials")
-    .select("id, name, brand")
-    .eq("is_coffee_bean", true)
-    .eq("status", "APPROVED")
-    .order("name");
-  const { data: records } = outlet
-    ? await supabase
-        .from("calibrations")
-        .select(
-          `id, coffee_bean_material_id, dose_g, yield_g, extraction_time_seconds, grind_setting,
-           taste_notes, deleted_at, delete_reason, updated_at, revision`,
-        )
-        .eq("outlet_id", outlet.id)
-        .eq("business_date", date)
-    : { data: [] };
+  const outletId = outlet?.id ?? "00000000-0000-0000-0000-000000000000";
+  const [
+    { data: beans },
+    { data: targets },
+    { data: grinders },
+    { data: machines },
+    { data: records },
+    { data: previous },
+    { data: shots },
+  ] = await Promise.all([
+    supabase.from("materials").select("id, name, brand").eq("is_coffee_bean", true).eq("status", "APPROVED").order("name"),
+    supabase.from("coffee_bean_targets").select("*"),
+    supabase.from("grinders").select("id, name, brand, model, scale_type, scale_min, scale_max, is_active").eq("outlet_id", outletId).order("name"),
+    supabase
+      .from("espresso_machines")
+      .select("id, name, brand, model, default_water_temp_c, default_pressure_bar, is_active")
+      .eq("outlet_id", outletId)
+      .order("name"),
+    supabase.from("calibrations").select(RECORD_COLUMNS).eq("outlet_id", outletId).eq("business_date", date),
+    // The day before, for "Use yesterday's values".
+    supabase
+      .from("calibrations")
+      .select(RECORD_COLUMNS)
+      .eq("outlet_id", outletId)
+      .eq("business_date", addDays(date, -1))
+      .is("deleted_at", null),
+    supabase
+      .from("calibration_shots")
+      .select(
+        `id, coffee_bean_material_id, grinder_id, espresso_machine_id, dose_g, yield_g, extraction_time_seconds,
+         grind_setting, water_temp_c, pressure_bar, preinfusion_seconds, basket_g, tds_percent, taste_balance,
+         taste_notes, created_at`,
+      )
+      .eq("outlet_id", outletId)
+      .eq("business_date", date)
+      .order("created_at"),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -62,7 +87,12 @@ export default async function CalibrationPage({
             id: bean.id,
             name: bean.brand ? `${bean.name} · ${bean.brand}` : bean.name,
           }))}
+          targets={targets ?? []}
+          grinders={grinders ?? []}
+          machines={machines ?? []}
           records={records ?? []}
+          previous={previous ?? []}
+          shots={shots ?? []}
         />
       )}
     </div>
