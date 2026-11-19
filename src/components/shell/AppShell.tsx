@@ -41,9 +41,7 @@ export function AppShell({
               <dd className="font-semibold">{outletScope}</dd>
             </div>
           </dl>
-          <div className="ml-auto flex items-center gap-2">
-            <MobileNav viewer={viewer} />
-          </div>
+          <MobileNav viewer={viewer} />
         </header>
         <main className="flex-1 px-4 pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-8 md:pb-[calc(5rem+env(safe-area-inset-bottom))]">
           <div className="mx-auto w-full max-w-[1280px]">{children}</div>
