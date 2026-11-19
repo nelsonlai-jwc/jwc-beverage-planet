@@ -17,10 +17,11 @@ insert into public.user_outlets (user_id, outlet_id)
 select '00000000-0000-0000-0000-0000000000a2'::uuid, id from public.outlets where code = 'JB-BROOOS'
 union all select '00000000-0000-0000-0000-0000000000b1'::uuid, id from public.outlets where code = 'JB-BROOOS';
 
-insert into public.materials (id, name, brand, material_type_id, created_by, is_coffee_bean)
+insert into public.material_types (name, sort_order) values ('Coffee Bean', 99) on conflict (name) do nothing;
+insert into public.materials (id, name, brand, material_type_id, created_by, espresso_calibration, filter_calibration)
   select '00000000-0000-0000-0000-0000000000c1', 'Test Bean', 'Test', id,
-         '00000000-0000-0000-0000-0000000000b1', true
-    from public.material_types where name = 'Other';
+         '00000000-0000-0000-0000-0000000000b1', true, true
+    from public.material_types where name = 'Coffee Bean';
 update public.materials set status = 'APPROVED' where id = '00000000-0000-0000-0000-0000000000c1';
 
 create temp table t_outlet as select code, id from public.outlets;

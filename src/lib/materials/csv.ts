@@ -1,6 +1,7 @@
 // CSV import and export for materials and packaging. Headers carry both languages,
 // e.g. "name (名称)"; on import a column is matched by either part.
 
+import { isCoffeeBeanType } from "./coffeeBean";
 import { isDecimal, isPositiveDecimal } from "./decimal";
 
 export type ImportKind = "materials" | "packaging";
@@ -21,7 +22,8 @@ export const MATERIAL_COLUMNS: Column[] = [
   { key: "pack_description", zh: "包装说明" },
   { key: "abv", zh: "ABV" },
   { key: "bx", zh: "Bx" },
-  { key: "coffee_bean", zh: "咖啡豆" },
+  { key: "espresso_calibration", zh: "意式咖啡校准" },
+  { key: "filter_calibration", zh: "手冲咖啡校准" },
 ];
 
 export const PACKAGING_COLUMNS: Column[] = [
@@ -121,7 +123,8 @@ export type MaterialRow = {
   pack_description: string | null;
   abv: number | null;
   bx: number | null;
-  is_coffee_bean: boolean;
+  espresso_calibration: boolean;
+  filter_calibration: boolean;
 };
 
 export type PackagingRow = {
@@ -197,8 +200,12 @@ export function checkMaterialFile(
       }
       return Number(value);
     });
-    const coffee = values.coffee_bean.trim().toLowerCase();
-    if (!YES.includes(coffee) && !NO.includes(coffee)) errors.push("YES_NO_INVALID");
+    // Calibration use only counts for a Coffee Bean; other types save it as no.
+    const calibration = (["espresso_calibration", "filter_calibration"] as const).map((key) => {
+      const value = values[key].trim().toLowerCase();
+      if (!YES.includes(value) && !NO.includes(value)) errors.push("YES_NO_INVALID");
+      return YES.includes(value) && isCoffeeBeanType(type?.name);
+    });
 
     const row: MaterialRow = {
       name: values.name.trim(),
@@ -214,7 +221,8 @@ export function checkMaterialFile(
       pack_description: optional(values.pack_description),
       abv: percents[0],
       bx: percents[1],
-      is_coffee_bean: YES.includes(coffee),
+      espresso_calibration: calibration[0],
+      filter_calibration: calibration[1],
     };
     return { row, key: materialKey(row.name, row.brand, row.specification) };
   }, existingKeys);

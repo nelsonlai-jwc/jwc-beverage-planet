@@ -17,10 +17,11 @@ insert into public.user_outlets (user_id, outlet_id)
   select u, id from public.outlets,
     (values ('00000000-0000-0000-0000-00000000000b'::uuid), ('00000000-0000-0000-0000-00000000000c'::uuid)) as v(u)
    where code = 'JB-BROOOS';
-insert into public.materials (id, name, brand, material_type_id, created_by, is_coffee_bean)
+insert into public.material_types (name, sort_order) values ('Coffee Bean', 99) on conflict (name) do nothing;
+insert into public.materials (id, name, brand, material_type_id, created_by, espresso_calibration, filter_calibration)
   select '00000000-0000-0000-0000-0000000000b1', 'Test Bean', 'Test', id,
-         '00000000-0000-0000-0000-00000000000b', true
-    from public.material_types where name = 'Other';
+         '00000000-0000-0000-0000-00000000000b', true, true
+    from public.material_types where name = 'Coffee Bean';
 update public.materials set status = 'APPROVED' where id = '00000000-0000-0000-0000-0000000000b1';
 
 set local role authenticated;

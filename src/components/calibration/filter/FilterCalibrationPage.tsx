@@ -47,7 +47,7 @@ export async function FilterCalibrationPage({
     { data: previous },
     { data: brews },
   ] = await Promise.all([
-    supabase.from("materials").select("id, name, brand").eq("is_coffee_bean", true).eq("status", "APPROVED").order("name"),
+    supabase.from("materials").select("id, name, brand").eq("filter_calibration", true).eq("status", "APPROVED").order("name"),
     supabase.from("coffee_bean_filter_targets").select("*"),
     supabase.from("grinders").select(grinderColumns).order("name"),
     supabase.from("brewers").select(brewerColumns).order("name"),
