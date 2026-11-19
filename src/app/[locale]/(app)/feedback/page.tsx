@@ -138,9 +138,9 @@ export default async function FeedbackPage({
         </div>
       </div>
 
-      <section className="rounded-[20px] border border-black/10 bg-white">
+      <section className="border border-black/10 bg-white">
         {/* Tab cards with counts */}
-        <nav aria-label={t("tabs.label")} className="grid grid-cols-3 overflow-hidden rounded-t-[20px] border-b border-black/10 sm:flex">
+        <nav aria-label={t("tabs.label")} className="grid grid-cols-3 border-b border-black/10 sm:flex">
           {TABS.map((key) => {
             const active = tab === key;
             return (
@@ -148,7 +148,7 @@ export default async function FeedbackPage({
                 key={key}
                 href={href({ tab: key })}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-0 flex-col gap-1 border-r border-black/10 px-3 py-3 sm:min-w-44 sm:px-6 sm:py-4 ${
+                className={`flex min-w-0 flex-col gap-0.5 border-r border-black/10 px-3 py-2 sm:min-w-44 sm:px-6 sm:py-2.5 ${
                   active ? "bg-white shadow-[inset_0_2px_0_#000]" : "bg-[#f4f5f2] text-black/60 hover:bg-[#eceee8]"
                 }`}
               >
@@ -250,7 +250,7 @@ export default async function FeedbackPage({
             )}
           </div>
         ) : (
-          <ul className="overflow-hidden rounded-b-[20px]">
+          <ul>
             {reports.map((report) => {
               const priority = priorityOf.get(report.id);
               const replied = report.admin_reply || report.reject_reasons.length > 0;

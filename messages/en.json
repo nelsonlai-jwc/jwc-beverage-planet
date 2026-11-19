@@ -1902,8 +1902,8 @@
       "bug": "Bugs",
       "idea": "Ideas",
       "closed": "Closed",
-      "bugCount": "{count, plural, one {# open bug} other {# open bugs}}",
-      "ideaCount": "{count, plural, one {# open idea} other {# open ideas}}",
+      "bugCount": "{count, plural, one {# bug} other {# bugs}}",
+      "ideaCount": "{count, plural, one {# idea} other {# ideas}}",
       "closedCount": "{count, plural, one {# report} other {# reports}}"
     },
     "filter": "Filter",

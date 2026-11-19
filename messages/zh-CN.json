@@ -1902,8 +1902,8 @@
       "bug": "Bug",
       "idea": "想法",
       "closed": "已结束",
-      "bugCount": "{count} 则待处理",
-      "ideaCount": "{count} 则待处理",
+      "bugCount": "{count} 则",
+      "ideaCount": "{count} 则",
       "closedCount": "{count} 则"
     },
     "filter": "筛选",
