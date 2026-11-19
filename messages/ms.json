@@ -1902,8 +1902,8 @@
       "bug": "Pepijat",
       "idea": "Idea",
       "closed": "Ditutup",
-      "bugCount": "{count} belum selesai",
-      "ideaCount": "{count} belum selesai",
+      "bugCount": "{count} laporan",
+      "ideaCount": "{count} laporan",
       "closedCount": "{count} laporan"
     },
     "filter": "Tapis",
