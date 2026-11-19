@@ -17,6 +17,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { PriceComparison } from "@/components/materials/PriceComparison";
 import { divide, formatMoney, formatUnitCost } from "@/lib/materials/decimal";
+import { isCoffeeBeanType } from "@/lib/materials/coffeeBean";
 import { getViewer } from "@/lib/materials/viewer";
 import { TranslationNote } from "@/components/content/TranslationNote";
 import { getLocalizer } from "@/lib/content/translations";
@@ -161,10 +162,18 @@ export default async function MaterialPage({
             <Detail label={t("form.specification")} value={loc.t(material.specification)} />
             <Detail label={t("form.abv")} value={material.abv != null ? `${material.abv}%` : null} />
             <Detail label={t("form.bx")} value={material.bx != null ? `${material.bx}%` : null} />
-            <Detail
-              label={t("form.coffeeBean")}
-              value={material.is_coffee_bean ? t("detail.yes") : t("detail.no")}
-            />
+            {isCoffeeBeanType(material.material_types?.name) && (
+              <>
+                <Detail
+                  label={t("form.espressoCalibration")}
+                  value={material.espresso_calibration ? t("detail.yes") : t("detail.no")}
+                />
+                <Detail
+                  label={t("form.filterCalibration")}
+                  value={material.filter_calibration ? t("detail.yes") : t("detail.no")}
+                />
+              </>
+            )}
             <Detail label={t("detail.usedBy")} value={t("detail.recipes", { count: affected ?? 0 })} />
           </dl>
           {material.description && <p className="text-sm whitespace-pre-line">{loc.t(material.description)}</p>}

@@ -78,7 +78,8 @@ export type MaterialInput = {
   description: string;
   abv: string;
   bx: string;
-  isCoffeeBean: boolean;
+  espressoCalibration: boolean;
+  filterCalibration: boolean;
   photoAssetId: string | null;
   packId?: string;
   packQuantity: string;
@@ -118,7 +119,8 @@ function materialFields(input: MaterialDetails) {
     description: blank(input.description) ? null : input.description.trim(),
     abv: percent(input.abv),
     bx: percent(input.bx),
-    is_coffee_bean: input.isCoffeeBean,
+    espresso_calibration: input.espressoCalibration,
+    filter_calibration: input.filterCalibration,
     photo_asset_id: input.photoAssetId,
   };
 }
@@ -201,7 +203,8 @@ export type MaterialDetails = Pick<
   | "description"
   | "abv"
   | "bx"
-  | "isCoffeeBean"
+  | "espressoCalibration"
+  | "filterCalibration"
   | "photoAssetId"
 >;
 

@@ -50,7 +50,7 @@ export async function EspressoCalibrationPage({
     { data: previousRows },
     { data: shots },
   ] = await Promise.all([
-    supabase.from("materials").select("id, name, brand").eq("is_coffee_bean", true).eq("status", "APPROVED").order("name"),
+    supabase.from("materials").select("id, name, brand").eq("espresso_calibration", true).eq("status", "APPROVED").order("name"),
     supabase.from("coffee_bean_targets").select("*"),
     supabase.from("grinders").select(GRINDER_COLUMNS).order("name"),
     supabase.from("espresso_machines").select(MACHINE_COLUMNS).order("name"),

@@ -1732,6 +1732,8 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          espresso_calibration: boolean
+          filter_calibration: boolean
           is_coffee_bean: boolean
           material_type_id: string
           name: string
@@ -1757,6 +1759,8 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          espresso_calibration?: boolean
+          filter_calibration?: boolean
           is_coffee_bean?: boolean
           material_type_id: string
           name: string
@@ -1782,6 +1786,8 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          espresso_calibration?: boolean
+          filter_calibration?: boolean
           is_coffee_bean?: boolean
           material_type_id?: string
           name?: string

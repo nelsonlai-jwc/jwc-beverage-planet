@@ -9,6 +9,7 @@ import {
   type MaterialInput,
 } from "@/app/[locale]/(app)/raw-materials/actions";
 import { Link, useRouter } from "@/i18n/navigation";
+import { isCoffeeBeanType } from "@/lib/materials/coffeeBean";
 import { divide, formatUnitCost, isDecimal, isPositiveDecimal } from "@/lib/materials/decimal";
 import { createClient } from "@/lib/supabase/client";
 import { PhotoField } from "./PhotoField";
@@ -34,7 +35,8 @@ const emptyValues: MaterialFormValues = {
   description: "",
   abv: "",
   bx: "",
-  isCoffeeBean: false,
+  espressoCalibration: false,
+  filterCalibration: false,
   photoAssetId: null,
   packQuantity: "",
   unit: "ml",
@@ -116,6 +118,18 @@ export function MaterialForm({
     }, 300);
     return () => clearTimeout(timer);
   }, [values.name, values.id]);
+
+  // Calibration use is only for a Coffee Bean; another type clears it.
+  const isCoffeeBean = isCoffeeBeanType(types.find((type) => type.id === values.materialTypeId)?.name);
+  function changeType(typeId: string) {
+    const coffeeBean = isCoffeeBeanType(types.find((type) => type.id === typeId)?.name);
+    setValues((current) => ({
+      ...current,
+      materialTypeId: typeId,
+      espressoCalibration: coffeeBean && current.espressoCalibration,
+      filterCalibration: coffeeBean && current.filterCalibration,
+    }));
+  }
 
   const unitCost = divide(values.price, values.packQuantity);
   const isFree = isDecimal(values.price) && !isPositiveDecimal(values.price);
@@ -262,7 +276,7 @@ export function MaterialForm({
               <select
                 id="type"
                 value={values.materialTypeId}
-                onChange={(event) => set("materialTypeId", event.target.value)}
+                onChange={(event) => changeType(event.target.value)}
                 className={inputClass}
               >
                 <option value="">{t("form.choose")}</option>
@@ -360,7 +374,7 @@ export function MaterialForm({
           </section>
         )}
 
-        <details className={cardClass} open={Boolean(values.abv || values.bx || values.isCoffeeBean)}>
+        <details className={cardClass} open={Boolean(values.abv || values.bx || values.espressoCalibration || values.filterCalibration)}>
           <summary className="cursor-pointer text-base font-semibold">{t("form.additional")}</summary>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field id="abv" label={t("form.abv")} hint={t("form.percentHint")}>
@@ -382,15 +396,21 @@ export function MaterialForm({
               />
             </Field>
           </div>
-          <label className="flex min-h-11 items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={values.isCoffeeBean}
-              onChange={(event) => set("isCoffeeBean", event.target.checked)}
-              className="size-5 accent-black"
-            />
-            {t("form.coffeeBean")}
-          </label>
+          {isCoffeeBean && (
+            <div className="flex flex-col">
+              {(["espressoCalibration", "filterCalibration"] as const).map((key) => (
+                <label key={key} className="flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={values[key]}
+                    onChange={(event) => set(key, event.target.checked)}
+                    className="size-5 accent-black"
+                  />
+                  {t(`form.${key}`)}
+                </label>
+              ))}
+            </div>
+          )}
         </details>
 
         {approved && !approved.isAdmin && (
