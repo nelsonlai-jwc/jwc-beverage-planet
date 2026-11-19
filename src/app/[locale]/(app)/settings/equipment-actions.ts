@@ -8,7 +8,6 @@ export type EquipmentKind = "GRINDER" | "MACHINE" | "BREWER";
 
 /** Form values as typed; blank optional fields are saved as empty. */
 export type EquipmentInput = {
-  outletId: string;
   name: string;
   brand: string;
   model: string;
@@ -40,13 +39,12 @@ const num = (value: string | undefined): number | null | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-/** Super Admin adds (id null) or edits a grinder or espresso machine. */
+/** Super Admin adds (id null) or edits a grinder, espresso machine or hand brew kit. */
 export async function saveEquipment(kind: EquipmentKind, id: string | null, input: EquipmentInput): Promise<SettingResult> {
   const name = input.name.trim();
   if (!name) return { ok: false, error: "NAME_REQUIRED" };
-  if (name.length > 60 || !input.outletId) return { ok: false, error: "INVALID" };
+  if (name.length > 60) return { ok: false, error: "INVALID" };
   const common = {
-    outlet_id: input.outletId,
     name,
     brand: text(input.brand, 60),
     model: text(input.model, 60),
@@ -103,4 +101,33 @@ export async function setEquipmentActive(kind: EquipmentKind, id: string, active
   revalidatePath("/", "layout");
   if (error) return { ok: false, error: "UNKNOWN" };
   return data?.length ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
+}
+
+const EQUIPMENT_COLUMN = { GRINDER: "grinder_id", MACHINE: "espresso_machine_id", BREWER: "brewer_id" } as const;
+
+/** Outlet Equipment: an outlet's Admin (or the Super Admin) picks or removes one item for the outlet. */
+export async function setOutletEquipment(
+  outletId: string,
+  kind: EquipmentKind,
+  equipmentId: string,
+  used: boolean,
+): Promise<SettingResult> {
+  const supabase = await createClient();
+  const column = EQUIPMENT_COLUMN[kind];
+  const { data, error } = used
+    ? await supabase
+        .from("outlet_equipment")
+        .insert({
+          outlet_id: outletId,
+          grinder_id: kind === "GRINDER" ? equipmentId : null,
+          espresso_machine_id: kind === "MACHINE" ? equipmentId : null,
+          brewer_id: kind === "BREWER" ? equipmentId : null,
+        })
+        .select("id")
+    : await supabase.from("outlet_equipment").delete().eq("outlet_id", outletId).eq(column, equipmentId).select("id");
+  revalidatePath("/", "layout");
+  if (error?.code === "23505") return { ok: true };
+  if (error?.code === "42501") return { ok: false, error: "NOT_ALLOWED" };
+  if (error) return { ok: false, error: "UNKNOWN" };
+  return data?.length || used ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
 }

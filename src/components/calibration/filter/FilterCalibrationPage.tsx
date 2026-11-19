@@ -35,27 +35,23 @@ export async function FilterCalibrationPage({
 
   const supabase = await createClient();
   const outletId = outlet?.id ?? NO_OUTLET;
-  const grinderColumns = "id, outlet_id, name, brand, model, scale_type, scale_min, scale_max, is_active";
-  const brewerColumns = "id, outlet_id, name, brand, model, brewer_type, is_active";
+  const grinderColumns = "id, name, brand, model, scale_type, scale_min, scale_max, is_active";
+  const brewerColumns = "id, name, brand, model, brewer_type, is_active";
   const [
     { data: beans },
     { data: targets },
     { data: grinders },
     { data: brewers },
-    { data: outlets },
+    { data: outletEquipment },
     { data: records },
     { data: previous },
     { data: brews },
   ] = await Promise.all([
     supabase.from("materials").select("id, name, brand").eq("is_coffee_bean", true).eq("status", "APPROVED").order("name"),
     supabase.from("coffee_bean_filter_targets").select("*"),
-    custom
-      ? supabase.from("grinders").select(grinderColumns).order("name")
-      : supabase.from("grinders").select(grinderColumns).eq("outlet_id", outletId).order("name"),
-    custom
-      ? supabase.from("brewers").select(brewerColumns).order("name")
-      : supabase.from("brewers").select(brewerColumns).eq("outlet_id", outletId).order("name"),
-    supabase.from("outlets").select("id, name"),
+    supabase.from("grinders").select(grinderColumns).order("name"),
+    supabase.from("brewers").select(brewerColumns).order("name"),
+    supabase.from("outlet_equipment").select("grinder_id, espresso_machine_id, brewer_id").eq("outlet_id", outletId),
     custom
       ? supabase.from("filter_calibrations").select(RECORD_COLUMNS).eq("purpose", "CUSTOM").eq("business_date", date).order("created_at")
       : supabase
@@ -100,10 +96,13 @@ export async function FilterCalibrationPage({
           .order("created_at"),
   ]);
 
-  // Custom: equipment of every outlet, so the outlet goes in the name.
-  const outletNames = new Map((outlets ?? []).map((o) => [o.id, o.name]));
-  const named = <T extends { name: string; outlet_id: string }>(list: T[] | null) =>
-    (list ?? []).map((x) => (custom ? { ...x, name: `${x.name} · ${outletNames.get(x.outlet_id) ?? "—"}` } : x));
+  // Custom: any equipment. Daily: only what the outlet uses (Outlet Equipment) can be chosen;
+  // the rest stays in the list, like disabled equipment, so older records keep their names.
+  const usedIds = new Set(
+    (outletEquipment ?? []).flatMap((e) => [e.grinder_id, e.espresso_machine_id, e.brewer_id].filter(Boolean)),
+  );
+  const usable = <T extends { id: string; is_active: boolean }>(list: T[] | null) =>
+    (list ?? []).map((x) => (custom ? x : { ...x, is_active: x.is_active && usedIds.has(x.id) }));
 
   const creators = custom ? [...new Set((records ?? []).map((r) => r.created_by).filter((id) => id !== user.id))] : [];
   const { data: people } = creators.length
@@ -132,8 +131,8 @@ export async function FilterCalibrationPage({
             name: bean.brand ? `${bean.name} · ${bean.brand}` : bean.name,
           }))}
           targets={targets ?? []}
-          grinders={named(grinders)}
-          brewers={named(brewers)}
+          grinders={usable(grinders)}
+          brewers={usable(brewers)}
           records={records ?? []}
           previous={previous ?? []}
           brews={brews ?? []}

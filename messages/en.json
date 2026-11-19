@@ -113,18 +113,23 @@
       },
       "grinders": {
         "label": "Grinders",
-        "rule": "Grinders used at each outlet.",
-        "adminRule": "Add grinders and assign each one to an outlet. A grinder cannot be deleted, only disabled, so past records keep it."
+        "rule": "Grinders the outlets can use.",
+        "adminRule": "Add grinders here; each outlet picks its own in Outlet Equipment. A grinder cannot be deleted, only disabled, so past records keep it."
       },
       "machines": {
         "label": "Espresso machines",
-        "rule": "Espresso machines used at each outlet.",
-        "adminRule": "Add espresso machines and assign each one to an outlet. A machine cannot be deleted, only disabled, so past records keep it."
+        "rule": "Espresso machines the outlets can use.",
+        "adminRule": "Add espresso machines here; each outlet picks its own in Outlet Equipment. A machine cannot be deleted, only disabled, so past records keep it."
       },
       "brewers": {
-        "label": "Brewers",
-        "rule": "Filter brewers used at each outlet.",
-        "adminRule": "Add pour-over or batch brewers and assign each one to an outlet. A brewer cannot be deleted, only disabled, so past records keep it."
+        "label": "Hand Brew Kits",
+        "rule": "Hand brew kits the outlets can use for filter coffee.",
+        "adminRule": "Add pour-over or batch hand brew kits here; each outlet picks its own in Outlet Equipment. A kit cannot be deleted, only disabled, so past records keep it."
+      },
+      "outletEquipment": {
+        "label": "Outlet Equipment",
+        "rule": "The espresso machines, grinders and hand brew kits each outlet uses.",
+        "adminRule": "Tick the espresso machines, grinders and hand brew kits your outlet uses. Daily calibration offers only these."
       }
     },
     "values": {
@@ -230,16 +235,26 @@
       "errors": {
         "NUMBER": "Check the numbers (machine: 1–6 groups, 80–100 °C, up to 20 bar).",
         "SCALE_RANGE": "The scale 'From' must be below 'To'.",
-        "DUPLICATE": "This outlet already has one with that name."
+        "DUPLICATE": "There is already one with that name."
       },
-      "brewerTypeLabel": "Brewer type",
+      "brewerTypeLabel": "Kit type",
       "brewerType": {
         "POUR_OVER": "Pour-over",
         "BATCH": "Batch brewer"
       },
       "brewerPlaceholder": "e.g. V60 #1",
-      "noBrewers": "No brewers yet.",
-      "addBrewer": "Add brewer"
+      "noBrewers": "No hand brew kits yet.",
+      "addBrewer": "Add hand brew kit"
+    },
+    "outletEquipment": {
+      "kinds": {
+        "MACHINE": "Espresso machines",
+        "GRINDER": "Grinders",
+        "BREWER": "Hand brew kits"
+      },
+      "noneSetUp": "None set up yet. The Super Admin adds them above.",
+      "noneUsed": "None yet.",
+      "noOutlets": "You have no outlet yet."
     }
   },
   "Invite": {
@@ -447,7 +462,7 @@
     "conflict": "Someone else changed this record. The latest version is now shown; please check and edit again.",
     "alreadyRecorded": "This bean already has a record on this grinder for this day (it may have been deleted). The page has been reloaded.",
     "equipment": "Equipment at this outlet",
-    "noGrinders": "This outlet has no grinder yet. An Admin adds grinders and espresso machines in Settings.",
+    "noGrinders": "This outlet has no grinder yet. An Admin picks the outlet's grinders and espresso machines in Settings > Outlet Equipment.",
     "grinder": "Grinder",
     "machine": "Espresso machine",
     "shot": "Shot",
@@ -526,12 +541,12 @@
   },
   "FilterCalibration": {
     "title": "Filter Calibration · Daily",
-    "note": "One final record per coffee bean per brewer per outlet per day.",
-    "noEquipment": "This outlet needs at least one brewer and one grinder. An Admin adds them in Settings.",
-    "invalid": "Dose, water and total time must be greater than zero, and brewer, grinder and grind setting are required.",
+    "note": "One final record per coffee bean per hand brew kit per outlet per day.",
+    "noEquipment": "This outlet needs at least one hand brew kit and one grinder. An Admin picks them in Settings > Outlet Equipment.",
+    "invalid": "Dose, water and total time must be greater than zero, and hand brew kit, grinder and grind setting are required.",
     "invalidOptional": "Check the numbers: water 70–100 °C, pours 1–20, TDS up to 25%, no negative values.",
-    "alreadyRecorded": "This bean already has a record on this brewer for this day (it may have been deleted). The page has been reloaded.",
-    "brewer": "Brewer",
+    "alreadyRecorded": "This bean already has a record on this hand brew kit for this day (it may have been deleted). The page has been reloaded.",
+    "brewer": "Hand brew kit",
     "recipe": "Recipe",
     "water": "Water",
     "waterG": "Water (g)",
@@ -554,7 +569,7 @@
     "bloomShort": "bloom {water} g / {seconds} s",
     "poursShort": "{count, plural, one {# pour} other {# pours}}",
     "targetSummary": "Target: dose {dose} g · ratio 1:{ratio} · time {time}",
-    "recordAnotherBrewer": "Record on another brewer",
+    "recordAnotherBrewer": "Record on another hand brew kit",
     "customTitle": "Filter Calibration · Custom"
   },
   "Users": {

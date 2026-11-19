@@ -113,18 +113,23 @@
       },
       "grinders": {
         "label": "Pengisar",
-        "rule": "Pengisar yang digunakan di setiap cawangan.",
-        "adminRule": "Tambah pengisar dan tetapkan setiap satu kepada cawangan. Pengisar tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+        "rule": "Pengisar yang boleh digunakan oleh cawangan.",
+        "adminRule": "Tambah pengisar di sini; setiap cawangan memilih sendiri dalam Peralatan Cawangan. Pengisar tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
       },
       "machines": {
         "label": "Mesin espresso",
-        "rule": "Mesin espresso yang digunakan di setiap cawangan.",
-        "adminRule": "Tambah mesin espresso dan tetapkan setiap satu kepada cawangan. Mesin tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+        "rule": "Mesin espresso yang boleh digunakan oleh cawangan.",
+        "adminRule": "Tambah mesin espresso di sini; setiap cawangan memilih sendiri dalam Peralatan Cawangan. Mesin tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
       },
       "brewers": {
-        "label": "Alat bancuhan",
-        "rule": "Alat bancuhan penapis yang digunakan di setiap cawangan.",
-        "adminRule": "Tambah alat pour-over atau batch dan tetapkan setiap satu kepada cawangan. Alat tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+        "label": "Kit Bancuhan Tangan",
+        "rule": "Kit bancuhan tangan yang boleh digunakan oleh cawangan untuk kopi penapis.",
+        "adminRule": "Tambah kit bancuhan tangan pour-over atau batch di sini; setiap cawangan memilih sendiri dalam Peralatan Cawangan. Kit tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+      },
+      "outletEquipment": {
+        "label": "Peralatan Cawangan",
+        "rule": "Mesin espresso, pengisar dan kit bancuhan tangan yang digunakan oleh setiap cawangan.",
+        "adminRule": "Tandakan mesin espresso, pengisar dan kit bancuhan tangan yang digunakan oleh cawangan anda. Kalibrasi harian hanya menawarkan peralatan ini."
       }
     },
     "values": {
@@ -230,16 +235,26 @@
       "errors": {
         "NUMBER": "Semak nombor (mesin: 1–6 kumpulan, 80–100 °C, hingga 20 bar).",
         "SCALE_RANGE": "Skala 'Dari' mesti lebih kecil daripada 'Hingga'.",
-        "DUPLICATE": "Cawangan ini sudah mempunyai peralatan dengan nama itu."
+        "DUPLICATE": "Sudah ada peralatan dengan nama itu."
       },
-      "brewerTypeLabel": "Jenis alat",
+      "brewerTypeLabel": "Jenis kit",
       "brewerType": {
         "POUR_OVER": "Pour-over",
         "BATCH": "Pembancuh batch"
       },
       "brewerPlaceholder": "cth. V60 #1",
-      "noBrewers": "Belum ada alat bancuhan.",
-      "addBrewer": "Tambah alat bancuhan"
+      "noBrewers": "Belum ada kit bancuhan tangan.",
+      "addBrewer": "Tambah kit bancuhan tangan"
+    },
+    "outletEquipment": {
+      "kinds": {
+        "MACHINE": "Mesin espresso",
+        "GRINDER": "Pengisar",
+        "BREWER": "Kit bancuhan tangan"
+      },
+      "noneSetUp": "Belum ada. Super Admin menambahnya di atas.",
+      "noneUsed": "Belum ada.",
+      "noOutlets": "Anda belum mempunyai cawangan."
     }
   },
   "Invite": {
@@ -447,7 +462,7 @@
     "conflict": "Orang lain telah mengubah rekod ini. Versi terkini kini dipaparkan; sila semak dan sunting semula.",
     "alreadyRecorded": "Biji kopi ini sudah mempunyai rekod pada pengisar ini untuk hari ini (mungkin telah dipadam). Halaman telah dimuat semula.",
     "equipment": "Peralatan di cawangan ini",
-    "noGrinders": "Cawangan ini belum mempunyai pengisar. Admin menambah pengisar dan mesin espresso dalam Tetapan.",
+    "noGrinders": "Cawangan ini belum mempunyai pengisar. Admin memilih pengisar dan mesin espresso cawangan dalam Tetapan > Peralatan Cawangan.",
     "grinder": "Pengisar",
     "machine": "Mesin espresso",
     "shot": "Syot",
@@ -526,12 +541,12 @@
   },
   "FilterCalibration": {
     "title": "Kalibrasi Filter · Harian",
-    "note": "Satu rekod muktamad bagi setiap biji kopi, setiap alat bancuhan, setiap cawangan, setiap hari.",
-    "noEquipment": "Cawangan ini memerlukan sekurang-kurangnya satu alat bancuhan dan satu pengisar. Admin menambahnya dalam Tetapan.",
-    "invalid": "Dos, air dan jumlah masa mesti lebih daripada sifar, dan alat bancuhan, pengisar serta tetapan kisaran diperlukan.",
+    "note": "Satu rekod muktamad bagi setiap biji kopi, setiap kit bancuhan tangan, setiap cawangan, setiap hari.",
+    "noEquipment": "Cawangan ini memerlukan sekurang-kurangnya satu kit bancuhan tangan dan satu pengisar. Admin memilihnya dalam Tetapan > Peralatan Cawangan.",
+    "invalid": "Dos, air dan jumlah masa mesti lebih daripada sifar, dan kit bancuhan tangan, pengisar serta tetapan kisaran diperlukan.",
     "invalidOptional": "Semak nombor: air 70–100 °C, tuangan 1–20, TDS sehingga 25%, tiada nilai negatif.",
-    "alreadyRecorded": "Biji ini sudah mempunyai rekod pada alat bancuhan ini untuk hari ini (mungkin telah dipadam). Halaman telah dimuat semula.",
-    "brewer": "Alat bancuhan",
+    "alreadyRecorded": "Biji ini sudah mempunyai rekod pada kit bancuhan tangan ini untuk hari ini (mungkin telah dipadam). Halaman telah dimuat semula.",
+    "brewer": "Kit bancuhan tangan",
     "recipe": "Resipi",
     "water": "Air",
     "waterG": "Air (g)",
@@ -554,7 +569,7 @@
     "bloomShort": "bloom {water} g / {seconds} s",
     "poursShort": "{count} tuangan",
     "targetSummary": "Sasaran: dos {dose} g · nisbah 1:{ratio} · masa {time}",
-    "recordAnotherBrewer": "Rekod pada alat bancuhan lain",
+    "recordAnotherBrewer": "Rekod pada kit bancuhan tangan lain",
     "customTitle": "Kalibrasi Filter · Peribadi"
   },
   "Users": {

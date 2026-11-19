@@ -28,8 +28,9 @@ insert into public.profiles (id, email, full_name, role) values
   ('00000000-0000-0000-0000-00000000000d', 'other@test.local', 'OTHER BARISTA', 'BARISTA');
 insert into public.user_outlets (user_id, outlet_id)
   select '00000000-0000-0000-0000-00000000000d', id from public.outlets where code = 'JB-YOUBAR';
-insert into public.grinders (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000a1', id, 'Grinder 1' from public.outlets where code = 'JB-BROOOS';
+insert into public.grinders (id, name) values ('00000000-0000-0000-0000-0000000000a1', 'Grinder 1');
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a1' from public.outlets where code = 'JB-BROOOS';
 
 grant select on all tables in schema public to anon, authenticated;
 create temp table t_ids (k text primary key, v text);
