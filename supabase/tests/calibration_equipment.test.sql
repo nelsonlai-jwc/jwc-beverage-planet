@@ -31,7 +31,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b
 do $$
 begin
   begin
-    insert into public.grinders (outlet_id, name) select id, 'G' from public.outlets where code = 'JB-BROOOS';
+    insert into public.grinders (name) values ('G');
     raise exception 'manager should not add a grinder';
   exception when insufficient_privilege then
     null;
@@ -41,21 +41,22 @@ $$;
 
 -- Super Admin adds two grinders and a machine at Brooos, and one grinder elsewhere.
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', true);
-insert into public.grinders (id, outlet_id, name, brand, model, burr_type, scale_min, scale_max)
-  select '00000000-0000-0000-0000-0000000000a1', id, 'Grinder 1', 'Mahlkönig', 'E65S', 'FLAT', 1, 40
-    from public.outlets where code = 'JB-BROOOS';
-insert into public.grinders (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000a2', id, 'Grinder 2' from public.outlets where code = 'JB-BROOOS';
-insert into public.grinders (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000a3', id, 'Other outlet' from public.outlets where code = 'JB-YOUBAR';
-insert into public.espresso_machines (id, outlet_id, name, brand, group_count, default_water_temp_c, default_pressure_bar)
-  select '00000000-0000-0000-0000-0000000000e1', id, 'Machine 1', 'La Marzocco', 2, 93, 9
-    from public.outlets where code = 'JB-BROOOS';
+insert into public.grinders (id, name, brand, model, burr_type, scale_min, scale_max) values ('00000000-0000-0000-0000-0000000000a1', 'Grinder 1', 'Mahlkönig', 'E65S', 'FLAT', 1, 40);
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a1' from public.outlets where code = 'JB-BROOOS';
+insert into public.grinders (id, name) values ('00000000-0000-0000-0000-0000000000a2', 'Grinder 2');
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a2' from public.outlets where code = 'JB-BROOOS';
+insert into public.grinders (id, name) values ('00000000-0000-0000-0000-0000000000a3', 'Other outlet');
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a3' from public.outlets where code = 'JB-YOUBAR';
+insert into public.espresso_machines (id, name, brand, group_count, default_water_temp_c, default_pressure_bar) values ('00000000-0000-0000-0000-0000000000e1', 'Machine 1', 'La Marzocco', 2, 93, 9);
+insert into public.outlet_equipment (outlet_id, espresso_machine_id)
+  select id, '00000000-0000-0000-0000-0000000000e1' from public.outlets where code = 'JB-BROOOS';
 do $$
 begin
   begin
-    insert into public.grinders (outlet_id, name, scale_min, scale_max)
-      select id, 'Bad scale', 10, 5 from public.outlets where code = 'JB-BROOOS';
+    insert into public.grinders (name, scale_min, scale_max) values ('Bad scale', 10, 5);
     raise exception 'scale min must be below max';
   exception when check_violation then
     null;

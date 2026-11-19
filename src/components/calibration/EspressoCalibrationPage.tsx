@@ -12,8 +12,8 @@ const RECORD_COLUMNS = `id, business_date, created_by, coffee_bean_material_id, 
 const SHOT_COLUMNS = `id, coffee_bean_material_id, grinder_id, grinder_name, espresso_machine_id, machine_name,
   drink_type, dose_g, yield_g, extraction_time_seconds, grind_setting, water_temp_c, pressure_bar,
   preinfusion_seconds, basket_g, tds_percent, taste_balance, taste_notes, created_at`;
-const GRINDER_COLUMNS = "id, outlet_id, name, brand, model, scale_type, scale_min, scale_max, is_active";
-const MACHINE_COLUMNS = "id, outlet_id, name, brand, model, default_water_temp_c, default_pressure_bar, is_active";
+const GRINDER_COLUMNS = "id, name, brand, model, scale_type, scale_min, scale_max, is_active";
+const MACHINE_COLUMNS = "id, name, brand, model, default_water_temp_c, default_pressure_bar, is_active";
 const NO_OUTLET = "00000000-0000-0000-0000-000000000000";
 
 /** Espresso Calibration, Daily (outlet records) or Custom (personal records). */
@@ -45,20 +45,16 @@ export async function EspressoCalibrationPage({
     { data: targets },
     { data: grinders },
     { data: machines },
-    { data: outlets },
+    { data: outletEquipment },
     { data: rows },
     { data: previousRows },
     { data: shots },
   ] = await Promise.all([
     supabase.from("materials").select("id, name, brand").eq("is_coffee_bean", true).eq("status", "APPROVED").order("name"),
     supabase.from("coffee_bean_targets").select("*"),
-    custom
-      ? supabase.from("grinders").select(GRINDER_COLUMNS).order("name")
-      : supabase.from("grinders").select(GRINDER_COLUMNS).eq("outlet_id", outletId).order("name"),
-    custom
-      ? supabase.from("espresso_machines").select(MACHINE_COLUMNS).order("name")
-      : supabase.from("espresso_machines").select(MACHINE_COLUMNS).eq("outlet_id", outletId).order("name"),
-    supabase.from("outlets").select("id, name"),
+    supabase.from("grinders").select(GRINDER_COLUMNS).order("name"),
+    supabase.from("espresso_machines").select(MACHINE_COLUMNS).order("name"),
+    supabase.from("outlet_equipment").select("grinder_id, espresso_machine_id, brewer_id").eq("outlet_id", outletId),
     custom
       ? records.eq("purpose", "CUSTOM").eq("business_date", date).order("created_at")
       : records.eq("purpose", "DAILY").eq("outlet_id", outletId).eq("business_date", date),
@@ -100,10 +96,13 @@ export async function EspressoCalibrationPage({
   const withDrinks = (list: typeof rows): CalibrationRecord[] =>
     (list ?? []).map((r) => ({ ...r, drinks: drinksOf.get(r.id) ?? [] }));
 
-  // Custom: equipment of every outlet, so the outlet goes in the name.
-  const outletNames = new Map((outlets ?? []).map((o) => [o.id, o.name]));
-  const named = <T extends { name: string; outlet_id: string }>(list: T[] | null) =>
-    (list ?? []).map((x) => (custom ? { ...x, name: `${x.name} · ${outletNames.get(x.outlet_id) ?? "—"}` } : x));
+  // Custom: any equipment. Daily: only what the outlet uses (Outlet Equipment) can be chosen;
+  // the rest stays in the list, like disabled equipment, so older records keep their names.
+  const usedIds = new Set(
+    (outletEquipment ?? []).flatMap((e) => [e.grinder_id, e.espresso_machine_id, e.brewer_id].filter(Boolean)),
+  );
+  const usable = <T extends { id: string; is_active: boolean }>(list: T[] | null) =>
+    (list ?? []).map((x) => (custom ? x : { ...x, is_active: x.is_active && usedIds.has(x.id) }));
 
   const creators = custom ? [...new Set((rows ?? []).map((r) => r.created_by).filter((id) => id !== user.id))] : [];
   const { data: people } = creators.length
@@ -131,8 +130,8 @@ export async function EspressoCalibrationPage({
             name: bean.brand ? `${bean.name} · ${bean.brand}` : bean.name,
           }))}
           targets={targets ?? []}
-          grinders={named(grinders)}
-          machines={named(machines)}
+          grinders={usable(grinders)}
+          machines={usable(machines)}
           records={withDrinks(rows)}
           previous={withDrinks(previousRows)}
           shots={shots ?? []}

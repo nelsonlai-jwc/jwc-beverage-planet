@@ -23,12 +23,15 @@ insert into public.materials (id, name, brand, material_type_id, created_by, is_
          '00000000-0000-0000-0000-00000000000b', true
     from public.material_types where name = 'Other';
 update public.materials set status = 'APPROVED' where id = '00000000-0000-0000-0000-0000000000b1';
-insert into public.grinders (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000a1', id, 'Grinder 1' from public.outlets where code = 'JB-BROOOS';
-insert into public.grinders (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000a3', id, 'Elsewhere' from public.outlets where code = 'JB-YOUBAR';
-insert into public.brewers (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000d1', id, 'V60' from public.outlets where code = 'JB-YOUBAR';
+insert into public.grinders (id, name) values ('00000000-0000-0000-0000-0000000000a1', 'Grinder 1');
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a1' from public.outlets where code = 'JB-BROOOS';
+insert into public.grinders (id, name) values ('00000000-0000-0000-0000-0000000000a3', 'Elsewhere');
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a3' from public.outlets where code = 'JB-YOUBAR';
+insert into public.brewers (id, name) values ('00000000-0000-0000-0000-0000000000d1', 'V60');
+insert into public.outlet_equipment (outlet_id, brewer_id)
+  select id, '00000000-0000-0000-0000-0000000000d1' from public.outlets where code = 'JB-YOUBAR';
 
 grant select on all tables in schema public to authenticated;
 set local role authenticated;

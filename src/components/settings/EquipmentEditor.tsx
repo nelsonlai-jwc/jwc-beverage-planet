@@ -14,7 +14,6 @@ import { Chevron } from "./SettingsEditors";
 
 export type EquipmentItem = {
   id: string;
-  outletId: string;
   name: string;
   brand: string | null;
   model: string | null;
@@ -32,13 +31,10 @@ export type EquipmentItem = {
   brewerType?: string | null;
 };
 
-type OutletOption = { id: string; name: string };
-
 const s = (value: string | number | null | undefined) => (value == null ? "" : String(value));
 
-function toInput(item: EquipmentItem | null, outlets: OutletOption[]): EquipmentInput {
+function toInput(item: EquipmentItem | null): EquipmentInput {
   return {
-    outletId: item?.outletId ?? outlets[0]?.id ?? "",
     name: s(item?.name),
     brand: s(item?.brand),
     model: s(item?.model),
@@ -88,7 +84,6 @@ function Field({ label, children, wide }: { label: string; children: React.React
 function EquipmentForm({
   kind,
   initial,
-  outlets,
   pending,
   submitLabel,
   onSubmit,
@@ -96,7 +91,6 @@ function EquipmentForm({
 }: {
   kind: EquipmentKind;
   initial: EquipmentInput;
-  outlets: OutletOption[];
   pending: boolean;
   submitLabel: string;
   onSubmit: (input: EquipmentInput) => void;
@@ -118,15 +112,6 @@ function EquipmentForm({
     >
       <Field label={t("name")}>
         <input value={form.name} maxLength={60} required onChange={set("name")} placeholder={t(kind === "GRINDER" ? "grinderPlaceholder" : kind === "BREWER" ? "brewerPlaceholder" : "machinePlaceholder")} className={inputClass} />
-      </Field>
-      <Field label={t("outlet")}>
-        <select value={form.outletId} onChange={set("outletId")} className={inputClass}>
-          {outlets.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.name}
-            </option>
-          ))}
-        </select>
       </Field>
       <Field label={t("brand")}>
         <input value={form.brand} maxLength={60} onChange={set("brand")} className={inputClass} />
@@ -203,16 +188,8 @@ function EquipmentForm({
   );
 }
 
-/** Settings card body: the Super Admin lists, adds, edits and disables grinders or machines. */
-export function EquipmentEditor({
-  kind,
-  items,
-  outlets,
-}: {
-  kind: EquipmentKind;
-  items: EquipmentItem[];
-  outlets: OutletOption[];
-}) {
+/** Settings card body: the Super Admin lists, adds, edits and disables grinders, machines or hand brew kits. */
+export function EquipmentEditor({ kind, items }: { kind: EquipmentKind; items: EquipmentItem[] }) {
   const t = useTranslations("Settings.equipment");
   const tEdit = useTranslations("Settings.edit");
   const router = useRouter();
@@ -221,7 +198,6 @@ export function EquipmentEditor({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const outletName = new Map(outlets.map((o) => [o.id, o.name]));
 
   function run(action: () => ReturnType<typeof saveEquipment>, done: () => void) {
     setError(null);
@@ -237,12 +213,7 @@ export function EquipmentEditor({
     });
   }
 
-  // Grouped by outlet, in outlet order.
-  const sorted = [...items].sort(
-    (a, b) =>
-      outlets.findIndex((o) => o.id === a.outletId) - outlets.findIndex((o) => o.id === b.outletId) ||
-      a.name.localeCompare(b.name),
-  );
+  const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="flex flex-col gap-3">
@@ -261,7 +232,6 @@ export function EquipmentEditor({
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className={`font-semibold ${item.active ? "" : "text-[#3d3f3a]"}`}>{item.name}</span>
-                    <span className="rounded-full border border-black/40 px-2 py-0.5 text-xs">{outletName.get(item.outletId) ?? "—"}</span>
                     {!item.active && (
                       <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5 text-xs font-semibold">{tEdit("disabled")}</span>
                     )}
@@ -274,8 +244,7 @@ export function EquipmentEditor({
                 <>
                   <EquipmentForm
                     kind={kind}
-                    initial={toInput(item, outlets)}
-                    outlets={outlets}
+                    initial={toInput(item)}
                     pending={pending}
                     submitLabel={tEdit("save")}
                     onSubmit={(input) => run(() => saveEquipment(kind, item.id, input), () => setNotice(tEdit("saved")))}
@@ -303,8 +272,7 @@ export function EquipmentEditor({
         {adding ? (
           <EquipmentForm
             kind={kind}
-            initial={toInput(null, outlets)}
-            outlets={outlets}
+            initial={toInput(null)}
             pending={pending}
             submitLabel={tEdit("add")}
             onCancel={() => setAdding(false)}

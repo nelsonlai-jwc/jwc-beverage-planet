@@ -140,7 +140,6 @@ export type Database = {
           model: string | null
           name: string
           notes: string | null
-          outlet_id: string
           revision: number
           serial_number: string | null
           updated_at: string
@@ -154,7 +153,6 @@ export type Database = {
           model?: string | null
           name: string
           notes?: string | null
-          outlet_id: string
           revision?: number
           serial_number?: string | null
           updated_at?: string
@@ -168,7 +166,6 @@ export type Database = {
           model?: string | null
           name?: string
           notes?: string | null
-          outlet_id?: string
           revision?: number
           serial_number?: string | null
           updated_at?: string
@@ -868,7 +865,6 @@ export type Database = {
           model: string | null
           name: string
           notes: string | null
-          outlet_id: string
           revision: number
           serial_number: string | null
           updated_at: string
@@ -884,7 +880,6 @@ export type Database = {
           model?: string | null
           name: string
           notes?: string | null
-          outlet_id: string
           revision?: number
           serial_number?: string | null
           updated_at?: string
@@ -900,7 +895,6 @@ export type Database = {
           model?: string | null
           name?: string
           notes?: string | null
-          outlet_id?: string
           revision?: number
           serial_number?: string | null
           updated_at?: string
@@ -1208,7 +1202,6 @@ export type Database = {
           model: string | null
           name: string
           notes: string | null
-          outlet_id: string
           revision: number
           scale_max: number | null
           scale_min: number | null
@@ -1226,7 +1219,6 @@ export type Database = {
           model?: string | null
           name: string
           notes?: string | null
-          outlet_id: string
           revision?: number
           scale_max?: number | null
           scale_min?: number | null
@@ -1244,7 +1236,6 @@ export type Database = {
           model?: string | null
           name?: string
           notes?: string | null
-          outlet_id?: string
           revision?: number
           scale_max?: number | null
           scale_min?: number | null
@@ -2256,6 +2247,33 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           value?: string
+        }
+        Relationships: []
+      }
+      outlet_equipment: {
+        Row: {
+          brewer_id: string | null
+          created_at: string
+          espresso_machine_id: string | null
+          grinder_id: string | null
+          id: string
+          outlet_id: string
+        }
+        Insert: {
+          brewer_id?: string | null
+          created_at?: string
+          espresso_machine_id?: string | null
+          grinder_id?: string | null
+          id?: string
+          outlet_id: string
+        }
+        Update: {
+          brewer_id?: string | null
+          created_at?: string
+          espresso_machine_id?: string | null
+          grinder_id?: string | null
+          id?: string
+          outlet_id?: string
         }
         Relationships: []
       }

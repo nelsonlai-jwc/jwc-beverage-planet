@@ -28,7 +28,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b
 do $$
 begin
   begin
-    insert into public.brewers (outlet_id, name) select id, 'V60' from public.outlets where code = 'JB-BROOOS';
+    insert into public.brewers (name) values ('V60');
     raise exception 'manager should not add a brewer';
   exception when insufficient_privilege then
     null;
@@ -37,14 +37,18 @@ end;
 $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', true);
-insert into public.grinders (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000a1', id, 'EK43' from public.outlets where code = 'JB-BROOOS';
-insert into public.brewers (id, outlet_id, name, brewer_type)
-  select '00000000-0000-0000-0000-0000000000d1', id, 'V60', 'POUR_OVER' from public.outlets where code = 'JB-BROOOS';
-insert into public.brewers (id, outlet_id, name, brewer_type)
-  select '00000000-0000-0000-0000-0000000000d2', id, 'Batch', 'BATCH' from public.outlets where code = 'JB-BROOOS';
-insert into public.brewers (id, outlet_id, name)
-  select '00000000-0000-0000-0000-0000000000d3', id, 'Elsewhere' from public.outlets where code = 'JB-YOUBAR';
+insert into public.grinders (id, name) values ('00000000-0000-0000-0000-0000000000a1', 'EK43');
+insert into public.outlet_equipment (outlet_id, grinder_id)
+  select id, '00000000-0000-0000-0000-0000000000a1' from public.outlets where code = 'JB-BROOOS';
+insert into public.brewers (id, name, brewer_type) values ('00000000-0000-0000-0000-0000000000d1', 'V60', 'POUR_OVER');
+insert into public.outlet_equipment (outlet_id, brewer_id)
+  select id, '00000000-0000-0000-0000-0000000000d1' from public.outlets where code = 'JB-BROOOS';
+insert into public.brewers (id, name, brewer_type) values ('00000000-0000-0000-0000-0000000000d2', 'Batch', 'BATCH');
+insert into public.outlet_equipment (outlet_id, brewer_id)
+  select id, '00000000-0000-0000-0000-0000000000d2' from public.outlets where code = 'JB-BROOOS';
+insert into public.brewers (id, name) values ('00000000-0000-0000-0000-0000000000d3', 'Elsewhere');
+insert into public.outlet_equipment (outlet_id, brewer_id)
+  select id, '00000000-0000-0000-0000-0000000000d3' from public.outlets where code = 'JB-YOUBAR';
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000c', true);
 do $$
