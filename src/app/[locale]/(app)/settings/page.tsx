@@ -2,8 +2,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { EquipmentEditor, type EquipmentItem } from "@/components/settings/EquipmentEditor";
 import { OutletEquipmentEditor, type OutletEquipmentOutlet } from "@/components/settings/OutletEquipmentEditor";
-import { Chevron, ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
+import { BeanOptionsEditor, Chevron, ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
 import { getCurrentUser } from "@/lib/auth/currentUser";
+import { beanOptionName, toBeanOptions } from "@/lib/materials/coffeeBean";
 import { settingGroups } from "@/lib/settings/defaults";
 import { getOptionLabels, optionName, type OptionGroup } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +21,7 @@ export default async function SettingsPage({
   setRequestLocale(locale);
   const t = await getTranslations("Settings");
   const supabase = await createClient();
-  const [user, labels, { data: types }, { data: outlets }, { data: grinders }, { data: machines }, { data: brewers }, { data: assignments }] = await Promise.all([
+  const [user, labels, { data: types }, { data: outlets }, { data: grinders }, { data: machines }, { data: brewers }, { data: assignments }, { data: beanRows }] = await Promise.all([
     getCurrentUser(),
     getOptionLabels(),
     supabase.from("material_types").select("id, name, is_active").order("sort_order"),
@@ -29,7 +30,14 @@ export default async function SettingsPage({
     supabase.from("espresso_machines").select("*").order("name"),
     supabase.from("brewers").select("*").order("name"),
     supabase.from("outlet_equipment").select("outlet_id, grinder_id, espresso_machine_id, brewer_id"),
+    supabase.from("coffee_bean_options").select("id, kind, name_en, name_zh, name_ms, is_active").order("sort_order"),
   ]);
+  const beanOptions = toBeanOptions(beanRows);
+  const beanCards = [
+    { key: "beanOrigins", kind: "ORIGIN" as const },
+    { key: "beanVarieties", kind: "VARIETY" as const },
+    { key: "beanProcesses", kind: "PROCESS" as const },
+  ];
   const isAdmin = user?.role === "ADMIN";
 
   const optionItems = (group: OptionGroup) =>
@@ -153,6 +161,41 @@ export default async function SettingsPage({
                       {value}
                     </li>
                   ))}
+                </ul>
+              )}
+            </details>
+          );
+        })}
+        {beanCards.map((card) => {
+          const items = beanOptions.filter((o) => o.kind === card.kind);
+          return (
+            <details
+              key={card.key}
+              aria-labelledby={`setting-${card.key}`}
+              className="group flex flex-col rounded-[20px] bg-white p-5 sm:p-6 [&[open]>summary]:mb-3"
+            >
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <div className="flex flex-col gap-1">
+                  <h2 id={`setting-${card.key}`} className="text-base font-semibold">
+                    {t(`groups.${card.key}.label`)}
+                  </h2>
+                  <p className="text-[13px] text-[#3d3f3a]">
+                    {isAdmin ? t(`groups.${card.key}.adminRule`) : t(`groups.${card.key}.rule`)}
+                  </p>
+                </div>
+                <Chevron className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
+              </summary>
+              {isAdmin ? (
+                <BeanOptionsEditor kind={card.kind} items={items} />
+              ) : (
+                <ul className="flex flex-wrap gap-2">
+                  {items
+                    .filter((item) => item.active)
+                    .map((item) => (
+                      <li key={item.id} className="rounded-full border-[1.5px] border-black px-3 py-1 text-sm">
+                        {beanOptionName(item, locale)}
+                      </li>
+                    ))}
                 </ul>
               )}
             </details>

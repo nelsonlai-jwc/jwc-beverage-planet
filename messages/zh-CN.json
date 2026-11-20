@@ -96,6 +96,21 @@
         "rule": "已被引用的选项只能停用。",
         "adminRule": "可新增、改名、调整顺序或删除。已被原料使用的类型会改为停用。"
       },
+      "beanOrigins": {
+        "label": "咖啡产地",
+        "rule": "新增咖啡豆原料时可选的产地；清单没有的可在表单自行输入。",
+        "adminRule": "新增咖啡豆原料时可选的国家，员工仍可自行输入。可在这里新增、改名、排序或停用（停用后已有的豆子保留原值）。"
+      },
+      "beanVarieties": {
+        "label": "咖啡品种",
+        "rule": "新增咖啡豆原料时可选的品种；清单没有的可在表单自行输入。",
+        "adminRule": "新增咖啡豆原料时可选的品种，员工仍可自行输入。可在这里新增、改名、排序或停用（停用后已有的豆子保留原值）。"
+      },
+      "beanProcesses": {
+        "label": "咖啡处理法",
+        "rule": "新增咖啡豆原料时可选的处理法；清单没有的可在表单自行输入。",
+        "adminRule": "新增咖啡豆原料时可选的处理法，员工仍可自行输入。可在这里新增、改名、排序或停用（停用后已有的豆子保留原值）。"
+      },
       "outlet": {
         "label": "分店",
         "rule": "八间初始分店。",
@@ -193,7 +208,12 @@
         "INVALID": "名称太长。",
         "NOT_ALLOWED": "只有 Admin 可以修改。",
         "UNKNOWN": "出错了，请重试。"
-      }
+      },
+      "disable": "停用",
+      "beanEnPlaceholder": "英文名称",
+      "beanZhPlaceholder": "中文名称",
+      "beanMsPlaceholder": "马来文名称（可留空）",
+      "beanHint": "豆子保存的是英文名称，所以在这里改英文名不会改到之前已输入的豆子。"
     },
     "equipment": {
       "name": "名称",
@@ -757,7 +777,11 @@
       "saveDraft": "保存草稿",
       "submit": "提交审批",
       "saving": "保存中…",
-      "summary": "摘要"
+      "summary": "摘要",
+      "origin": "产地",
+      "variety": "品种",
+      "process": "处理法",
+      "beanDetailHint": "从清单选择，或自行输入。"
     },
     "detail": {
       "edit": "编辑",
@@ -840,7 +864,8 @@
       "NOT_CURRENT_APPROVAL": "只能撤回目前生效的审批，请刷新页面。",
       "OPEN_PRICE_EXISTS": "已有另一个价格在等待审批，请先批准或退回。",
       "NO_PREVIOUS_PRICE": "没有更早的价格可以恢复。",
-      "LATER_CHANGES": "之后已批准过改价，请先撤回那次改价。"
+      "LATER_CHANGES": "之后已批准过改价，请先撤回那次改价。",
+      "TEXT_TOO_LONG": "产地、品种或处理法超过 100 个字符。"
     },
     "export": "导出 CSV",
     "import": {
@@ -989,7 +1014,10 @@
       "price": "价格",
       "price_per_piece": "每件价格",
       "free_reason": "免费原因",
-      "status": "状态"
+      "status": "状态",
+      "origin": "产地",
+      "variety": "品种",
+      "process": "处理法"
     },
     "undo": {
       "button": "撤回审批",

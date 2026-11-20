@@ -80,6 +80,9 @@ export type MaterialInput = {
   bx: string;
   espressoCalibration: boolean;
   filterCalibration: boolean;
+  origin: string;
+  variety: string;
+  process: string;
   photoAssetId: string | null;
   packId?: string;
   packQuantity: string;
@@ -121,6 +124,9 @@ function materialFields(input: MaterialDetails) {
     bx: percent(input.bx),
     espresso_calibration: input.espressoCalibration,
     filter_calibration: input.filterCalibration,
+    origin: blank(input.origin) ? null : input.origin.trim().slice(0, 100),
+    variety: blank(input.variety) ? null : input.variety.trim().slice(0, 100),
+    process: blank(input.process) ? null : input.process.trim().slice(0, 100),
     photo_asset_id: input.photoAssetId,
   };
 }
@@ -205,6 +211,9 @@ export type MaterialDetails = Pick<
   | "bx"
   | "espressoCalibration"
   | "filterCalibration"
+  | "origin"
+  | "variety"
+  | "process"
   | "photoAssetId"
 >;
 
