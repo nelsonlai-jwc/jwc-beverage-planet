@@ -9,9 +9,10 @@ import {
   type MaterialInput,
 } from "@/app/[locale]/(app)/raw-materials/actions";
 import { Link, useRouter } from "@/i18n/navigation";
-import { isCoffeeBeanType } from "@/lib/materials/coffeeBean";
+import { BEAN_DETAIL_FIELD, BEAN_DETAIL_KINDS, isCoffeeBeanType, type BeanOption } from "@/lib/materials/coffeeBean";
 import { divide, formatUnitCost, isDecimal, isPositiveDecimal } from "@/lib/materials/decimal";
 import { createClient } from "@/lib/supabase/client";
+import { BeanDetailInput } from "./BeanDetailInput";
 import { PhotoField } from "./PhotoField";
 import {
   cardClass,
@@ -37,6 +38,9 @@ const emptyValues: MaterialFormValues = {
   bx: "",
   espressoCalibration: false,
   filterCalibration: false,
+  origin: "",
+  variety: "",
+  process: "",
   photoAssetId: null,
   packQuantity: "",
   unit: "ml",
@@ -74,11 +78,13 @@ function Field({
  */
 export function MaterialForm({
   types,
+  beanOptions,
   initial,
   photoUrl = null,
   approved,
 }: {
   types: { id: string; name: string }[];
+  beanOptions: BeanOption[];
   initial?: MaterialFormValues;
   photoUrl?: string | null;
   approved?: { isAdmin: boolean };
@@ -119,7 +125,7 @@ export function MaterialForm({
     return () => clearTimeout(timer);
   }, [values.name, values.id]);
 
-  // Calibration use is only for a Coffee Bean; another type clears it.
+  // Calibration use, origin, variety and process are only for a Coffee Bean; another type clears them.
   const isCoffeeBean = isCoffeeBeanType(types.find((type) => type.id === values.materialTypeId)?.name);
   function changeType(typeId: string) {
     const coffeeBean = isCoffeeBeanType(types.find((type) => type.id === typeId)?.name);
@@ -128,6 +134,9 @@ export function MaterialForm({
       materialTypeId: typeId,
       espressoCalibration: coffeeBean && current.espressoCalibration,
       filterCalibration: coffeeBean && current.filterCalibration,
+      origin: coffeeBean ? current.origin : "",
+      variety: coffeeBean ? current.variety : "",
+      process: coffeeBean ? current.process : "",
     }));
   }
 
@@ -374,7 +383,9 @@ export function MaterialForm({
           </section>
         )}
 
-        <details className={cardClass} open={Boolean(values.abv || values.bx || values.espressoCalibration || values.filterCalibration)}>
+        <details className={cardClass} open={Boolean(
+            values.abv || values.bx || values.espressoCalibration || values.filterCalibration || values.origin || values.variety || values.process,
+          )}>
           <summary className="cursor-pointer text-base font-semibold">{t("form.additional")}</summary>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field id="abv" label={t("form.abv")} hint={t("form.percentHint")}>
@@ -396,6 +407,25 @@ export function MaterialForm({
               />
             </Field>
           </div>
+          {isCoffeeBean && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              {BEAN_DETAIL_KINDS.map((kind) => {
+                const key = BEAN_DETAIL_FIELD[kind];
+                return (
+                  <Field key={kind} id={key} label={t(`form.${key}`)}>
+                    <BeanDetailInput
+                      id={key}
+                      kind={kind}
+                      options={beanOptions}
+                      value={values[key]}
+                      onChange={(value) => set(key, value)}
+                    />
+                  </Field>
+                );
+              })}
+              <p className="text-[13px] text-[#3d3f3a] sm:col-span-3">{t("form.beanDetailHint")}</p>
+            </div>
+          )}
           {isCoffeeBean && (
             <div className="flex flex-col">
               {(["espressoCalibration", "filterCalibration"] as const).map((key) => (

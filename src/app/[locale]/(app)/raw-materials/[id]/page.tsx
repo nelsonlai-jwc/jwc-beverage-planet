@@ -17,7 +17,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { PriceComparison } from "@/components/materials/PriceComparison";
 import { divide, formatMoney, formatUnitCost } from "@/lib/materials/decimal";
-import { isCoffeeBeanType } from "@/lib/materials/coffeeBean";
+import { BEAN_DETAIL_FIELD, BEAN_DETAIL_KINDS, beanDetailText, isCoffeeBeanType, toBeanOptions } from "@/lib/materials/coffeeBean";
 import { getViewer } from "@/lib/materials/viewer";
 import { TranslationNote } from "@/components/content/TranslationNote";
 import { getLocalizer } from "@/lib/content/translations";
@@ -47,7 +47,7 @@ export default async function MaterialPage({
     .maybeSingle();
   if (!material) notFound();
 
-  const [{ data: affected }, { data: returns }] = await Promise.all([
+  const [{ data: affected }, { data: returns }, { data: beanRows }] = await Promise.all([
     supabase.rpc("material_affected_recipe_count", { p_material_id: id }),
     supabase
       .from("approval_events")
@@ -57,7 +57,9 @@ export default async function MaterialPage({
       .eq("action", "RETURN")
       .order("created_at", { ascending: false })
       .limit(1),
+    supabase.from("coffee_bean_options").select("id, kind, name_en, name_zh, name_ms, is_active"),
   ]);
+  const beanOptions = toBeanOptions(beanRows);
 
   const isAdmin = role === "ADMIN";
   // Name, specification and details in the viewer's language (AI translated).
@@ -164,6 +166,16 @@ export default async function MaterialPage({
             <Detail label={t("form.bx")} value={material.bx != null ? `${material.bx}%` : null} />
             {isCoffeeBeanType(material.material_types?.name) && (
               <>
+                {BEAN_DETAIL_KINDS.map((kind) => {
+                  const key = BEAN_DETAIL_FIELD[kind];
+                  return (
+                    <Detail
+                      key={kind}
+                      label={t(`form.${key}`)}
+                      value={beanDetailText(material[key], beanOptions, kind, locale) || null}
+                    />
+                  );
+                })}
                 <Detail
                   label={t("form.espressoCalibration")}
                   value={material.espresso_calibration ? t("detail.yes") : t("detail.no")}

@@ -96,6 +96,21 @@
         "rule": "Nilai yang sedang digunakan hanya boleh dinyahaktifkan.",
         "adminRule": "Tambah, namakan semula, susun semula atau padam. Jenis yang sudah digunakan oleh bahan akan dinyahaktifkan, bukan dipadam."
       },
+      "beanOrigins": {
+        "label": "Asal Kopi",
+        "rule": "Asal yang ditawarkan untuk bahan mentah Biji Kopi. Lain-lain boleh ditaip dalam borang.",
+        "adminRule": "Negara yang ditawarkan semasa memasukkan bahan mentah Biji Kopi; staf masih boleh menaip sendiri. Tambah, namakan semula, susun atau nyahaktifkan di sini (nama yang dinyahaktifkan kekal pada biji sedia ada)."
+      },
+      "beanVarieties": {
+        "label": "Varieti Kopi",
+        "rule": "Varieti yang ditawarkan untuk bahan mentah Biji Kopi. Lain-lain boleh ditaip dalam borang.",
+        "adminRule": "Varieti yang ditawarkan semasa memasukkan bahan mentah Biji Kopi; staf masih boleh menaip sendiri. Tambah, namakan semula, susun atau nyahaktifkan di sini (nama yang dinyahaktifkan kekal pada biji sedia ada)."
+      },
+      "beanProcesses": {
+        "label": "Proses Kopi",
+        "rule": "Proses yang ditawarkan untuk bahan mentah Biji Kopi. Lain-lain boleh ditaip dalam borang.",
+        "adminRule": "Proses yang ditawarkan semasa memasukkan bahan mentah Biji Kopi; staf masih boleh menaip sendiri. Tambah, namakan semula, susun atau nyahaktifkan di sini (nama yang dinyahaktifkan kekal pada biji sedia ada)."
+      },
       "outlet": {
         "label": "Cawangan",
         "rule": "Lapan cawangan awal.",
@@ -193,7 +208,12 @@
         "INVALID": "Nama itu terlalu panjang.",
         "NOT_ALLOWED": "Hanya Admin boleh mengubah ini.",
         "UNKNOWN": "Berlaku ralat. Sila cuba lagi."
-      }
+      },
+      "disable": "Nyahaktifkan",
+      "beanEnPlaceholder": "Nama Inggeris",
+      "beanZhPlaceholder": "Nama Cina",
+      "beanMsPlaceholder": "Nama Melayu (pilihan)",
+      "beanHint": "Biji kopi menyimpan nama Inggeris, jadi menukarnya di sini tidak mengubah biji yang telah dimasukkan."
     },
     "equipment": {
       "name": "Nama",
@@ -792,7 +812,11 @@
       "saveDraft": "Simpan draf",
       "submit": "Hantar untuk kelulusan",
       "saving": "Menyimpan…",
-      "summary": "Ringkasan"
+      "summary": "Ringkasan",
+      "origin": "Asal",
+      "variety": "Varieti",
+      "process": "Proses",
+      "beanDetailHint": "Pilih daripada senarai atau taip sendiri."
     },
     "detail": {
       "edit": "Sunting",
@@ -875,7 +899,8 @@
       "NOT_CURRENT_APPROVAL": "Hanya kelulusan semasa boleh dibatalkan. Muat semula halaman.",
       "OPEN_PRICE_EXISTS": "Harga lain sedang menunggu kelulusan. Luluskan atau pulangkannya terlebih dahulu.",
       "NO_PREVIOUS_PRICE": "Tiada harga terdahulu untuk dikembalikan.",
-      "LATER_CHANGES": "Perubahan harga yang lebih baharu telah diluluskan. Batalkan perubahan harga itu terlebih dahulu."
+      "LATER_CHANGES": "Perubahan harga yang lebih baharu telah diluluskan. Batalkan perubahan harga itu terlebih dahulu.",
+      "TEXT_TOO_LONG": "Asal, varieti atau proses melebihi 100 aksara."
     },
     "export": "Eksport CSV",
     "import": {
@@ -1024,7 +1049,10 @@
       "price": "Harga",
       "price_per_piece": "Harga sekeping",
       "free_reason": "Sebab percuma",
-      "status": "Status"
+      "status": "Status",
+      "origin": "Asal",
+      "variety": "Varieti",
+      "process": "Proses"
     },
     "undo": {
       "button": "Batalkan kelulusan",

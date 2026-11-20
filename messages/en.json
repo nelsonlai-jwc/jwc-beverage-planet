@@ -96,6 +96,21 @@
         "rule": "Values in use can only be deactivated.",
         "adminRule": "Add, rename, reorder or delete. A type already used by a material is disabled instead of deleted."
       },
+      "beanOrigins": {
+        "label": "Coffee Origins",
+        "rule": "Origins offered for Coffee Bean raw materials. Anything else can be typed in the form.",
+        "adminRule": "Countries offered when entering a Coffee Bean raw material; staff can still type their own. Add, rename, reorder or disable here (disabled names stay on existing beans)."
+      },
+      "beanVarieties": {
+        "label": "Coffee Varieties",
+        "rule": "Varieties offered for Coffee Bean raw materials. Anything else can be typed in the form.",
+        "adminRule": "Varieties offered when entering a Coffee Bean raw material; staff can still type their own. Add, rename, reorder or disable here (disabled names stay on existing beans)."
+      },
+      "beanProcesses": {
+        "label": "Coffee Processes",
+        "rule": "Processes offered for Coffee Bean raw materials. Anything else can be typed in the form.",
+        "adminRule": "Processes offered when entering a Coffee Bean raw material; staff can still type their own. Add, rename, reorder or disable here (disabled names stay on existing beans)."
+      },
       "outlet": {
         "label": "Outlet",
         "rule": "The eight initial outlets.",
@@ -193,7 +208,12 @@
         "INVALID": "That name is too long.",
         "NOT_ALLOWED": "Only an Admin can change this.",
         "UNKNOWN": "Something went wrong. Please try again."
-      }
+      },
+      "disable": "Disable",
+      "beanEnPlaceholder": "English name",
+      "beanZhPlaceholder": "Chinese name",
+      "beanMsPlaceholder": "Malay name (optional)",
+      "beanHint": "Beans store the English name, so renaming it here does not change beans entered before."
     },
     "equipment": {
       "name": "Name",
@@ -792,7 +812,11 @@
       "saveDraft": "Save draft",
       "submit": "Submit for approval",
       "saving": "Saving…",
-      "summary": "Summary"
+      "summary": "Summary",
+      "origin": "Origin",
+      "variety": "Variety",
+      "process": "Process",
+      "beanDetailHint": "Pick from the list or type your own."
     },
     "detail": {
       "edit": "Edit",
@@ -875,7 +899,8 @@
       "NOT_CURRENT_APPROVAL": "Only the current approval can be undone. Refresh the page.",
       "OPEN_PRICE_EXISTS": "Another price is pending approval. Approve or return it first.",
       "NO_PREVIOUS_PRICE": "There is no earlier price to go back to.",
-      "LATER_CHANGES": "A later price change was approved. Undo that price change first."
+      "LATER_CHANGES": "A later price change was approved. Undo that price change first.",
+      "TEXT_TOO_LONG": "Origin, variety or process is longer than 100 characters."
     },
     "export": "Export CSV",
     "import": {
@@ -1024,7 +1049,10 @@
       "price": "Price",
       "price_per_piece": "Price per piece",
       "free_reason": "Why free",
-      "status": "Status"
+      "status": "Status",
+      "origin": "Origin",
+      "variety": "Variety",
+      "process": "Process"
     },
     "undo": {
       "button": "Undo approval",

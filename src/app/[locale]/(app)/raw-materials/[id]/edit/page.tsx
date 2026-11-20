@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MaterialForm } from "@/components/materials/MaterialForm";
 import { BackLink } from "@/components/materials/ui";
+import { toBeanOptions } from "@/lib/materials/coffeeBean";
 import { getViewer } from "@/lib/materials/viewer";
 import { signedMediaUrl } from "@/lib/media/signedUrl";
 
@@ -21,7 +22,7 @@ export default async function EditMaterialPage({
   if (role !== "ADMIN" && role !== "MANAGER") {
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
   }
-  const [{ data: material }, { data: types }] = await Promise.all([
+  const [{ data: material }, { data: types }, { data: beanOptions }] = await Promise.all([
     supabase
       .from("materials")
       .select(
@@ -30,6 +31,7 @@ export default async function EditMaterialPage({
       .eq("id", id)
       .maybeSingle(),
     supabase.from("material_types").select("id, name").eq("is_active", true).order("sort_order"),
+    supabase.from("coffee_bean_options").select("id, kind, name_en, name_zh, name_ms, is_active").order("sort_order"),
   ]);
   if (!material) notFound();
   const isAdmin = role === "ADMIN";
@@ -56,6 +58,7 @@ export default async function EditMaterialPage({
       <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{t("detail.edit")}</h1>
       <MaterialForm
         types={types ?? []}
+        beanOptions={toBeanOptions(beanOptions)}
         photoUrl={await signedMediaUrl(supabase, material.photo_asset_id)}
         approved={approved ? { isAdmin } : undefined}
         initial={{
@@ -70,6 +73,9 @@ export default async function EditMaterialPage({
           bx: material.bx?.toString() ?? "",
           espressoCalibration: material.espresso_calibration,
           filterCalibration: material.filter_calibration,
+          origin: material.origin ?? "",
+          variety: material.variety ?? "",
+          process: material.process ?? "",
           photoAssetId: material.photo_asset_id,
           packId: pack?.id,
           packQuantity: pack ? String(pack.pack_quantity) : "",

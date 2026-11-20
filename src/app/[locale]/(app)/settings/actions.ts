@@ -3,6 +3,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { translateTexts } from "@/lib/ai/translate";
+import type { BeanDetailKind } from "@/lib/materials/coffeeBean";
 import { OPTION_LABELS_TAG, type OptionGroup } from "@/lib/settings/options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -91,7 +92,7 @@ export async function setListValueActive(group: ListGroup, id: string, active: b
 }
 
 /** ids (or option values) of the whole group, first to last. */
-export async function reorderValues(group: ListGroup | OptionGroup, ids: string[]): Promise<SettingResult> {
+export async function reorderValues(group: ListGroup | OptionGroup | BeanDetailKind, ids: string[]): Promise<SettingResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("reorder_setting_values", { p_group: group, p_ids: ids });
   if (group === "STYLE" || group === "TEMP" || group === "STRENGTH") revalidateTag(OPTION_LABELS_TAG);
@@ -143,6 +144,49 @@ export async function saveOptionLabel(
     .eq("value", value)
     .select("value");
   revalidateTag(OPTION_LABELS_TAG);
+  refresh();
+  if (error) return fail(error);
+  return data?.length ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
+}
+
+// Coffee Bean origins, varieties and processes ------------------------------------------
+
+/** Adds an origin, variety or process at the end of its list (id null), or renames one. */
+export async function saveBeanOption(
+  kind: BeanDetailKind,
+  id: string | null,
+  labels: { en: string; zh: string; ms?: string | null },
+): Promise<SettingResult> {
+  const en = labels.en.trim();
+  const zh = labels.zh.trim();
+  const ms = (labels.ms ?? "").trim();
+  if (!en || !zh) return { ok: false, error: "NAME_REQUIRED" };
+  if (en.length > 60 || zh.length > 60 || ms.length > 60) return { ok: false, error: "INVALID" };
+  const names = { name_en: en, name_zh: zh, name_ms: ms || null };
+  const supabase = await createClient();
+  if (id) {
+    const { data, error } = await supabase.from("coffee_bean_options").update(names).eq("id", id).select("id");
+    refresh();
+    if (error) return fail(error);
+    return data?.length ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
+  }
+  const { data: last } = await supabase
+    .from("coffee_bean_options")
+    .select("sort_order")
+    .eq("kind", kind)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  const { error } = await supabase
+    .from("coffee_bean_options")
+    .insert({ kind, ...names, sort_order: (last?.[0]?.sort_order ?? 0) + 1 });
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
+/** Disabled names are no longer offered; beans that have them keep them. */
+export async function setBeanOptionActive(id: string, active: boolean): Promise<SettingResult> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("coffee_bean_options").update({ is_active: active }).eq("id", id).select("id");
   refresh();
   if (error) return fail(error);
   return data?.length ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };

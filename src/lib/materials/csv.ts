@@ -24,6 +24,9 @@ export const MATERIAL_COLUMNS: Column[] = [
   { key: "bx", zh: "Bx" },
   { key: "espresso_calibration", zh: "意式咖啡校准" },
   { key: "filter_calibration", zh: "手冲咖啡校准" },
+  { key: "origin", zh: "产地" },
+  { key: "variety", zh: "品种" },
+  { key: "process", zh: "处理法" },
 ];
 
 export const PACKAGING_COLUMNS: Column[] = [
@@ -125,6 +128,9 @@ export type MaterialRow = {
   bx: number | null;
   espresso_calibration: boolean;
   filter_calibration: boolean;
+  origin: string | null;
+  variety: string | null;
+  process: string | null;
 };
 
 export type PackagingRow = {
@@ -206,6 +212,12 @@ export function checkMaterialFile(
       if (!YES.includes(value) && !NO.includes(value)) errors.push("YES_NO_INVALID");
       return YES.includes(value) && isCoffeeBeanType(type?.name);
     });
+    // Origin, variety and process likewise only count for a Coffee Bean.
+    const beanDetail = (key: "origin" | "variety" | "process") => {
+      const value = optional(values[key]);
+      if (value && value.length > 100) errors.push("TEXT_TOO_LONG");
+      return isCoffeeBeanType(type?.name) ? value : null;
+    };
 
     const row: MaterialRow = {
       name: values.name.trim(),
@@ -223,6 +235,9 @@ export function checkMaterialFile(
       bx: percents[1],
       espresso_calibration: calibration[0],
       filter_calibration: calibration[1],
+      origin: beanDetail("origin"),
+      variety: beanDetail("variety"),
+      process: beanDetail("process"),
     };
     return { row, key: materialKey(row.name, row.brand, row.specification) };
   }, existingKeys);
