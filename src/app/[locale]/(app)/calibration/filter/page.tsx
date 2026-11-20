@@ -1,14 +1,7 @@
-import { setRequestLocale } from "next-intl/server";
-import { FilterCalibrationPage } from "@/components/calibration/filter/FilterCalibrationPage";
+import { redirect } from "next/navigation";
 
-export default async function FilterPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<{ outlet?: string; date?: string }>;
-}) {
+/** Old Calibration page: everything is on /calibration now. */
+export default async function OldCalibrationPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  setRequestLocale(locale);
-  return <FilterCalibrationPage purpose="DAILY" searchParams={await searchParams} />;
+  redirect(`/${locale}/calibration`);
 }

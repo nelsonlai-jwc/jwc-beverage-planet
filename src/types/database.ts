@@ -174,37 +174,43 @@ export type Database = {
       }
       calibration_drinks: {
         Row: {
+          business_date: string
           calibration_id: string
-          dose_g: number
+          coffee_bean_material_id: string
           drink_type: string
-          extraction_time_seconds: number
+          grinder_id: string | null
           id: string
-          taste_balance: string | null
-          taste_notes: string | null
-          tds_percent: number | null
-          yield_g: number
+          outlet_id: string | null
+          purpose: string
+          record_deleted: boolean
+          superseded_at: string | null
+          superseded_by: string | null
         }
         Insert: {
+          business_date: string
           calibration_id: string
-          dose_g: number
+          coffee_bean_material_id: string
           drink_type: string
-          extraction_time_seconds: number
+          grinder_id?: string | null
           id?: string
-          taste_balance?: string | null
-          taste_notes?: string | null
-          tds_percent?: number | null
-          yield_g: number
+          outlet_id?: string | null
+          purpose: string
+          record_deleted?: boolean
+          superseded_at?: string | null
+          superseded_by?: string | null
         }
         Update: {
+          business_date?: string
           calibration_id?: string
-          dose_g?: number
+          coffee_bean_material_id?: string
           drink_type?: string
-          extraction_time_seconds?: number
+          grinder_id?: string | null
           id?: string
-          taste_balance?: string | null
-          taste_notes?: string | null
-          tds_percent?: number | null
-          yield_g?: number
+          outlet_id?: string | null
+          purpose?: string
+          record_deleted?: boolean
+          superseded_at?: string | null
+          superseded_by?: string | null
         }
         Relationships: []
       }
@@ -253,7 +259,6 @@ export type Database = {
           grinder_rpm: number | null
           grinder_name: string | null
           machine_name: string | null
-          drink_type: string
           basket_g: number | null
           business_date: string
           coffee_bean_material_id: string
@@ -279,7 +284,6 @@ export type Database = {
           grinder_rpm?: number | null
           grinder_name?: string | null
           machine_name?: string | null
-          drink_type: string
           basket_g?: number | null
           business_date?: string
           coffee_bean_material_id: string
@@ -305,7 +309,6 @@ export type Database = {
           grinder_rpm?: number | null
           grinder_name?: string | null
           machine_name?: string | null
-          drink_type?: string
           basket_g?: number | null
           business_date?: string
           coffee_bean_material_id?: string
@@ -330,6 +333,13 @@ export type Database = {
       }
       calibrations: {
         Row: {
+          dose_g: number
+          yield_g: number
+          extraction_time_seconds: number
+          tds_percent: number | null
+          taste_balance: string | null
+          taste_notes: string | null
+          production_no: string | null
           purpose: string
           grinder_rpm: number | null
           grinder_name: string | null
@@ -356,6 +366,13 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          dose_g: number
+          yield_g: number
+          extraction_time_seconds: number
+          tds_percent?: number | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          production_no?: string | null
           purpose?: string
           grinder_rpm?: number | null
           grinder_name?: string | null
@@ -382,6 +399,13 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          dose_g?: number
+          yield_g?: number
+          extraction_time_seconds?: number
+          tds_percent?: number | null
+          taste_balance?: string | null
+          taste_notes?: string | null
+          production_no?: string | null
           purpose?: string
           grinder_rpm?: number | null
           grinder_name?: string | null
@@ -1131,8 +1155,51 @@ export type Database = {
         }
         Relationships: []
       }
+      filter_calibration_uses: {
+        Row: {
+          business_date: string
+          coffee_bean_material_id: string
+          filter_calibration_id: string
+          grinder_id: string | null
+          id: string
+          outlet_id: string | null
+          purpose: string
+          record_deleted: boolean
+          superseded_at: string | null
+          superseded_by: string | null
+          temperature: string
+        }
+        Insert: {
+          business_date: string
+          coffee_bean_material_id: string
+          filter_calibration_id: string
+          grinder_id?: string | null
+          id?: string
+          outlet_id?: string | null
+          purpose: string
+          record_deleted?: boolean
+          superseded_at?: string | null
+          superseded_by?: string | null
+          temperature: string
+        }
+        Update: {
+          business_date?: string
+          coffee_bean_material_id?: string
+          filter_calibration_id?: string
+          grinder_id?: string | null
+          id?: string
+          outlet_id?: string | null
+          purpose?: string
+          record_deleted?: boolean
+          superseded_at?: string | null
+          superseded_by?: string | null
+          temperature?: string
+        }
+        Relationships: []
+      }
       filter_calibrations: {
         Row: {
+          production_no: string | null
           purpose: string
           brewer_name: string | null
           grinder_rpm: number | null
@@ -1166,6 +1233,7 @@ export type Database = {
           water_temp_c: number | null
         }
         Insert: {
+          production_no?: string | null
           purpose?: string
           brewer_name?: string | null
           grinder_rpm?: number | null
@@ -1199,6 +1267,7 @@ export type Database = {
           water_temp_c?: number | null
         }
         Update: {
+          production_no?: string | null
           purpose?: string
           brewer_name?: string | null
           grinder_rpm?: number | null
@@ -3305,7 +3374,11 @@ export type Database = {
     }
     Functions: {
       save_espresso_calibration: {
-        Args: { p_id: string | null; p_revision: number | null; p_record: Json; p_drinks: Json }
+        Args: { p_record: Json; p_uses: string[]; p_replace: string[] | null }
+        Returns: string
+      }
+      save_filter_calibration: {
+        Args: { p_record: Json; p_uses: string[]; p_replace: string[] | null }
         Returns: string
       }
       admin_update_user: {
