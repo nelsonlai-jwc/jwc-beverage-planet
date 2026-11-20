@@ -6,13 +6,16 @@ import {
   addBeverageStyle,
   removeListValue,
   reorderValues,
+  saveBeanOption,
   saveListValue,
   saveOptionLabel,
+  setBeanOptionActive,
   setListValueActive,
   type ListGroup,
   type SettingResult,
 } from "@/app/[locale]/(app)/settings/actions";
 import { useRouter } from "@/i18n/navigation";
+import type { BeanDetailKind, BeanOption } from "@/lib/materials/coffeeBean";
 import type { OptionGroup } from "@/lib/settings/options";
 import { alertClass, inputClass, primaryButton, secondaryButton, smallButton } from "@/components/recipes/ui";
 
@@ -368,6 +371,150 @@ export function OptionLabelsEditor({ group, items: initial }: { group: OptionGro
           <p className="text-[13px] text-[#3d3f3a]">{t("styleHint")}</p>
         </>
       )}
+      {notice && (
+        <p role="status" className="text-sm font-semibold">
+          {notice}
+        </p>
+      )}
+      {error && (
+        <p role="alert" className={alertClass}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Coffee Bean origins, varieties or processes: add, rename (three languages), reorder, disable. */
+export function BeanOptionsEditor({ kind, items: initial }: { kind: BeanDetailKind; items: BeanOption[] }) {
+  const t = useTranslations("Settings.edit");
+  const { error, notice, setNotice, pending, run } = useSettingAction();
+  const [items, setItems] = useState(initial);
+  const [edits, setEdits] = useState<Record<string, { en: string; zh: string; ms: string }>>({});
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [added, setAdded] = useState({ en: "", zh: "", ms: "" });
+  const [source, setSource] = useState(initial);
+  if (source !== initial) {
+    setSource(initial);
+    setItems(initial);
+    setEdits({});
+  }
+
+  function reorder(index: number, delta: number) {
+    const next = move(items, index, delta);
+    setItems(next);
+    run(() => reorderValues(kind, next.map((item) => item.id)));
+  }
+
+  const nameInputs = (value: { en: string; zh: string; ms: string }, change: (next: { en: string; zh: string; ms: string }) => void) => (
+    <>
+      <input
+        value={value.en}
+        maxLength={60}
+        onChange={(e) => change({ ...value, en: e.target.value })}
+        placeholder={t("beanEnPlaceholder")}
+        aria-label="English"
+        className={`${inputClass} min-w-0 flex-1 basis-40`}
+      />
+      <input
+        value={value.zh}
+        maxLength={60}
+        onChange={(e) => change({ ...value, zh: e.target.value })}
+        placeholder={t("beanZhPlaceholder")}
+        aria-label="简体中文"
+        className={`${inputClass} min-w-0 flex-1 basis-40`}
+      />
+      <input
+        value={value.ms}
+        maxLength={60}
+        onChange={(e) => change({ ...value, ms: e.target.value })}
+        placeholder={t("beanMsPlaceholder")}
+        aria-label="Bahasa Melayu"
+        className={`${inputClass} min-w-0 flex-1 basis-40`}
+      />
+    </>
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="flex max-h-[28rem] flex-col gap-2 overflow-y-auto">
+        {items.map((item, index) => {
+          const edit = edits[item.id] ?? { en: item.en, zh: item.zh, ms: item.ms ?? "" };
+          const changed = edit.en.trim() !== item.en || edit.zh.trim() !== item.zh || edit.ms.trim() !== (item.ms ?? "");
+          const open = openId === item.id;
+          return (
+            <li key={item.id} className="flex flex-col gap-2 rounded-[12px] border border-black/15 p-2.5">
+              <div className="flex items-center gap-2">
+                <span className="flex gap-1">
+                  <button type="button" className={smallButton} aria-label={t("moveUp")} disabled={pending || index === 0} onClick={() => reorder(index, -1)}>
+                    ↑
+                  </button>
+                  <button type="button" className={smallButton} aria-label={t("moveDown")} disabled={pending || index === items.length - 1} onClick={() => reorder(index, 1)}>
+                    ↓
+                  </button>
+                </span>
+                <ItemToggle open={open} onToggle={() => setOpenId(open ? null : item.id)}>
+                  <span className={`font-semibold ${item.active ? "" : "text-[#3d3f3a]"}`}>
+                    {item.en}
+                    {item.zh !== item.en ? ` / ${item.zh}` : ""}
+                    {item.ms && item.ms !== item.en ? ` / ${item.ms}` : ""}
+                  </span>
+                  {!item.active && (
+                    <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5 text-xs font-semibold">{t("disabled")}</span>
+                  )}
+                </ItemToggle>
+              </div>
+              {open && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {nameInputs(edit, (next) => setEdits({ ...edits, [item.id]: next }))}
+                  {changed && (
+                    <button
+                      type="button"
+                      className={primaryButton}
+                      disabled={pending}
+                      onClick={() => run(() => saveBeanOption(kind, item.id, edit), () => setNotice(t("saved")))}
+                    >
+                      {t("save")}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={secondaryButton}
+                    disabled={pending}
+                    onClick={() =>
+                      run(
+                        () => setBeanOptionActive(item.id, !item.active),
+                        () => setNotice(item.active ? t("disabled") : t("enabled")),
+                      )
+                    }
+                  >
+                    {item.active ? t("disable") : t("enable")}
+                  </button>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <form
+        className="flex flex-wrap items-center gap-2 border-t border-black/10 pt-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          run(
+            () => saveBeanOption(kind, null, added),
+            () => {
+              setAdded({ en: "", zh: "", ms: "" });
+              setNotice(t("added"));
+            },
+          );
+        }}
+      >
+        {nameInputs(added, setAdded)}
+        <button type="submit" className={secondaryButton} disabled={pending || !added.en.trim() || !added.zh.trim()}>
+          {t("add")}
+        </button>
+      </form>
+      <p className="text-[13px] text-[#3d3f3a]">{t("beanHint")}</p>
       {notice && (
         <p role="status" className="text-sm font-semibold">
           {notice}

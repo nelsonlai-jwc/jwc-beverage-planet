@@ -16,6 +16,9 @@ export const MATERIAL_FIELDS = [
   "bx",
   "espresso_calibration",
   "filter_calibration",
+  "origin",
+  "variety",
+  "process",
   "photo_asset_id",
 ];
 export const PACKAGING_FIELDS = ["name", "brand", "description"];

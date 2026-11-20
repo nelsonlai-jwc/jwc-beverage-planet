@@ -57,7 +57,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   const { data } = await supabase
     .from("materials")
     .select(
-      "id, name, brand, no_brand, specification, description, abv, bx, espresso_calibration, filter_calibration, status, updated_at, cost_pack_id, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, description, status, material_price_versions(price, free_reason, status))",
+      "id, name, brand, no_brand, specification, description, abv, bx, espresso_calibration, filter_calibration, origin, variety, process, status, updated_at, cost_pack_id, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, description, status, material_price_versions(price, free_reason, status))",
     )
     .neq("status", "ARCHIVED")
     .order("name");
@@ -90,6 +90,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
       m.bx,
       m.espresso_calibration ? "yes" : "no",
       m.filter_calibration ? "yes" : "no",
+      m.origin,
+      m.variety,
+      m.process,
       cost?.unit_cost != null ? `${formatUnitCostFull(cost.unit_cost)} / ${cost.unit}` : "",
       t(`status.${m.status}`),
       date(m.updated_at),

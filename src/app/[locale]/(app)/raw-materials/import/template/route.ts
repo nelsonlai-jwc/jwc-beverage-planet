@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const csv = packaging
     ? toCsv(PACKAGING_COLUMNS, [["Cup Lid 90mm", "", "0.12", "", ""]])
     : toCsv(MATERIAL_COLUMNS, [
-        ["Fresh Milk", "Farm Fresh", "no", "Other", "Full cream", "", "1000", "ml", "6.35", "", "Bottle", "", "", "no"],
+        ["Fresh Milk", "Farm Fresh", "no", "Other", "Full cream", "", "1000", "ml", "6.35", "", "Bottle", "", "", "no", "no", "", "", ""],
       ]);
   return new Response(csv, {
     headers: {

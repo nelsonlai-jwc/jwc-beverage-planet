@@ -531,6 +531,36 @@ export type Database = {
           },
         ]
       }
+      coffee_bean_options: {
+        Row: {
+          id: string
+          is_active: boolean
+          kind: string
+          name_en: string
+          name_ms: string | null
+          name_zh: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          kind: string
+          name_en: string
+          name_ms?: string | null
+          name_zh: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name_en?: string
+          name_ms?: string | null
+          name_zh?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       coffee_bean_targets: {
         Row: {
           drink_type: string
@@ -1758,6 +1788,9 @@ export type Database = {
           is_coffee_bean: boolean
           material_type_id: string
           name: string
+          origin: string | null
+          process: string | null
+          variety: string | null
           name_normalized: string | null
           no_brand: boolean
           photo_asset_id: string | null
@@ -1785,6 +1818,9 @@ export type Database = {
           is_coffee_bean?: boolean
           material_type_id: string
           name: string
+          origin?: string | null
+          process?: string | null
+          variety?: string | null
           name_normalized?: string | null
           no_brand?: boolean
           photo_asset_id?: string | null
@@ -1812,6 +1848,9 @@ export type Database = {
           is_coffee_bean?: boolean
           material_type_id?: string
           name?: string
+          origin?: string | null
+          process?: string | null
+          variety?: string | null
           name_normalized?: string | null
           no_brand?: boolean
           photo_asset_id?: string | null
