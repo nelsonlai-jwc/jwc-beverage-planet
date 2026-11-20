@@ -25,6 +25,9 @@ export type EquipmentItem = {
   scaleType?: string | null;
   scaleMin?: number | null;
   scaleMax?: number | null;
+  rpmAdjustable?: boolean;
+  rpmMin?: number | null;
+  rpmMax?: number | null;
   groupCount?: number | null;
   defaultWaterTempC?: number | null;
   defaultPressureBar?: number | null;
@@ -45,6 +48,9 @@ function toInput(item: EquipmentItem | null): EquipmentInput {
     scaleType: item?.scaleType ?? "STEPPED",
     scaleMin: s(item?.scaleMin),
     scaleMax: s(item?.scaleMax),
+    rpmAdjustable: item?.rpmAdjustable ?? false,
+    rpmMin: s(item?.rpmMin),
+    rpmMax: s(item?.rpmMax),
     groupCount: s(item?.groupCount),
     defaultWaterTempC: s(item?.defaultWaterTempC),
     defaultPressureBar: s(item?.defaultPressureBar),
@@ -62,6 +68,8 @@ export function equipmentSummary(
   if (kind === "GRINDER") {
     if (item.burrType) parts.push(t(`burr.${item.burrType}`) + (item.burrSizeMm ? ` ${item.burrSizeMm} mm` : ""));
     if (item.scaleMin != null && item.scaleMax != null) parts.push(t("scaleShort", { min: item.scaleMin, max: item.scaleMax }));
+    if (item.rpmAdjustable && item.rpmMin != null && item.rpmMax != null)
+      parts.push(t("rpmShort", { min: item.rpmMin, max: item.rpmMax }));
   } else if (kind === "BREWER") {
     if (item.brewerType) parts.push(t(`brewerType.${item.brewerType}`));
   } else {
@@ -147,6 +155,24 @@ function EquipmentForm({
               <input {...numberProps} aria-label={t("scaleMax")} placeholder={t("scaleMax")} value={form.scaleMax} onChange={set("scaleMax")} />
             </span>
           </Field>
+          <label className="flex min-h-11 items-center gap-2 sm:col-span-2">
+            <input
+              type="checkbox"
+              className="h-5 w-5 accent-black"
+              checked={!!form.rpmAdjustable}
+              onChange={(e) => setForm({ ...form, rpmAdjustable: e.target.checked })}
+            />
+            <span className="text-[13px] font-semibold">{t("rpmAdjustable")}</span>
+          </label>
+          {form.rpmAdjustable && (
+            <Field label={t("rpmRange")}>
+              <span className="flex items-center gap-2">
+                <input {...numberProps} step="1" min="1" max="10000" inputMode="numeric" required aria-label={t("rpmMin")} placeholder={t("rpmMin")} value={form.rpmMin} onChange={set("rpmMin")} />
+                <span aria-hidden>–</span>
+                <input {...numberProps} step="1" min="1" max="10000" inputMode="numeric" required aria-label={t("rpmMax")} placeholder={t("rpmMax")} value={form.rpmMax} onChange={set("rpmMax")} />
+              </span>
+            </Field>
+          )}
         </>
       ) : kind === "BREWER" ? (
         <Field label={t("brewerTypeLabel")}>

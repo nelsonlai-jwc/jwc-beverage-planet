@@ -19,6 +19,9 @@ export type EquipmentInput = {
   scaleType?: string;
   scaleMin?: string;
   scaleMax?: string;
+  rpmAdjustable?: boolean;
+  rpmMin?: string;
+  rpmMax?: string;
   // Espresso machine
   groupCount?: string;
   defaultWaterTempC?: string;
@@ -59,6 +62,16 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
     const scaleMax = num(input.scaleMax);
     if (burrSize === undefined || scaleMin === undefined || scaleMax === undefined) return { ok: false, error: "NUMBER" };
     if (scaleMin !== null && scaleMax !== null && scaleMin >= scaleMax) return { ok: false, error: "SCALE_RANGE" };
+    // Adjustable speed needs a whole-number RPM range; otherwise no range is kept.
+    const rpmAdjustable = !!input.rpmAdjustable;
+    const rpmMin = rpmAdjustable ? num(input.rpmMin) : null;
+    const rpmMax = rpmAdjustable ? num(input.rpmMax) : null;
+    if (
+      rpmAdjustable &&
+      (rpmMin == null || rpmMax == null || !Number.isInteger(rpmMin) || !Number.isInteger(rpmMax) ||
+        rpmMin <= 0 || rpmMin >= rpmMax || rpmMax > 10000)
+    )
+      return { ok: false, error: "RPM_RANGE" };
     const values = {
       ...common,
       burr_type: ["FLAT", "CONICAL", "OTHER"].includes(input.burrType ?? "") ? input.burrType! : null,
@@ -66,6 +79,9 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
       scale_type: input.scaleType === "STEPLESS" ? "STEPLESS" : "STEPPED",
       scale_min: scaleMin,
       scale_max: scaleMax,
+      rpm_adjustable: rpmAdjustable,
+      rpm_min: rpmMin,
+      rpm_max: rpmMax,
     };
     ({ error } = id
       ? await supabase.from("grinders").update(values).eq("id", id)

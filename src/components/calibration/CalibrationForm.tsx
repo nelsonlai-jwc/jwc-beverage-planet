@@ -21,6 +21,7 @@ import {
   type Purpose,
   type SharedValues,
   type TasteBalance,
+  rpmProblem,
 } from "./types";
 
 type SharedState = {
@@ -29,6 +30,7 @@ type SharedState = {
   machineId: string;
   machineName: string;
   grind: string;
+  rpm: string;
   temp: string;
   pressure: string;
   preinfusion: string;
@@ -50,6 +52,7 @@ function sharedFrom(v: Partial<SharedValues> & { roast_date?: string | null }, b
     machineId: v.espresso_machine_id ?? (v.machine_name ? OTHER : base.machineId),
     machineName: v.machine_name ?? base.machineName,
     grind: v.grind_setting ?? "",
+    rpm: str(v.grinder_rpm),
     temp: str(v.water_temp_c),
     pressure: str(v.pressure_bar),
     preinfusion: str(v.preinfusion_seconds),
@@ -128,6 +131,7 @@ export function CalibrationForm({
       machineId: firstMachine?.id ?? "",
       machineName: "",
       grind: "",
+      rpm: "",
       temp: str(firstMachine?.default_water_temp_c),
       pressure: str(firstMachine?.default_pressure_bar),
       preinfusion: "",
@@ -158,6 +162,9 @@ export function CalibrationForm({
     grinder?.scale_max != null &&
     Number.isFinite(grindNumber) &&
     (grindNumber < grinder.scale_min || grindNumber > grinder.scale_max);
+  // Speed only for a Settings grinder with adjustable RPM.
+  const rpmGrinder = grinder?.rpm_adjustable ? grinder : undefined;
+  const rpmOutOfRange = rpmProblem(rpmGrinder, form.rpm);
 
   function pickMachine(id: string, typed: string) {
     const machine = machines.find((m) => m.id === id);
@@ -199,6 +206,10 @@ export function CalibrationForm({
       setError(t("roastFuture"));
       return null;
     }
+    if (rpmOutOfRange && rpmGrinder) {
+      setError(t("rpmOutOfRange", { min: rpmGrinder.rpm_min ?? 0, max: rpmGrinder.rpm_max ?? 0 }));
+      return null;
+    }
     return {
       coffee_bean_material_id: beanId,
       grinder_id: g.id,
@@ -206,6 +217,7 @@ export function CalibrationForm({
       espresso_machine_id: m.id,
       machine_name: m.name,
       grind_setting: form.grind.trim(),
+      grinder_rpm: rpmGrinder && form.rpm.trim() ? Number(form.rpm) : null,
       water_temp_c: temp ?? null,
       pressure_bar: p ?? null,
       preinfusion_seconds: optional.preinfusion_seconds ?? null,
@@ -398,6 +410,29 @@ export function CalibrationForm({
               </span>
             )}
           </div>
+          {rpmGrinder && (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="cal-rpm" className={labelClass}>
+                {t("rpm")}
+              </label>
+              <input
+                id="cal-rpm"
+                type="number"
+                inputMode="numeric"
+                step="1"
+                min={rpmGrinder.rpm_min ?? undefined}
+                max={rpmGrinder.rpm_max ?? undefined}
+                value={form.rpm}
+                onChange={set("rpm")}
+                className={inputClass}
+              />
+              <span className={rpmOutOfRange ? "text-[13px] font-semibold text-[#c4161c]" : mutedText}>
+                {rpmOutOfRange
+                  ? t("rpmOutOfRange", { min: rpmGrinder.rpm_min ?? 0, max: rpmGrinder.rpm_max ?? 0 })
+                  : t("rpmRange", { min: rpmGrinder.rpm_min ?? 0, max: rpmGrinder.rpm_max ?? 0 })}
+              </span>
+            </div>
+          )}
           {sharedField("temp", t("waterTempC"), { min: "80", max: "100" })}
           {sharedField("pressure", t("pressureBar"), { min: "0.1", max: "20" })}
           {sharedField("preinfusion", t("preinfusionS"))}

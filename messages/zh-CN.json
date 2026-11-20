@@ -218,6 +218,11 @@
       "scaleMin": "最小",
       "scaleMax": "最大",
       "scaleShort": "刻度 {min}–{max}",
+      "rpmAdjustable": "可调转速 (RPM)",
+      "rpmRange": "转速范围",
+      "rpmMin": "最低 RPM",
+      "rpmMax": "最高 RPM",
+      "rpmShort": "RPM {min}–{max}",
       "groupCount": "冲煮头数量",
       "groupsShort": "{count} 头",
       "defaultTemp": "常用水温 (°C)",
@@ -235,7 +240,8 @@
       "errors": {
         "NUMBER": "请检查数字（咖啡机：1–6 头、80–100 °C、最多 20 bar）。",
         "SCALE_RANGE": "刻度最小值须小于最大值。",
-        "DUPLICATE": "已经有同名的设备。"
+        "DUPLICATE": "已经有同名的设备。",
+        "RPM_RANGE": "请填写整数的最低和最高 RPM，最低须小于最高（最多 10,000）。"
       },
       "brewerTypeLabel": "器具类型",
       "brewerType": {
@@ -495,6 +501,9 @@
     },
     "grindRange": "磨豆机刻度范围 {min}–{max}",
     "grindOutOfRange": "超出这台磨豆机的刻度范围 {min}–{max}",
+    "rpm": "转速 (RPM)",
+    "rpmRange": "转速范围 {min}–{max}",
+    "rpmOutOfRange": "转速须为 {min}–{max} RPM 之间的整数。",
     "invalidOptional": "请检查数字：水温 80–100 °C，压力最多 20 bar，TDS 最多 25%，不能为负数。",
     "useYesterday": "沿用昨天数值",
     "saveFinal": "保存为最终记录",

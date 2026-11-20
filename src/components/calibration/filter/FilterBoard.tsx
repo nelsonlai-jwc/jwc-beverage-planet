@@ -289,6 +289,7 @@ export function FilterBoard({
                   ],
                   [t("grinder"), equipmentName(record.grinder_id, record.grinder_name, grinderNames)],
                   [t("grind"), record.grind_setting],
+                  ...(record.grinder_rpm != null ? [["RPM", String(record.grinder_rpm)] as [string, string]] : []),
                   ...(record.water_temp_c != null
                     ? [[t("waterTemp"), `${record.water_temp_c} °C`] as [string, string]]
                     : []),

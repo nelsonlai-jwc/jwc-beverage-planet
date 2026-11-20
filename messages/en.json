@@ -218,6 +218,11 @@
       "scaleMin": "From",
       "scaleMax": "To",
       "scaleShort": "scale {min}–{max}",
+      "rpmAdjustable": "Adjustable speed (RPM)",
+      "rpmRange": "RPM range",
+      "rpmMin": "Min RPM",
+      "rpmMax": "Max RPM",
+      "rpmShort": "RPM {min}–{max}",
       "groupCount": "Groups",
       "groupsShort": "{count, plural, one {# group} other {# groups}}",
       "defaultTemp": "Usual water temp (°C)",
@@ -235,7 +240,8 @@
       "errors": {
         "NUMBER": "Check the numbers (machine: 1–6 groups, 80–100 °C, up to 20 bar).",
         "SCALE_RANGE": "The scale 'From' must be below 'To'.",
-        "DUPLICATE": "There is already one with that name."
+        "DUPLICATE": "There is already one with that name.",
+        "RPM_RANGE": "Fill in Min RPM and Max RPM as whole numbers, Min below Max (up to 10,000)."
       },
       "brewerTypeLabel": "Kit type",
       "brewerType": {
@@ -495,6 +501,9 @@
     },
     "grindRange": "Grinder range {min}–{max}",
     "grindOutOfRange": "Outside this grinder's range {min}–{max}",
+    "rpm": "Speed (RPM)",
+    "rpmRange": "RPM range {min}–{max}",
+    "rpmOutOfRange": "Speed must be a whole number within {min}–{max} RPM.",
     "invalidOptional": "Check the numbers: water 80–100 °C, pressure up to 20 bar, TDS up to 25%, no negative values.",
     "useYesterday": "Use yesterday's values",
     "saveFinal": "Save as final",

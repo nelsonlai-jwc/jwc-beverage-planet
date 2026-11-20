@@ -271,6 +271,7 @@ export function CalibrationBoard({
                 const age = daysOffRoast(record.roast_date, record.business_date);
                 const facts: [string, string][] = [
                   [t("grind"), record.grind_setting],
+                  ...(record.grinder_rpm != null ? [["RPM", String(record.grinder_rpm)] as [string, string]] : []),
                   ...(record.water_temp_c != null ? [[t("waterTemp"), `${record.water_temp_c} °C`] as [string, string]] : []),
                   ...(record.pressure_bar != null ? [[t("pressure"), `${record.pressure_bar} bar`] as [string, string]] : []),
                   ...(record.preinfusion_seconds != null

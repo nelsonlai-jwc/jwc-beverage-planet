@@ -5,6 +5,7 @@ export type FilterValues = {
   grinder_id: string | null;
   grinder_name: string | null;
   grind_setting: string;
+  grinder_rpm: number | null;
   dose_g: number;
   water_g: number;
   water_temp_c: number | null;
