@@ -218,6 +218,11 @@
       "scaleMin": "Dari",
       "scaleMax": "Hingga",
       "scaleShort": "skala {min}–{max}",
+      "rpmAdjustable": "Kelajuan boleh laras (RPM)",
+      "rpmRange": "Julat RPM",
+      "rpmMin": "RPM minimum",
+      "rpmMax": "RPM maksimum",
+      "rpmShort": "RPM {min}–{max}",
       "groupCount": "Kumpulan",
       "groupsShort": "{count} kumpulan",
       "defaultTemp": "Suhu air biasa (°C)",
@@ -235,7 +240,8 @@
       "errors": {
         "NUMBER": "Semak nombor (mesin: 1–6 kumpulan, 80–100 °C, hingga 20 bar).",
         "SCALE_RANGE": "Skala 'Dari' mesti lebih kecil daripada 'Hingga'.",
-        "DUPLICATE": "Sudah ada peralatan dengan nama itu."
+        "DUPLICATE": "Sudah ada peralatan dengan nama itu.",
+        "RPM_RANGE": "Isi RPM minimum dan maksimum sebagai nombor bulat, minimum lebih kecil daripada maksimum (hingga 10,000)."
       },
       "brewerTypeLabel": "Jenis kit",
       "brewerType": {
@@ -495,6 +501,9 @@
     },
     "grindRange": "Julat pengisar {min}–{max}",
     "grindOutOfRange": "Di luar julat pengisar ini {min}–{max}",
+    "rpm": "Kelajuan (RPM)",
+    "rpmRange": "Julat RPM {min}–{max}",
+    "rpmOutOfRange": "Kelajuan mesti nombor bulat dalam julat {min}–{max} RPM.",
     "invalidOptional": "Semak nombor: air 80–100 °C, tekanan hingga 20 bar, TDS hingga 25%, tiada nilai negatif.",
     "useYesterday": "Guna nilai semalam",
     "saveFinal": "Simpan sebagai muktamad",

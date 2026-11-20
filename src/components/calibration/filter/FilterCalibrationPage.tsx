@@ -6,7 +6,7 @@ import { addDays, isIsoDate, malaysiaToday } from "@/lib/calibration/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { Purpose } from "../types";
 
-const VALUE_COLUMNS = `coffee_bean_material_id, brewer_id, brewer_name, grinder_id, grinder_name, grind_setting, dose_g,
+const VALUE_COLUMNS = `coffee_bean_material_id, brewer_id, brewer_name, grinder_id, grinder_name, grind_setting, grinder_rpm, dose_g,
   water_g, water_temp_c, bloom_water_g, bloom_seconds, pour_count, total_time_seconds, beverage_g, tds_percent,
   taste_balance, taste_notes`;
 const RECORD_COLUMNS = `id, business_date, created_by, ${VALUE_COLUMNS}, roast_date, deleted_at, delete_reason, updated_at, revision`;
@@ -35,7 +35,7 @@ export async function FilterCalibrationPage({
 
   const supabase = await createClient();
   const outletId = outlet?.id ?? NO_OUTLET;
-  const grinderColumns = "id, name, brand, model, scale_type, scale_min, scale_max, is_active";
+  const grinderColumns = "id, name, brand, model, scale_type, scale_min, scale_max, rpm_adjustable, rpm_min, rpm_max, is_active";
   const brewerColumns = "id, name, brand, model, brewer_type, is_active";
   const [
     { data: beans },

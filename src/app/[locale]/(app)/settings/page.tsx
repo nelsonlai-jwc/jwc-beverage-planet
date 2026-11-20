@@ -57,6 +57,9 @@ export default async function SettingsPage({
     scaleType: g.scale_type,
     scaleMin: g.scale_min,
     scaleMax: g.scale_max,
+    rpmAdjustable: g.rpm_adjustable,
+    rpmMin: g.rpm_min,
+    rpmMax: g.rpm_max,
   }));
   const machineItems: EquipmentItem[] = (machines ?? []).map((m) => ({
     id: m.id,

@@ -29,6 +29,7 @@ export function ShotList({
             `${shot.dose_g} g → ${shot.yield_g} g (${brewRatio(shot.dose_g, shot.yield_g)})`,
             `${shot.extraction_time_seconds} s`,
             `${t("grind")} ${shot.grind_setting}`,
+            shot.grinder_rpm != null ? `${shot.grinder_rpm} RPM` : null,
             shot.water_temp_c != null ? `${shot.water_temp_c} °C` : null,
             shot.pressure_bar != null ? `${shot.pressure_bar} bar` : null,
             shot.preinfusion_seconds != null ? t("preinfusionShort", { value: shot.preinfusion_seconds }) : null,

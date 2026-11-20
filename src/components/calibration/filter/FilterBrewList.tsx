@@ -29,6 +29,7 @@ export function FilterBrewList({
           const parts = [
             `${brew.dose_g} g : ${brew.water_g} g (1:${waterRatio(brew.dose_g, brew.water_g)})`,
             `${t("grind")} ${brew.grind_setting}`,
+            brew.grinder_rpm != null ? `${brew.grinder_rpm} RPM` : null,
             minutes(brew.total_time_seconds),
             brew.water_temp_c != null ? `${brew.water_temp_c} °C` : null,
             brew.bloom_water_g != null || brew.bloom_seconds != null

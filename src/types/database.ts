@@ -250,6 +250,7 @@ export type Database = {
       calibration_shots: {
         Row: {
           purpose: string
+          grinder_rpm: number | null
           grinder_name: string | null
           machine_name: string | null
           drink_type: string
@@ -275,6 +276,7 @@ export type Database = {
         }
         Insert: {
           purpose?: string
+          grinder_rpm?: number | null
           grinder_name?: string | null
           machine_name?: string | null
           drink_type: string
@@ -300,6 +302,7 @@ export type Database = {
         }
         Update: {
           purpose?: string
+          grinder_rpm?: number | null
           grinder_name?: string | null
           machine_name?: string | null
           drink_type?: string
@@ -328,6 +331,7 @@ export type Database = {
       calibrations: {
         Row: {
           purpose: string
+          grinder_rpm: number | null
           grinder_name: string | null
           machine_name: string | null
           grinder_id: string | null
@@ -353,6 +357,7 @@ export type Database = {
         }
         Insert: {
           purpose?: string
+          grinder_rpm?: number | null
           grinder_name?: string | null
           machine_name?: string | null
           grinder_id?: string | null
@@ -378,6 +383,7 @@ export type Database = {
         }
         Update: {
           purpose?: string
+          grinder_rpm?: number | null
           grinder_name?: string | null
           machine_name?: string | null
           grinder_id?: string | null
@@ -1018,6 +1024,7 @@ export type Database = {
         Row: {
           purpose: string
           brewer_name: string | null
+          grinder_rpm: number | null
           grinder_name: string | null
           beverage_g: number | null
           bloom_seconds: number | null
@@ -1043,6 +1050,7 @@ export type Database = {
         Insert: {
           purpose?: string
           brewer_name?: string | null
+          grinder_rpm?: number | null
           grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
@@ -1068,6 +1076,7 @@ export type Database = {
         Update: {
           purpose?: string
           brewer_name?: string | null
+          grinder_rpm?: number | null
           grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
@@ -1096,6 +1105,7 @@ export type Database = {
         Row: {
           purpose: string
           brewer_name: string | null
+          grinder_rpm: number | null
           grinder_name: string | null
           beverage_g: number | null
           bloom_seconds: number | null
@@ -1128,6 +1138,7 @@ export type Database = {
         Insert: {
           purpose?: string
           brewer_name?: string | null
+          grinder_rpm?: number | null
           grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
@@ -1160,6 +1171,7 @@ export type Database = {
         Update: {
           purpose?: string
           brewer_name?: string | null
+          grinder_rpm?: number | null
           grinder_name?: string | null
           beverage_g?: number | null
           bloom_seconds?: number | null
@@ -1203,6 +1215,9 @@ export type Database = {
           name: string
           notes: string | null
           revision: number
+          rpm_adjustable: boolean
+          rpm_max: number | null
+          rpm_min: number | null
           scale_max: number | null
           scale_min: number | null
           scale_type: string
@@ -1220,6 +1235,9 @@ export type Database = {
           name: string
           notes?: string | null
           revision?: number
+          rpm_adjustable?: boolean
+          rpm_max?: number | null
+          rpm_min?: number | null
           scale_max?: number | null
           scale_min?: number | null
           scale_type?: string
@@ -1237,6 +1255,9 @@ export type Database = {
           name?: string
           notes?: string | null
           revision?: number
+          rpm_adjustable?: boolean
+          rpm_max?: number | null
+          rpm_min?: number | null
           scale_max?: number | null
           scale_min?: number | null
           scale_type?: string

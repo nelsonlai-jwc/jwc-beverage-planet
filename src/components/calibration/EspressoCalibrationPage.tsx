@@ -7,12 +7,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { CalibrationRecord, DrinkValues, Purpose } from "./types";
 
 const RECORD_COLUMNS = `id, business_date, created_by, coffee_bean_material_id, grinder_id, grinder_name,
-  espresso_machine_id, machine_name, grind_setting, water_temp_c, pressure_bar, preinfusion_seconds, basket_g,
+  espresso_machine_id, machine_name, grind_setting, grinder_rpm, water_temp_c, pressure_bar, preinfusion_seconds, basket_g,
   roast_date, deleted_at, delete_reason, updated_at, revision`;
 const SHOT_COLUMNS = `id, coffee_bean_material_id, grinder_id, grinder_name, espresso_machine_id, machine_name,
-  drink_type, dose_g, yield_g, extraction_time_seconds, grind_setting, water_temp_c, pressure_bar,
+  drink_type, dose_g, yield_g, extraction_time_seconds, grind_setting, grinder_rpm, water_temp_c, pressure_bar,
   preinfusion_seconds, basket_g, tds_percent, taste_balance, taste_notes, created_at`;
-const GRINDER_COLUMNS = "id, name, brand, model, scale_type, scale_min, scale_max, is_active";
+const GRINDER_COLUMNS = "id, name, brand, model, scale_type, scale_min, scale_max, rpm_adjustable, rpm_min, rpm_max, is_active";
 const MACHINE_COLUMNS = "id, name, brand, model, default_water_temp_c, default_pressure_bar, is_active";
 const NO_OUTLET = "00000000-0000-0000-0000-000000000000";
 

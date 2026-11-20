@@ -9,7 +9,7 @@ import { checkRange, daysOffRoast, type RangeCheck } from "@/lib/calibration/cal
 import { filterExtractionYield, waterRatio } from "@/lib/calibration/filterCalc";
 import { createClient } from "@/lib/supabase/client";
 import { EquipmentSelect, OTHER, equipmentColumns } from "../EquipmentSelect";
-import type { Grinder, Purpose, TasteBalance } from "../types";
+import { rpmProblem, type Grinder, type Purpose, type TasteBalance } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
 import type { Brewer, FilterBrew, FilterRecord, FilterTarget, FilterValues } from "./types";
 
@@ -19,6 +19,7 @@ type FormState = {
   grinderId: string;
   grinderName: string;
   grind: string;
+  rpm: string;
   dose: string;
   water: string;
   temp: string;
@@ -41,6 +42,7 @@ function fromValues(v: Partial<FilterValues> & { roast_date?: string | null }, b
     grinderId: v.grinder_id ?? (v.grinder_name ? OTHER : base.grinderId),
     grinderName: v.grinder_name ?? base.grinderName,
     grind: v.grind_setting ?? "",
+    rpm: str(v.grinder_rpm),
     dose: str(v.dose_g),
     water: str(v.water_g),
     temp: str(v.water_temp_c),
@@ -107,6 +109,7 @@ export function FilterForm({
       grinderId: grinders[0]?.id ?? (custom ? OTHER : ""),
       grinderName: "",
       grind: "",
+      rpm: "",
       dose: "",
       water: "",
       temp: "",
@@ -139,6 +142,9 @@ export function FilterForm({
     grinder?.scale_max != null &&
     Number.isFinite(grindNumber) &&
     (grindNumber < grinder.scale_min || grindNumber > grinder.scale_max);
+  // Speed only for a Settings grinder with adjustable RPM.
+  const rpmGrinder = grinder?.rpm_adjustable ? grinder : undefined;
+  const rpmOutOfRange = rpmProblem(rpmGrinder, form.rpm);
 
   function values(): (FilterValues & { roast_date: string | null }) | null {
     const optional = {
@@ -170,6 +176,10 @@ export function FilterForm({
       setError(t("roastFuture"));
       return null;
     }
+    if (rpmOutOfRange && rpmGrinder) {
+      setError(t("rpmOutOfRange", { min: rpmGrinder.rpm_min ?? 0, max: rpmGrinder.rpm_max ?? 0 }));
+      return null;
+    }
     return {
       coffee_bean_material_id: beanId,
       brewer_id: b.id,
@@ -177,6 +187,7 @@ export function FilterForm({
       grinder_id: g.id,
       grinder_name: g.name,
       grind_setting: form.grind.trim(),
+      grinder_rpm: rpmGrinder && form.rpm.trim() ? Number(form.rpm) : null,
       dose_g: dose,
       water_g: water,
       water_temp_c: temp ?? null,
@@ -341,6 +352,29 @@ export function FilterForm({
               </span>
             )}
           </div>
+          {rpmGrinder && (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="fc-rpm" className={labelClass}>
+                {t("rpm")}
+              </label>
+              <input
+                id="fc-rpm"
+                type="number"
+                inputMode="numeric"
+                step="1"
+                min={rpmGrinder.rpm_min ?? undefined}
+                max={rpmGrinder.rpm_max ?? undefined}
+                value={form.rpm}
+                onChange={set("rpm")}
+                className={inputClass}
+              />
+              <span className={rpmOutOfRange ? "text-[13px] font-semibold text-[#c4161c]" : mutedText}>
+                {rpmOutOfRange
+                  ? t("rpmOutOfRange", { min: rpmGrinder.rpm_min ?? 0, max: rpmGrinder.rpm_max ?? 0 })
+                  : t("rpmRange", { min: rpmGrinder.rpm_min ?? 0, max: rpmGrinder.rpm_max ?? 0 })}
+              </span>
+            </div>
+          )}
           {numberField("temp", tf("waterTempC"))}
         </div>
         <p className="text-sm">
