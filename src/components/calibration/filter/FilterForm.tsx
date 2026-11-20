@@ -3,15 +3,17 @@
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { toast } from "@/components/ui/toast";
-import { errorText, inputClass, labelClass, mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
+import { inputClass, labelClass, mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { useRouter } from "@/i18n/navigation";
 import { checkRange, daysOffRoast, type RangeCheck } from "@/lib/calibration/calc";
 import { filterExtractionYield, waterRatio } from "@/lib/calibration/filterCalc";
 import { createClient } from "@/lib/supabase/client";
+import { BeanTargetForm } from "../BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "../EquipmentSelect";
+import { AppliesTo, FormError, ProductionNoField, productionNoProblem, useFinalSave } from "../FinalParts";
 import { rpmProblem, type Grinder, type Purpose, type TasteBalance } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
-import type { Brewer, FilterBrew, FilterRecord, FilterTarget, FilterValues } from "./types";
+import { FILTER_TEMPS, type Brewer, type FilterBrew, type FilterRecord, type FilterTarget, type FilterValues } from "./types";
 
 type FormState = {
   brewerId: string;
@@ -66,69 +68,70 @@ function optionalNumber(value: string): number | null | undefined {
 
 const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
 
+/** Filter: dial in with test brews, then save a Final ticked Hot and / or Iced. */
 export function FilterForm({
   purpose,
   outletId,
   date,
   beanId,
-  record,
   brewers,
   grinders,
   target,
-  yesterday,
+  previous,
   brews,
   brewerNames,
-  onClose,
+  canManage,
+  onDone,
 }: {
   purpose: Purpose;
   /** Daily records only. */
   outletId: string | null;
   date: string;
   beanId: string;
-  record: FilterRecord | null;
-  /** New record: brewers still free for this bean today. Edit: the record's brewer. */
   brewers: Brewer[];
   grinders: Grinder[];
   target: FilterTarget | undefined;
-  /** Values to reuse: daily by brewer id (yesterday), custom under "*" (the last record). */
-  yesterday: Map<string, FilterRecord>;
+  /** Earlier Finals of this bean to reuse, newest first: daily yesterday's, custom my last ones. */
+  previous: FilterRecord[];
+  /** Test brews of this bean today. */
   brews: FilterBrew[];
   brewerNames: Map<string, string>;
-  onClose: () => void;
+  canManage: boolean;
+  onDone: () => void;
 }) {
   const t = useTranslations("Calibration");
   const tf = useTranslations("FilterCalibration");
   const router = useRouter();
   const custom = purpose === "CUSTOM";
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>(() => {
-    const base: FormState = {
-      brewerId: record ? (record.brewer_id ?? OTHER) : (brewers[0]?.id ?? (custom ? OTHER : "")),
-      brewerName: record?.brewer_name ?? "",
-      grinderId: grinders[0]?.id ?? (custom ? OTHER : ""),
-      grinderName: "",
-      grind: "",
-      rpm: "",
-      dose: "",
-      water: "",
-      temp: "",
-      bloomWater: "",
-      bloomSeconds: "",
-      pours: "",
-      time: "",
-      beverage: "",
-      tds: "",
-      roastDate: "",
-      balance: "",
-      notes: "",
-    };
-    return record ? fromValues(record, base) : base;
-  });
+  const final = useFinalSave({ kind: "FILTER", purpose, outletId, date, onSaved: onDone });
+  const { busy, setBusy, error, setError } = final;
+  const [editTarget, setEditTarget] = useState(false);
+  const [items, setItems] = useState<string[]>([]);
+  const [productionNo, setProductionNo] = useState("");
+  const [form, setForm] = useState<FormState>(() => ({
+    brewerId: brewers.find((b) => b.is_active)?.id ?? (custom ? OTHER : ""),
+    brewerName: "",
+    grinderId: grinders.find((g) => g.is_active)?.id ?? (custom ? OTHER : ""),
+    grinderName: "",
+    grind: "",
+    rpm: "",
+    dose: "",
+    water: "",
+    temp: "",
+    bloomWater: "",
+    bloomSeconds: "",
+    pours: "",
+    time: "",
+    beverage: "",
+    tds: "",
+    roastDate: "",
+    balance: "",
+    notes: "",
+  }));
   const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
-  const prev = yesterday.get(custom ? "*" : form.brewerId);
+  const prev = custom ? previous[0] : previous.find((r) => r.grinder_id === form.grinderId);
   const dose = Number(form.dose);
   const water = Number(form.water);
   const time = Number(form.time);
@@ -208,43 +211,15 @@ export function FilterForm({
     if (busy) return;
     const v = values();
     if (!v) return;
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
-    if (record) {
-      // A daily record keeps its bean and brewer.
-      const { coffee_bean_material_id: _bean, brewer_id: _brewer, brewer_name: _brewerName, ...rest } = v;
-      void _bean;
-      void _brewer;
-      void _brewerName;
-      const changes = custom ? v : rest;
-      const { data, error: updateError } = await supabase
-        .from("filter_calibrations")
-        .update(changes)
-        .eq("id", record.id)
-        .eq("revision", record.revision)
-        .select("id");
-      if (updateError || !data?.length) {
-        setError(updateError ? t("saveFailed") : t("conflict"));
-        setBusy(false);
-        router.refresh();
-        return;
-      }
-    } else {
-      const { error: insertError } = await supabase
-        .from("filter_calibrations")
-        .insert({ ...v, purpose, outlet_id: outletId, business_date: date });
-      if (insertError) {
-        setError(insertError.code === "23505" ? tf("alreadyRecorded") : t("saveFailed"));
-        setBusy(false);
-        router.refresh();
-        return;
-      }
+    if (productionNoProblem(productionNo)) {
+      setError(t("productionNoInvalid"));
+      return;
     }
-    setBusy(false);
-    toast("saved");
-    onClose();
-    router.refresh();
+    if (items.length === 0) {
+      setError(t("needAppliesTo"));
+      return;
+    }
+    await final.submit({ ...v, production_no: productionNo.trim() || null }, items);
   }
 
   async function saveBrew() {
@@ -297,7 +272,21 @@ export function FilterForm({
   );
 
   return (
-    <form onSubmit={saveFinal} className="flex flex-col gap-4">
+    <form onSubmit={saveFinal} className="flex flex-col gap-5">
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-sm font-semibold">{t("bagTitle")}</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor="fc-roast" className={labelClass}>
+              {t("roastDate")}
+            </label>
+            <input id="fc-roast" type="date" max={date} value={form.roastDate} onChange={set("roastDate")} className={inputClass} />
+            {age != null && age >= 0 && <span className={mutedText}>{t("daysOffRoast", { days: age })}</span>}
+          </div>
+          <ProductionNoField id="fc-production" value={productionNo} onChange={setProductionNo} />
+        </div>
+      </fieldset>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <EquipmentSelect
           id="fc-brewer"
@@ -306,7 +295,6 @@ export function FilterForm({
           value={form.brewerId}
           typed={form.brewerName}
           allowOther={custom}
-          disabled={!!record && !custom}
           onChange={(value, typed) => setForm({ ...form, brewerId: value, brewerName: typed })}
         />
         <EquipmentSelect
@@ -320,7 +308,7 @@ export function FilterForm({
         />
       </div>
 
-      {!record && prev && (
+      {prev && (
         <button type="button" className={`${secondaryButton} self-start`} onClick={() => setForm(fromValues(prev, form))}>
           {custom ? t("useLast") : t("useYesterday")}
         </button>
@@ -377,10 +365,18 @@ export function FilterForm({
           )}
           {numberField("temp", tf("waterTempC"))}
         </div>
-        <p className="text-sm">
-          <span className={mutedText}>{t("ratio")}: </span>
-          <span className="font-semibold">{ratio ? `1:${ratio}` : "—"}</span>
-        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <span>
+            <span className={mutedText}>{t("ratio")}: </span>
+            <span className="font-semibold">{ratio ? `1:${ratio}` : "—"}</span>
+          </span>
+          {canManage && (
+            <button type="button" className="text-[13px] underline" onClick={() => setEditTarget(!editTarget)}>
+              {target ? t("editTarget") : t("setTarget")}
+            </button>
+          )}
+        </div>
+        {editTarget && <BeanTargetForm beanId={beanId} target={target} filter onClose={() => setEditTarget(false)} />}
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
@@ -403,13 +399,6 @@ export function FilterForm({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {numberField("beverage", tf("beverageG"))}
           {numberField("tds", t("tdsPercent"), { hint: ey != null ? t("eyValue", { value: ey }) : tf("eyHint") })}
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <label htmlFor="fc-roast" className={labelClass}>
-              {t("roastDate")}
-            </label>
-            <input id="fc-roast" type="date" max={date} value={form.roastDate} onChange={set("roastDate")} className={inputClass} />
-            {age != null && age >= 0 && <span className={mutedText}>{t("daysOffRoast", { days: age })}</span>}
-          </div>
         </div>
         <div className="flex flex-col gap-1.5">
           <span className={labelClass}>{t("tasteBalance")}</span>
@@ -445,39 +434,33 @@ export function FilterForm({
         </div>
       </fieldset>
 
-      {error && (
-        <p role="alert" className={errorText}>
-          {error}
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={busy} className={primaryButton}>
-          {busy ? t("saving") : t("saveFinal")}
-        </button>
-        <button type="button" disabled={busy} onClick={saveBrew} className={secondaryButton}>
+      <div className="flex flex-col gap-3">
+        <button type="button" disabled={busy} onClick={saveBrew} className={`${secondaryButton} self-start`}>
           {tf("saveBrew")}
         </button>
-        <button type="button" onClick={onClose} className={secondaryButton}>
-          {t("cancel")}
-        </button>
+        <p className={mutedText}>{tf("brewHint")}</p>
+        {brews.length > 0 && (
+          <FilterBrewList
+            brews={brews}
+            brewerNames={brewerNames}
+            onUse={(brew) => setForm(fromValues(brew, { ...form, brewerId: brew.brewer_id ?? OTHER, brewerName: brew.brewer_name ?? "" }))}
+          />
+        )}
       </div>
-      <p className={mutedText}>{tf("brewHint")}</p>
 
-      {brews.length > 0 && (
-        <FilterBrewList
-          brews={brews}
-          brewerNames={brewerNames}
-          onUse={(brew) =>
-            setForm(
-              fromValues(
-                brew,
-                record && !custom
-                  ? form
-                  : { ...form, brewerId: brew.brewer_id ?? OTHER, brewerName: brew.brewer_name ?? "" },
-              ),
-            )
-          }
-        />
+      <AppliesTo kind="FILTER" items={FILTER_TEMPS} value={items} onChange={setItems} />
+
+      <FormError error={error} />
+      {final.warning}
+      {!final.pending && (
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" disabled={busy} className={primaryButton}>
+            {busy ? t("saving") : t("saveFinal")}
+          </button>
+          <button type="button" onClick={onDone} className={secondaryButton}>
+            {t("cancel")}
+          </button>
+        </div>
       )}
     </form>
   );

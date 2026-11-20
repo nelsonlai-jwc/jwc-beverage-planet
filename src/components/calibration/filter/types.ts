@@ -1,3 +1,5 @@
+import type { FinalBase } from "../types";
+
 export type FilterValues = {
   coffee_bean_material_id: string;
   brewer_id: string | null;
@@ -19,16 +21,7 @@ export type FilterValues = {
   taste_notes: string | null;
 };
 
-export type FilterRecord = FilterValues & {
-  id: string;
-  business_date: string;
-  created_by: string;
-  roast_date: string | null;
-  deleted_at: string | null;
-  delete_reason: string | null;
-  updated_at: string;
-  revision: number;
-};
+export type FilterRecord = FilterValues & FinalBase & { brewer_id: string | null };
 
 export type FilterBrew = FilterValues & { id: string; created_at: string };
 
@@ -51,3 +44,6 @@ export type Brewer = {
   brewer_type: string;
   is_active: boolean;
 };
+
+export type FilterTemp = "HOT" | "ICED";
+export const FILTER_TEMPS: FilterTemp[] = ["HOT", "ICED"];

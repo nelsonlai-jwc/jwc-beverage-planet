@@ -68,31 +68,31 @@ declare
   v_mine uuid := (select id from t_outlet where code = 'JB-BROOOS');
   v_id uuid;
 begin
-  v_id := public.save_espresso_calibration(null, null, jsonb_build_object(
+  v_id := public.save_espresso_calibration(jsonb_build_object(
     'outlet_id', v_mine, 'coffee_bean_material_id', '00000000-0000-0000-0000-0000000000c1',
-    'grinder_id', '00000000-0000-0000-0000-0000000000d1', 'grind_setting', '5', 'grinder_rpm', 1200),
-    '[{"drink_type":"BLACK_HOT","dose_g":18,"yield_g":36,"extraction_time_seconds":28}]'::jsonb);
+    'grinder_id', '00000000-0000-0000-0000-0000000000d1', 'grind_setting', '5', 'grinder_rpm', 1200, 'dose_g', 18, 'yield_g', 36, 'extraction_time_seconds', 28),
+    array['BLACK_HOT'], null);
   assert (select grinder_rpm from public.calibrations where id = v_id) = 1200, 'RPM saved on the record';
 
   begin
-    perform public.save_espresso_calibration(null, null, jsonb_build_object(
+    perform public.save_espresso_calibration(jsonb_build_object(
       'outlet_id', v_mine, 'coffee_bean_material_id', '00000000-0000-0000-0000-0000000000c1',
-      'grinder_id', '00000000-0000-0000-0000-0000000000d3', 'grind_setting', '5', 'grinder_rpm', 1200),
-      '[{"drink_type":"BLACK_HOT","dose_g":18,"yield_g":36,"extraction_time_seconds":28}]'::jsonb);
+      'grinder_id', '00000000-0000-0000-0000-0000000000d3', 'grind_setting', '5', 'grinder_rpm', 1200, 'dose_g', 18, 'yield_g', 36, 'extraction_time_seconds', 28),
+    array['BLACK_HOT'], null);
     raise exception 'RPM on a grinder without adjustable speed should fail';
   exception when check_violation then
     null;
   end;
 
   insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id, grind_setting, grinder_rpm,
-                                        drink_type, dose_g, yield_g, extraction_time_seconds)
+                                        dose_g, yield_g, extraction_time_seconds)
   values (v_mine, '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000d1', '5', 600,
-          'BLACK_HOT', 18, 36, 28);
+          18, 36, 28);
   begin
     insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id, grind_setting, grinder_rpm,
-                                          drink_type, dose_g, yield_g, extraction_time_seconds)
+                                          dose_g, yield_g, extraction_time_seconds)
     values (v_mine, '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000d1', '5', 1501,
-            'BLACK_HOT', 18, 36, 28);
+            18, 36, 28);
     raise exception 'RPM above the range should fail';
   exception when check_violation then
     null;

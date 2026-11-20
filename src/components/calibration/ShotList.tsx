@@ -43,7 +43,7 @@ export function ShotList({
               <div className="flex min-w-0 flex-col gap-0.5 text-sm">
                 <span className="font-semibold">
                   #{index + 1} · {format.dateTime(new Date(shot.created_at), { timeStyle: "short", timeZone: "Asia/Kuala_Lumpur" })} ·{" "}
-                  {t(`drink.${shot.drink_type}`)} · {equipmentName(shot.grinder_id, shot.grinder_name, grinderNames)}
+                  {equipmentName(shot.grinder_id, shot.grinder_name, grinderNames)}
                 </span>
                 <span>{parts.join(" · ")}</span>
                 {shot.taste_notes && <span className={mutedText}>{shot.taste_notes}</span>}

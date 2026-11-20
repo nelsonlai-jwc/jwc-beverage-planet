@@ -44,12 +44,10 @@ do $$
 declare
   v_id uuid;
 begin
-  v_id := public.save_espresso_calibration(null, null,
-    jsonb_build_object('outlet_id', (select id from public.outlets where code = 'JB-BROOOS'),
+  v_id := public.save_espresso_calibration(jsonb_build_object('outlet_id', (select id from public.outlets where code = 'JB-BROOOS'),
                        'coffee_bean_material_id', '00000000-0000-0000-0000-0000000000b1',
-                       'grinder_id', '00000000-0000-0000-0000-0000000000a1', 'grind_setting', '12'),
-    '[{"drink_type":"BLACK_HOT","dose_g":18,"yield_g":36,"extraction_time_seconds":28},
-      {"drink_type":"MILK_HOT","dose_g":18,"yield_g":32,"extraction_time_seconds":25}]');
+                       'grinder_id', '00000000-0000-0000-0000-0000000000a1', 'grind_setting', '12', 'dose_g', 18, 'yield_g', 36, 'extraction_time_seconds', 28),
+    array['BLACK_HOT', 'MILK_HOT'], null);
   insert into t_ids values ('cal', v_id);
   begin
     insert into public.surveys (subject_type, calibration_id, outlet_id, audience, drinks)

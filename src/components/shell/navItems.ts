@@ -114,20 +114,6 @@ export const navItems: readonly NavItem[] = [
     key: "calibration",
     icon: Coffee,
     roles: ["ADMIN", "MANAGER", "BARISTA"],
-    children: [
-      {
-        href: "/calibration",
-        label: "Calibration.espressoDailyNav",
-        match: (p) => p === "/calibration",
-      },
-      { href: "/calibration/custom", label: "Calibration.espressoCustomNav", match: (p) => p === "/calibration/custom" },
-      { href: "/calibration/filter", label: "Calibration.filterDailyNav", match: (p) => p === "/calibration/filter" },
-      {
-        href: "/calibration/filter/custom",
-        label: "Calibration.filterCustomNav",
-        match: (p) => p === "/calibration/filter/custom",
-      },
-    ],
   },
   { href: "/surveys", key: "surveys", icon: ClipboardList, roles: ["ADMIN", "MANAGER", "BARISTA"] },
   {

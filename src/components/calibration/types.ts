@@ -6,9 +6,8 @@ export type Purpose = "DAILY" | "CUSTOM";
 export type DrinkType = "BLACK_HOT" | "BLACK_ICED" | "MILK_HOT" | "MILK_ICED";
 export const DRINK_TYPES: DrinkType[] = ["BLACK_HOT", "BLACK_ICED", "MILK_HOT", "MILK_ICED"];
 
-/** Extraction values of one drink type. */
-export type DrinkValues = {
-  drink_type: string;
+/** Espresso extraction values of a Final or a test shot. */
+export type EspressoValues = {
   dose_g: number;
   yield_g: number;
   extraction_time_seconds: number;
@@ -17,7 +16,7 @@ export type DrinkValues = {
   taste_notes: string | null;
 };
 
-/** Grinder and machine settings shared by every drink of a record. */
+/** Grinder and machine settings of a Final or a test shot. */
 export type SharedValues = {
   coffee_bean_material_id: string;
   grinder_id: string | null;
@@ -32,21 +31,33 @@ export type SharedValues = {
   basket_g: number | null;
 };
 
-export type CalibrationRecord = SharedValues & {
+/** One ticked item of a Final (a drink type, or Hot / Iced for filter); superseded when a newer Final took it. */
+export type FinalUse = { id: string; item: string; superseded_by: string | null; superseded_at: string | null };
+
+/** Fields every Final has, espresso or filter. */
+export type FinalBase = {
   id: string;
+  purpose: Purpose;
+  outlet_id: string | null;
   business_date: string;
   created_by: string;
+  created_at: string;
   roast_date: string | null;
+  production_no: string | null;
   deleted_at: string | null;
   delete_reason: string | null;
-  updated_at: string;
   revision: number;
-  drinks: DrinkValues[];
+  uses: FinalUse[];
 };
 
-export type CalibrationShot = SharedValues & DrinkValues & { id: string; created_at: string };
+export type CalibrationRecord = SharedValues & EspressoValues & FinalBase;
 
-export type Bean = { id: string; name: string };
+export type CalibrationShot = SharedValues & EspressoValues & { id: string; created_at: string };
+
+/** Production number of a bag, e.g. PR-47481. */
+export const PRODUCTION_NO = /^PR-\d{5}$/;
+
+export type Bean = { id: string; name: string; brand: string | null };
 
 export type BeanTarget = {
   material_id: string;

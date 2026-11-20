@@ -65,15 +65,25 @@ begin
                                           dose_g, water_g, total_time_seconds)
   values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000d2',
           '00000000-0000-0000-0000-0000000000a1', '10', 60, 1000, 300);
+  -- One current Final per bean, grinder and hot / iced: a second Hot needs agreement.
+  perform public.save_filter_calibration(jsonb_build_object('outlet_id', v_outlet,
+    'coffee_bean_material_id', '00000000-0000-0000-0000-0000000000b1', 'brewer_id', '00000000-0000-0000-0000-0000000000d1',
+    'grinder_id', '00000000-0000-0000-0000-0000000000a1', 'grind_setting', '9', 'dose_g', 15, 'water_g', 250,
+    'total_time_seconds', 165), array['HOT'], null);
   begin
-    insert into public.filter_calibrations (outlet_id, coffee_bean_material_id, brewer_id, grinder_id, grind_setting,
-                                            dose_g, water_g, total_time_seconds)
-    values (v_outlet, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000d1',
-            '00000000-0000-0000-0000-0000000000a1', '9', 15, 250, 165);
-    raise exception 'same bean and brewer twice should fail';
-  exception when unique_violation then
+    perform public.save_filter_calibration(jsonb_build_object('outlet_id', v_outlet,
+      'coffee_bean_material_id', '00000000-0000-0000-0000-0000000000b1', 'brewer_id', '00000000-0000-0000-0000-0000000000d2',
+      'grinder_id', '00000000-0000-0000-0000-0000000000a1', 'grind_setting', '9', 'dose_g', 15, 'water_g', 250,
+      'total_time_seconds', 165), array['HOT', 'ICED'], null);
+    raise exception 'same bean, grinder and hot twice should need agreement';
+  exception when serialization_failure then
     null;
   end;
+  perform public.save_filter_calibration(jsonb_build_object('outlet_id', v_outlet,
+    'coffee_bean_material_id', '00000000-0000-0000-0000-0000000000b1', 'brewer_id', '00000000-0000-0000-0000-0000000000d2',
+    'grinder_id', '00000000-0000-0000-0000-0000000000a1', 'grind_setting', '9', 'dose_g', 15, 'water_g', 250,
+    'total_time_seconds', 165), array['ICED'], null);
+  assert (select count(*) from public.filter_calibration_uses where superseded_by is null) = 2, 'hot and iced current';
   begin
     insert into public.filter_calibrations (outlet_id, coffee_bean_material_id, brewer_id, grinder_id, grind_setting,
                                             dose_g, water_g, total_time_seconds)
@@ -85,7 +95,7 @@ begin
   end;
   begin
     update public.filter_calibrations set deleted_at = now(), delete_reason = 'x'
-     where brewer_id = '00000000-0000-0000-0000-0000000000d2';
+     where brewer_id = '00000000-0000-0000-0000-0000000000d2' and grind_setting = '10';
     raise exception 'barista should not delete';
   exception when insufficient_privilege then
     null;
@@ -121,8 +131,9 @@ values ('00000000-0000-0000-0000-0000000000b1', 15, 16, 15, 17, 150, 210);
 do $$
 begin
   update public.filter_calibrations set deleted_at = now(), delete_reason = 'wrong'
-   where brewer_id = '00000000-0000-0000-0000-0000000000d2';
-  assert (select deleted_by from public.filter_calibrations where brewer_id = '00000000-0000-0000-0000-0000000000d2')
+   where brewer_id = '00000000-0000-0000-0000-0000000000d2' and grind_setting = '10';
+  assert (select deleted_by from public.filter_calibrations
+           where brewer_id = '00000000-0000-0000-0000-0000000000d2' and grind_setting = '10')
     = '00000000-0000-0000-0000-00000000000b', 'manager deletes with reason';
 end;
 $$;
