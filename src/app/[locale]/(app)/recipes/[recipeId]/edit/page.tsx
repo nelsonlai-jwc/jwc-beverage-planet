@@ -108,6 +108,7 @@ export default async function EditRecipePage({
       adminDirect={viewer.role === "ADMIN" && Boolean(recipe.current_approved_version_id)}
       styles={styleValues(labels, STYLES).filter((s) => s !== "PREP_MATERIAL")}
       temps={orderOf(labels, "TEMP", TEMPS)}
+      canAddMaterial={viewer.role === "ADMIN" || viewer.role === "MANAGER"}
     />
   );
 }

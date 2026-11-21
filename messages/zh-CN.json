@@ -720,6 +720,7 @@
   "RawMaterials": {
     "title": "原料",
     "backToList": "全部原料",
+    "backToRecipe": "返回配方",
     "backToPackaging": "全部包装",
     "intro": "全公司共用的采购原料与包装。价格经 Admin 批准后才计入饮料成本。",
     "noAccess": "只有 Manager 和 Admin 可以查看原料与价格。",
@@ -1218,6 +1219,7 @@
     "allTypes": "全部",
     "prepChip": "本店预制",
     "noIngredientMatch": "没有符合的原料",
+    "addNewMaterial": "新增原料“{name}”",
     "close": "关闭",
     "addIngredient": "新增原料",
     "packaging": "包装",
