@@ -255,6 +255,7 @@ export type Database = {
       }
       calibration_shots: {
         Row: {
+          drink_type: string | null
           purpose: string
           grinder_rpm: number | null
           grinder_name: string | null
@@ -280,6 +281,7 @@ export type Database = {
           yield_g: number
         }
         Insert: {
+          drink_type?: string | null
           purpose?: string
           grinder_rpm?: number | null
           grinder_name?: string | null
@@ -305,6 +307,7 @@ export type Database = {
           yield_g: number
         }
         Update: {
+          drink_type?: string | null
           purpose?: string
           grinder_rpm?: number | null
           grinder_name?: string | null
@@ -1076,6 +1079,7 @@ export type Database = {
       }
       filter_calibration_brews: {
         Row: {
+          temperature: string | null
           purpose: string
           brewer_name: string | null
           grinder_rpm: number | null
@@ -1102,6 +1106,7 @@ export type Database = {
           water_temp_c: number | null
         }
         Insert: {
+          temperature?: string | null
           purpose?: string
           brewer_name?: string | null
           grinder_rpm?: number | null
@@ -1128,6 +1133,7 @@ export type Database = {
           water_temp_c?: number | null
         }
         Update: {
+          temperature?: string | null
           purpose?: string
           brewer_name?: string | null
           grinder_rpm?: number | null
@@ -3380,6 +3386,14 @@ export type Database = {
       save_filter_calibration: {
         Args: { p_record: Json; p_uses: string[]; p_replace: string[] | null }
         Returns: string
+      }
+      save_espresso_calibrations: {
+        Args: { p_finals: Json }
+        Returns: string[]
+      }
+      save_filter_calibrations: {
+        Args: { p_finals: Json }
+        Returns: string[]
       }
       admin_update_user: {
         Args: {

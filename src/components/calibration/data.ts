@@ -14,8 +14,8 @@ export const FILTER_VALUES = `coffee_bean_material_id, brewer_id, brewer_name, g
   taste_balance, taste_notes`;
 export const ESPRESSO_COLUMNS = `${FINAL_BASE}, ${ESPRESSO_VALUES}`;
 export const FILTER_COLUMNS = `${FINAL_BASE}, ${FILTER_VALUES}`;
-export const SHOT_COLUMNS = `id, created_at, ${ESPRESSO_VALUES}`;
-export const BREW_COLUMNS = `id, created_at, ${FILTER_VALUES}`;
+export const SHOT_COLUMNS = `id, created_at, drink_type, ${ESPRESSO_VALUES}`;
+export const BREW_COLUMNS = `id, created_at, temperature, ${FILTER_VALUES}`;
 export const GRINDER_COLUMNS = "id, name, brand, model, scale_type, scale_min, scale_max, rpm_adjustable, rpm_min, rpm_max, is_active";
 export const MACHINE_COLUMNS = "id, name, brand, model, default_water_temp_c, default_pressure_bar, is_active";
 export const BREWER_COLUMNS = "id, name, brand, model, brewer_type, is_active";

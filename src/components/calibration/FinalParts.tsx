@@ -18,45 +18,82 @@ export function useItemLabel() {
   return (kind: FinalKind, item: string) => (kind === "ESPRESSO" ? t(`drink.${item}`) : t(`temp.${item}`));
 }
 
-/** Chips to tick the drinks a Final applies to. */
-export function AppliesTo({
+/** Tabs for the drinks a Final is for: each tab has its own shot values and saves as its own Final. */
+export function ItemTabs({
   kind,
   items,
   value,
+  filled,
   onChange,
 }: {
   kind: FinalKind;
   items: string[];
-  value: string[];
-  onChange: (value: string[]) => void;
+  value: string;
+  /** Tabs that have values; they are saved as Finals. */
+  filled: string[];
+  onChange: (item: string) => void;
 }) {
   const t = useTranslations("Calibration");
   const label = useItemLabel();
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-semibold">{t("appliesTo")}</legend>
-      <p className={mutedText}>{t("appliesToHint")}</p>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => {
-          const on = value.includes(item);
-          return (
-            <button
-              key={item}
-              type="button"
-              role="checkbox"
-              aria-checked={on}
-              onClick={() => onChange(on ? value.filter((x) => x !== item) : items.filter((x) => x === item || value.includes(x)))}
-              className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
-                on ? "border-black bg-black text-white" : "border-black/40 bg-white"
-              }`}
-            >
-              {on ? "✓ " : ""}
-              {label(kind, item)}
-            </button>
-          );
-        })}
+    <div role="tablist" aria-label={t("tabsLabel")} className="flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
+      {items.map((item) => {
+        const on = value === item;
+        return (
+          <button
+            key={item}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            onClick={() => onChange(item)}
+            className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-4 text-sm font-semibold whitespace-nowrap ${
+              on ? "border-black bg-black text-white" : "border-black/40 bg-white"
+            }`}
+          >
+            {label(kind, item)}
+            {filled.includes(item) && <span aria-label={t("tabFilled")}>●</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Copy the open tab's values to another tab: a dropdown and an "Apply to" button. */
+export function ApplyTo({
+  kind,
+  items,
+  current,
+  onApply,
+}: {
+  kind: FinalKind;
+  items: string[];
+  current: string;
+  onApply: (item: string) => void;
+}) {
+  const t = useTranslations("Calibration");
+  const label = useItemLabel();
+  const others = items.filter((x) => x !== current);
+  const [target, setTarget] = useState(others[0] ?? "");
+  const chosen = others.includes(target) ? target : others[0];
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1 sm:max-w-60">
+          <select aria-label={t("applyToLabel")} value={chosen} onChange={(e) => setTarget(e.target.value)} className={inputClass}>
+            {others.map((x) => (
+              <option key={x} value={x}>
+                {label(kind, x)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button type="button" className={secondaryButton} onClick={() => chosen && onApply(chosen)}>
+          {t("applyTo")}
+        </button>
       </div>
-    </fieldset>
+      <p className={mutedText}>{t("applyToHint")}</p>
+    </div>
   );
 }
 
@@ -142,11 +179,15 @@ async function currentFinals(
   });
 }
 
-type Pending = { record: Record<string, unknown>; items: string[]; conflicts: Conflict[] };
+/** One Final to save: a record and the drink(s) it is for. */
+export type FinalToSave = { record: Record<string, unknown>; items: string[] };
+
+type Pending = { finals: FinalToSave[]; conflicts: Conflict[] };
 
 /**
- * Saves a Final. A daily Final first looks for current Finals of the same bean, grinder and
- * ticked items; when there are any, the person sees them and must agree before they are replaced.
+ * Saves one or more Finals together (all or none). Daily Finals first look for current Finals of
+ * the same bean, grinder and drinks; when there are any, the person sees them and must agree
+ * before they are replaced.
  */
 export function useFinalSave({
   kind,
@@ -166,30 +207,38 @@ export function useFinalSave({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
 
-  async function check(record: Record<string, unknown>, items: string[]): Promise<Conflict[] | null> {
+  const allItems = (finals: FinalToSave[]) => finals.flatMap((f) => f.items);
+
+  async function check(finals: FinalToSave[]): Promise<Conflict[] | null> {
     if (purpose !== "DAILY" || !outletId) return [];
+    // Bean and grinder are shared by every tab.
+    const record = finals[0].record;
     return currentFinals(
       kind,
       { outletId, date, beanId: String(record.coffee_bean_material_id), grinderId: String(record.grinder_id) },
-      items,
+      allItems(finals),
     );
   }
 
-  async function save(record: Record<string, unknown>, items: string[], replace: string[]) {
+  async function save(finals: FinalToSave[], conflicts: Conflict[]) {
     setBusy(true);
     setError(null);
-    const args = { p_record: { ...record, purpose, outlet_id: outletId, business_date: date }, p_uses: items, p_replace: replace };
+    const p_finals = finals.map((f) => ({
+      record: { ...f.record, purpose, outlet_id: outletId, business_date: date },
+      uses: f.items,
+      replace: conflicts.filter((c) => f.items.includes(c.item)).map((c) => c.useId),
+    }));
     const { error: saveError } = await createClient().rpc(
-      kind === "ESPRESSO" ? "save_espresso_calibration" : "save_filter_calibration",
-      args as never,
+      kind === "ESPRESSO" ? "save_espresso_calibrations" : "save_filter_calibrations",
+      { p_finals } as never,
     );
     if (saveError) {
-      // 40001 / 23505: someone saved a Final for the same item meanwhile. Show the new situation.
+      // 40001 / 23505: someone saved a Final for the same drink meanwhile. Show the new situation.
       if (saveError.code === "40001" || saveError.code === "23505") {
-        const conflicts = await check(record, items);
+        const now = await check(finals);
         setBusy(false);
         setError(t("changedMeanwhile"));
-        if (conflicts?.length) setPending({ record, items, conflicts });
+        if (now?.length) setPending({ finals, conflicts: now });
         return;
       }
       setBusy(false);
@@ -202,11 +251,11 @@ export function useFinalSave({
     onSaved();
   }
 
-  async function submit(record: Record<string, unknown>, items: string[]) {
-    if (busy) return;
+  async function submit(finals: FinalToSave[]) {
+    if (busy || finals.length === 0) return;
     setBusy(true);
     setError(null);
-    const conflicts = await check(record, items);
+    const conflicts = await check(finals);
     if (conflicts === null) {
       setBusy(false);
       setError(t("saveFailed"));
@@ -214,10 +263,10 @@ export function useFinalSave({
     }
     if (conflicts.length) {
       setBusy(false);
-      setPending({ record, items, conflicts });
+      setPending({ finals, conflicts });
       return;
     }
-    await save(record, items, []);
+    await save(finals, []);
   }
 
   const warning = pending ? (
@@ -225,7 +274,7 @@ export function useFinalSave({
       kind={kind}
       conflicts={pending.conflicts}
       busy={busy}
-      onConfirm={() => save(pending.record, pending.items, pending.conflicts.map((c) => c.useId))}
+      onConfirm={() => save(pending.finals, pending.conflicts)}
       onCancel={() => setPending(null)}
     />
   ) : null;

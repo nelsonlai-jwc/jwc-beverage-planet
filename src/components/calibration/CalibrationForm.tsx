@@ -9,13 +9,14 @@ import { brewRatio, checkRange, daysOffRoast, extractionYield, type RangeCheck }
 import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "./BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "./EquipmentSelect";
-import { AppliesTo, FormError, ProductionNoField, productionNoProblem, useFinalSave } from "./FinalParts";
+import { ApplyTo, FormError, ItemTabs, ProductionNoField, productionNoProblem, useFinalSave, type FinalToSave } from "./FinalParts";
 import { ShotList } from "./ShotList";
 import {
   DRINK_TYPES,
   type BeanTarget,
   type CalibrationRecord,
   type CalibrationShot,
+  type DrinkType,
   type EspressoValues,
   type Grinder,
   type Machine,
@@ -36,6 +37,10 @@ type FormState = {
   pressure: string;
   preinfusion: string;
   basket: string;
+};
+
+/** The shot values of one tab (one drink). */
+type ShotState = {
   dose: string;
   yield: string;
   time: string;
@@ -43,6 +48,10 @@ type FormState = {
   balance: string;
   notes: string;
 };
+
+const EMPTY_SHOT: ShotState = { dose: "", yield: "", time: "", tds: "", balance: "", notes: "" };
+const emptyTabs = () => Object.fromEntries(DRINK_TYPES.map((d) => [d, EMPTY_SHOT])) as Record<DrinkType, ShotState>;
+const isFilled = (shot: ShotState) => Object.values(shot).some((v) => v.trim() !== "");
 
 const str = (value: number | string | null | undefined) => (value == null ? "" : String(value));
 
@@ -58,6 +67,11 @@ function fromValues(v: SharedValues & EspressoValues, base: FormState): FormStat
     pressure: str(v.pressure_bar),
     preinfusion: str(v.preinfusion_seconds),
     basket: str(v.basket_g),
+  };
+}
+
+function shotFromValues(v: EspressoValues): ShotState {
+  return {
     dose: str(v.dose_g),
     yield: str(v.yield_g),
     time: str(v.extraction_time_seconds),
@@ -76,7 +90,7 @@ function optionalNumber(value: string): number | null | undefined {
 
 const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
 
-/** Espresso: dial in with test shots, then save a Final ticked for the drinks it applies to. */
+/** Espresso: dial in with test shots per drink tab, then save each filled tab as its own Final. */
 export function CalibrationForm({
   purpose,
   outletId,
@@ -103,7 +117,7 @@ export function CalibrationForm({
   targets: BeanTarget[];
   /** Earlier Finals of this bean to reuse, newest first: daily yesterday's, custom my last ones. */
   previous: CalibrationRecord[];
-  /** Test shots of this bean today. */
+  /** Test shots of this bean today (each shows under its drink's tab). */
   shots: CalibrationShot[];
   grinderNames: Map<string, string>;
   canManage: boolean;
@@ -115,7 +129,8 @@ export function CalibrationForm({
   const final = useFinalSave({ kind: "ESPRESSO", purpose, outletId, date, onSaved: onDone });
   const { busy, setBusy, error, setError } = final;
   const [editTarget, setEditTarget] = useState(false);
-  const [items, setItems] = useState<string[]>([]);
+  const [tab, setTab] = useState<DrinkType>("BLACK_HOT");
+  const [tabs, setTabs] = useState(emptyTabs);
   const [roastDate, setRoastDate] = useState("");
   const [productionNo, setProductionNo] = useState("");
 
@@ -131,17 +146,17 @@ export function CalibrationForm({
     pressure: str(firstMachine?.default_pressure_bar),
     preinfusion: "",
     basket: "",
-    dose: "",
-    yield: "",
-    time: "",
-    tds: "",
-    balance: "",
-    notes: "",
   }));
   const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
+  const shot = tabs[tab];
+  const setShot = (key: keyof ShotState) => (e: { target: { value: string } }) => setTabs({ ...tabs, [tab]: { ...shot, [key]: e.target.value } });
+  const filled = DRINK_TYPES.filter((d) => isFilled(tabs[d]));
+  const tabShots = shots.filter((s) => !s.drink_type || s.drink_type === tab);
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
-  const prev = custom ? previous[0] : previous.find((r) => r.grinder_id === form.grinderId);
+  // Earlier Finals to reuse: custom my last ones, daily yesterday's of this grinder.
+  const reusable = custom ? previous : previous.filter((r) => r.grinder_id === form.grinderId);
+  const prev = reusable[0];
   const age = daysOffRoast(roastDate || null, date);
   const grindNumber = Number(form.grind);
   const grindOutOfRange =
@@ -153,15 +168,24 @@ export function CalibrationForm({
   // Speed only for a Settings grinder with adjustable RPM.
   const rpmGrinder = grinder?.rpm_adjustable ? grinder : undefined;
   const rpmOutOfRange = rpmProblem(rpmGrinder, form.rpm);
-  // Targets of the first ticked drink, else of the first drink that has one.
-  const target =
-    DRINK_TYPES.filter((d) => items.includes(d))
-      .map((d) => targets.find((x) => x.drink_type === d))
-      .find(Boolean) ?? (items.length ? undefined : DRINK_TYPES.map((d) => targets.find((x) => x.drink_type === d)).find(Boolean));
-  const dose = Number(form.dose);
-  const yieldG = Number(form.yield);
-  const time = Number(form.time);
-  const ey = extractionYield(dose, yieldG, Number(form.tds) || null);
+  // Targets of the open tab's drink.
+  const target = targets.find((x) => x.drink_type === tab);
+  const dose = Number(shot.dose);
+  const yieldG = Number(shot.yield);
+  const time = Number(shot.time);
+  const ey = extractionYield(dose, yieldG, Number(shot.tds) || null);
+
+  /** Use earlier Finals: machine settings of the newest, and each drink's values into its tab. */
+  function useEarlier() {
+    if (!prev) return;
+    setForm(fromValues(prev, form));
+    const next = { ...tabs };
+    for (const d of DRINK_TYPES) {
+      const r = reusable.find((x) => x.uses.some((u) => u.item === d));
+      if (r) next[d] = shotFromValues(r);
+    }
+    setTabs(next);
+  }
 
   function pickMachine(id: string, typed: string) {
     const machine = machines.find((m) => m.id === id);
@@ -175,8 +199,12 @@ export function CalibrationForm({
     });
   }
 
-  /** The shot's values, or null after showing why they are not valid. */
-  function values(): (SharedValues & EspressoValues) | null {
+  /** One tab's values with the shared settings, or null after showing why they are not valid. */
+  function values(d: DrinkType): (SharedValues & EspressoValues) | null {
+    const s = tabs[d];
+    const dose = Number(s.dose);
+    const yieldG = Number(s.yield);
+    const time = Number(s.time);
     const g = equipmentColumns(form.grinderId, form.grinderName);
     const m = equipmentColumns(form.machineId, form.machineName);
     if (!form.grind.trim() || (!g.id && !g.name) || (form.machineId === OTHER && !m.name)) {
@@ -184,7 +212,8 @@ export function CalibrationForm({
       return null;
     }
     if (!(dose > 0 && yieldG > 0 && time > 0)) {
-      setError(t("invalidShot"));
+      setTab(d);
+      setError(t("invalidShotTab", { drink: t(`drink.${d}`) }));
       return null;
     }
     const optional = {
@@ -192,7 +221,7 @@ export function CalibrationForm({
       pressure_bar: optionalNumber(form.pressure),
       preinfusion_seconds: optionalNumber(form.preinfusion),
       basket_g: optionalNumber(form.basket),
-      tds_percent: optionalNumber(form.tds),
+      tds_percent: optionalNumber(s.tds),
     };
     const { water_temp_c: temp, pressure_bar: p, basket_g: basket, tds_percent: tds } = optional;
     if (
@@ -202,6 +231,7 @@ export function CalibrationForm({
       (basket != null && basket <= 0) ||
       (tds != null && (tds <= 0 || tds > 25))
     ) {
+      setTab(d);
       setError(t("invalidOptional"));
       return null;
     }
@@ -225,16 +255,24 @@ export function CalibrationForm({
       yield_g: yieldG,
       extraction_time_seconds: time,
       tds_percent: tds ?? null,
-      taste_balance: form.balance || null,
-      taste_notes: form.notes.trim() || null,
+      taste_balance: s.balance || null,
+      taste_notes: s.notes.trim() || null,
     };
   }
 
   async function saveFinal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    const v = values();
-    if (!v) return;
+    if (filled.length === 0) {
+      setError(t("needShotValues"));
+      return;
+    }
+    const finals: FinalToSave[] = [];
+    for (const d of filled) {
+      const v = values(d);
+      if (!v) return;
+      finals.push({ record: { ...v, roast_date: roastDate || null, production_no: productionNo.trim() || null }, items: [d] });
+    }
     if (roastDate && roastDate > date) {
       setError(t("roastFuture"));
       return;
@@ -243,22 +281,18 @@ export function CalibrationForm({
       setError(t("productionNoInvalid"));
       return;
     }
-    if (items.length === 0) {
-      setError(t("needAppliesTo"));
-      return;
-    }
-    await final.submit({ ...v, roast_date: roastDate || null, production_no: productionNo.trim() || null }, items);
+    await final.submit(finals);
   }
 
   async function saveShot() {
     if (busy) return;
-    const v = values();
+    const v = values(tab);
     if (!v) return;
     setBusy(true);
     setError(null);
     const { error: insertError } = await createClient()
       .from("calibration_shots")
-      .insert({ ...v, purpose, outlet_id: outletId, business_date: date });
+      .insert({ ...v, drink_type: tab, purpose, outlet_id: outletId, business_date: date });
     setBusy(false);
     if (insertError) {
       setError(t("saveFailed"));
@@ -278,7 +312,7 @@ export function CalibrationForm({
   };
 
   const numberField = (
-    key: keyof FormState,
+    key: keyof FormState | keyof ShotState,
     label: string,
     opts: { min?: string; max?: string; required?: boolean; hint?: React.ReactNode } = {},
   ) => (
@@ -294,8 +328,8 @@ export function CalibrationForm({
         max={opts.max}
         step="any"
         required={opts.required}
-        value={form[key]}
-        onChange={set(key)}
+        value={key in shot ? shot[key as keyof ShotState] : form[key as keyof FormState]}
+        onChange={key in shot ? setShot(key as keyof ShotState) : set(key as keyof FormState)}
         className={inputClass}
       />
       {opts.hint && <span className={mutedText}>{opts.hint}</span>}
@@ -342,7 +376,7 @@ export function CalibrationForm({
           />
         </div>
         {prev && (
-          <button type="button" className={`${secondaryButton} self-start`} onClick={() => setForm(fromValues(prev, form))}>
+          <button type="button" className={`${secondaryButton} self-start`} onClick={useEarlier}>
             {custom ? t("useLast") : t("useYesterday")}
           </button>
         )}
@@ -390,8 +424,9 @@ export function CalibrationForm({
         </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
+      <fieldset className="flex min-w-0 flex-col gap-3">
         <legend className="mb-2 text-sm font-semibold">{t("shot")}</legend>
+        <ItemTabs kind="ESPRESSO" items={DRINK_TYPES} value={tab} filled={filled} onChange={(d) => setTab(d as DrinkType)} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {numberField("dose", t("doseG"), {
             min: "0.1",
@@ -415,7 +450,6 @@ export function CalibrationForm({
             <span className={mutedText}>{t("ratio")}: </span>
             <span className="font-semibold">{brewRatio(dose, yieldG) ?? "—"}</span>
           </span>
-          {target && <span className={mutedText}>{t("targetOf", { drink: t(`drink.${target.drink_type}`) })}</span>}
           {canManage && (
             <button type="button" className="text-[13px] underline" onClick={() => setEditTarget(!editTarget)}>
               {targets.length ? t("editTarget") : t("setTarget")}
@@ -430,10 +464,10 @@ export function CalibrationForm({
               key={b}
               type="button"
               role="radio"
-              aria-checked={form.balance === b}
-              onClick={() => setForm({ ...form, balance: form.balance === b ? "" : b })}
+              aria-checked={shot.balance === b}
+              onClick={() => setTabs({ ...tabs, [tab]: { ...shot, balance: shot.balance === b ? "" : b } })}
               className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
-                form.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
+                shot.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
               }`}
             >
               {t(`balance.${b}`)}
@@ -448,8 +482,8 @@ export function CalibrationForm({
             id="cal-notes"
             rows={2}
             maxLength={1000}
-            value={form.notes}
-            onChange={set("notes")}
+            value={shot.notes}
+            onChange={setShot("notes")}
             className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
           />
         </div>
@@ -457,10 +491,18 @@ export function CalibrationForm({
           {t("saveShot")}
         </button>
         <p className={mutedText}>{t("shotHint")}</p>
-        {shots.length > 0 && <ShotList shots={shots} grinderNames={grinderNames} onUse={(shot) => setForm(fromValues(shot, form))} />}
+        {tabShots.length > 0 && (
+          <ShotList
+            shots={tabShots}
+            grinderNames={grinderNames}
+            onUse={(s) => {
+              setForm(fromValues(s, form));
+              setTabs({ ...tabs, [tab]: shotFromValues(s) });
+            }}
+          />
+        )}
+        <ApplyTo kind="ESPRESSO" items={DRINK_TYPES} current={tab} onApply={(d) => setTabs({ ...tabs, [d]: { ...shot } })} />
       </fieldset>
-
-      <AppliesTo kind="ESPRESSO" items={DRINK_TYPES} value={items} onChange={setItems} />
 
       <FormError error={error} />
       {final.warning}
