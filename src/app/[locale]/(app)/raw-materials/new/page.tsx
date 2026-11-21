@@ -6,10 +6,16 @@ import { getViewer } from "@/lib/materials/viewer";
 
 export default async function NewMaterialPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ name?: string; returnTo?: string }>;
 }) {
   const { locale } = await params;
+  const query = await searchParams;
+  // Opened from the recipe editor's ingredient picker: only a recipe edit page is accepted.
+  const returnTo = query.returnTo && /^\/recipes\/[0-9a-f-]{36}\/edit$/.test(query.returnTo) ? query.returnTo : undefined;
+  const name = typeof query.name === "string" ? query.name.trim().slice(0, 200) : "";
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
   const { supabase, role } = await getViewer();
@@ -24,9 +30,14 @@ export default async function NewMaterialPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/raw-materials" label={t("backToList")} />
+      <BackLink href={returnTo ?? "/raw-materials"} label={returnTo ? t("backToRecipe") : t("backToList")} />
       <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{t("newMaterial")}</h1>
-      <MaterialForm types={types ?? []} beanOptions={toBeanOptions(beanOptions)} />
+      <MaterialForm
+        types={types ?? []}
+        beanOptions={toBeanOptions(beanOptions)}
+        initialName={name}
+        returnTo={returnTo}
+      />
     </div>
   );
 }

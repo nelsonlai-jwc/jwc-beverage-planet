@@ -86,6 +86,8 @@ type Props = {
   // Style and temperature choices in the order set on the Settings page.
   styles: BeverageStyle[];
   temps: BeverageTemp[];
+  // Admin or Manager: may open the new raw material page from the ingredient picker.
+  canAddMaterial: boolean;
 };
 
 const newKey = () => crypto.randomUUID();
@@ -335,6 +337,17 @@ export function RecipeEditor(props: Props) {
     const saved = await save();
     setSaving("idle");
     if (saved != null) toast("saved");
+  }
+
+  // Saves the draft first, then opens the new raw material page; it comes back here after saving.
+  async function handleAddMaterial(name: string) {
+    setSaving("saving");
+    setMessage(null);
+    const saved = await save();
+    setSaving("idle");
+    if (saved == null) return;
+    const returnTo = `/recipes/${recipeId}/edit`;
+    router.push(`/raw-materials/new?${new URLSearchParams({ name, returnTo })}`);
   }
 
   async function handleSubmit() {
@@ -760,6 +773,7 @@ export function RecipeEditor(props: Props) {
                       letter={letterFor(index)}
                       materials={materialOptions}
                       preps={prepOptions}
+                      onAddMaterial={props.canAddMaterial ? handleAddMaterial : undefined}
                       onChange={(ref) =>
                         updateIngredients(
                           ingredients.map((l) => (l.key === line.key ? { ...l, ref, unit: unitFor(ref) } : l)),

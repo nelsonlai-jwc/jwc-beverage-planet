@@ -720,6 +720,7 @@
   "RawMaterials": {
     "title": "Raw Material",
     "backToList": "All raw materials",
+    "backToRecipe": "Back to recipe",
     "backToPackaging": "All packaging",
     "intro": "Shared purchased materials and packaging. Prices count toward drink cost only after Admin approval.",
     "noAccess": "Only Managers and Admins can view raw materials and prices.",
@@ -1218,6 +1219,7 @@
     "allTypes": "All",
     "prepChip": "Outlet Prep",
     "noIngredientMatch": "No ingredient matches",
+    "addNewMaterial": "Add new raw material “{name}”",
     "close": "Close",
     "addIngredient": "Add ingredient",
     "packaging": "Packaging",

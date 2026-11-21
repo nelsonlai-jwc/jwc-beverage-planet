@@ -42,6 +42,7 @@ export function IngredientPicker({
   materials,
   preps,
   onChange,
+  onAddMaterial,
 }: {
   value: string;
   label: string;
@@ -49,6 +50,8 @@ export function IngredientPicker({
   materials: IngredientOption[];
   preps: IngredientOption[];
   onChange: (ref: string) => void;
+  // Shown when the search finds nothing: opens the new raw material page with the typed name.
+  onAddMaterial?: (name: string) => void;
 }) {
   const t = useTranslations("Recipes");
   const [open, setOpen] = useState(false);
@@ -199,7 +202,23 @@ export function IngredientPicker({
               {types.map((key) => chip(key, typeLabel(key), searched.filter((o) => o.type === key).length))}
             </div>
             <ul ref={list} role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto">
-              {shown.length === 0 && <li className="px-2 py-6 text-center text-sm text-[#6b6d67]">{t("noIngredientMatch")}</li>}
+              {shown.length === 0 && (
+                <li className="flex flex-col items-center gap-3 px-2 py-6 text-center text-sm text-[#6b6d67]">
+                  {t("noIngredientMatch")}
+                  {q && onAddMaterial && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        onAddMaterial(q);
+                      }}
+                      className="rounded-full border-[1.5px] border-black bg-black px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      {t("addNewMaterial", { name: q })}
+                    </button>
+                  )}
+                </li>
+              )}
               {shown.map((o, i) => (
                 <li
                   key={o.ref}

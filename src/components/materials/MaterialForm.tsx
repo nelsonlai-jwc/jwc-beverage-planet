@@ -27,7 +27,7 @@ type Match = { id: string; name: string; brand: string | null; no_brand: boolean
 
 export type MaterialFormValues = Omit<MaterialInput, "submit">;
 
-const emptyValues: MaterialFormValues = {
+const emptyMaterialValues: MaterialFormValues = {
   name: "",
   brand: "",
   noBrand: false,
@@ -82,16 +82,22 @@ export function MaterialForm({
   initial,
   photoUrl = null,
   approved,
+  returnTo,
+  initialName,
 }: {
   types: { id: string; name: string }[];
   beanOptions: BeanOption[];
   initial?: MaterialFormValues;
   photoUrl?: string | null;
   approved?: { isAdmin: boolean };
+  // Opened from the recipe editor: go back there after saving.
+  returnTo?: string;
+  // Name typed in the recipe editor's ingredient search.
+  initialName?: string;
 }) {
   const t = useTranslations("RawMaterials");
   const router = useRouter();
-  const [values, setValues] = useState<MaterialFormValues>(initial ?? emptyValues);
+  const [values, setValues] = useState<MaterialFormValues>(initial ?? { ...emptyMaterialValues, name: initialName ?? "" });
   const [matches, setMatches] = useState<Match[]>([]);
   const [missing, setMissing] = useState<{ field: string; label: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -189,7 +195,7 @@ export function MaterialForm({
         return;
       }
       toast("outcome" in result && result.outcome === "REQUESTED" ? "changeRequested" : submit ? "submitted" : "saved");
-      router.push(`/raw-materials/${values.id ?? ("id" in result ? result.id : "")}`);
+      router.push(returnTo ?? `/raw-materials/${values.id ?? ("id" in result ? result.id : "")}`);
       router.refresh();
     });
   }
