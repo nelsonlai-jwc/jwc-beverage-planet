@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Outlet } from "@/lib/auth/currentUser";
 import { createClient } from "@/lib/supabase/client";
-import type { Audience, SubjectType, SurveyDrink } from "@/lib/tasting/scale";
+import { ESPRESSO_DRINKS, type Audience, type SubjectType, type SurveyDrink } from "@/lib/tasting/scale";
 
 /** A calibration record to survey. outletId: the outlet of a daily record, null for a custom one. */
 export type RecordOption = { id: string; outletId: string | null; label: string; drinks: SurveyDrink[] };
@@ -15,7 +15,10 @@ export type RecordOption = { id: string; outletId: string | null; label: string;
 export type RecipeOption = { id: string; name: string; temperature: string | null; outletIds: string[] | null };
 type Person = { id: string; full_name: string; role: string };
 
-const SUBJECTS: SubjectType[] = ["ESPRESSO", "FILTER", "RECIPE"];
+/** CUSTOM: rate something with no record or recipe; it gets a type and a name instead. */
+type Subject = SubjectType | "CUSTOM";
+const SUBJECTS: Subject[] = ["ESPRESSO", "FILTER", "RECIPE", "CUSTOM"];
+const CUSTOM_TYPES: SubjectType[] = ["ESPRESSO", "FILTER", "RECIPE"];
 const AUDIENCES: Audience[] = ["OUTLET", "PUBLIC"];
 
 /** How long a survey stays open, in minutes; "none" closes it after 24 hours (database default). */
@@ -43,7 +46,9 @@ export function NewSurveyForm({
   const r = useTranslations("Recipes");
   const router = useRouter();
 
-  const [subject, setSubject] = useState<SubjectType>("ESPRESSO");
+  const [subject, setSubject] = useState<Subject>("ESPRESSO");
+  const [customType, setCustomType] = useState<SubjectType>("ESPRESSO");
+  const [title, setTitle] = useState("");
   const [recordId, setRecordId] = useState("");
   const [drinks, setDrinks] = useState<SurveyDrink[]>([]);
   const [recipeId, setRecipeId] = useState("");
@@ -59,7 +64,7 @@ export function NewSurveyForm({
   const records = subject === "ESPRESSO" ? espresso : subject === "FILTER" ? filter : [];
   const record = records.find((x) => x.id === recordId) ?? null;
   // A daily record's survey belongs to its outlet; otherwise the outlet is chosen.
-  const fixedOutlet = subject !== "RECIPE" && record?.outletId ? record.outletId : null;
+  const fixedOutlet = (subject === "ESPRESSO" || subject === "FILTER") && record?.outletId ? record.outletId : null;
   const needsOutlet = subject === "RECIPE" || audience === "OUTLET";
   const outletId = fixedOutlet ?? (needsOutlet ? chosenOutlet : null);
   const outletRecipes = recipes.filter((x) => !x.outletIds || x.outletIds.includes(chosenOutlet));
@@ -80,7 +85,7 @@ export function NewSurveyForm({
     };
   }, [audience, outletId]);
 
-  function pickSubject(next: SubjectType) {
+  function pickSubject(next: Subject) {
     setSubject(next);
     setRecordId("");
     setDrinks([]);
@@ -93,10 +98,20 @@ export function NewSurveyForm({
     setDrinks(espresso.find((x) => x.id === id)?.drinks ?? []);
   }
 
+  function pickCustomType(next: SubjectType) {
+    setCustomType(next);
+    setDrinks([]);
+    setError(null);
+  }
+
   async function create() {
     setError(null);
-    if (subject === "RECIPE" ? !recipeId : !record) return setError(t("pickSubject"));
-    if (subject === "ESPRESSO" && drinks.length === 0) return setError(t("pickDrinks"));
+    const custom = subject === "CUSTOM";
+    // A custom survey uses the score sheets of its type.
+    const type = custom ? customType : subject;
+    if (custom ? !title.trim() : subject === "RECIPE" ? !recipeId : !record)
+      return setError(custom ? t("pickName") : t("pickSubject"));
+    if (type === "ESPRESSO" && drinks.length === 0) return setError(t("pickDrinks"));
     if (needsOutlet && !outletId) return setError(t("pickOutlet"));
     if (audience === "OUTLET" && ticked.length === 0) return setError(t("pickPeople"));
 
@@ -105,13 +120,14 @@ export function NewSurveyForm({
     const { data, error: insertError } = await supabase
       .from("surveys")
       .insert({
-        subject_type: subject,
+        subject_type: type,
+        title: custom ? title.trim() : null,
         calibration_id: subject === "ESPRESSO" ? recordId : null,
         filter_calibration_id: subject === "FILTER" ? recordId : null,
         recipe_id: subject === "RECIPE" ? recipeId : null,
         outlet_id: outletId,
         audience,
-        drinks: subject === "ESPRESSO" ? drinks : subject === "FILTER" ? ["FILTER"] : ["RECIPE"],
+        drinks: type === "ESPRESSO" ? drinks : type === "FILTER" ? ["FILTER"] : ["RECIPE"],
         note: note.trim() || null,
         ...(duration !== "none" ? { closes_at: new Date(Date.now() + Number(duration) * 60e3).toISOString() } : {}),
       })
@@ -150,7 +166,48 @@ export function NewSurveyForm({
         <p className={mutedText}>{t(`subjectHint.${subject}`)}</p>
       </div>
 
-      {subject === "RECIPE" ? (
+      {subject === "CUSTOM" ? (
+        <>
+          <div className="flex flex-col gap-2">
+            <span className={labelClass}>{t("customTypeLabel")}</span>
+            <div className="flex flex-wrap gap-2">
+              {CUSTOM_TYPES.map((x) => (
+                <button
+                  key={x}
+                  type="button"
+                  aria-pressed={customType === x}
+                  onClick={() => pickCustomType(x)}
+                  className={chip(customType === x)}
+                >
+                  {t(`customType.${x}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className={labelClass}>{t("nameLabel")}</span>
+            <input value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
+          </label>
+          {customType === "ESPRESSO" && (
+            <div className="flex flex-col gap-2">
+              <span className={labelClass}>{t("drinksLabel")}</span>
+              <div className="flex flex-wrap gap-3">
+                {ESPRESSO_DRINKS.map((x) => (
+                  <label key={x} className="flex items-center gap-2 text-sm font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={drinks.includes(x)}
+                      onChange={(e) => setDrinks(e.target.checked ? [...drinks, x] : drinks.filter((y) => y !== x))}
+                      className="h-5 w-5 accent-black"
+                    />
+                    {d(`drink.${x}`)}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : subject === "RECIPE" ? (
         <>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>{t("outlet")}</span>

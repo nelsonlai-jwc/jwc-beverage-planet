@@ -2050,7 +2050,8 @@
     "subject": {
       "ESPRESSO": "Espresso",
       "FILTER": "Filter",
-      "RECIPE": "Beverage recipe"
+      "RECIPE": "Beverage recipe",
+      "CUSTOM": "Custom"
     },
     "audience": {
       "OUTLET": "Outlet staff",
@@ -2063,8 +2064,17 @@
     "subjectHint": {
       "ESPRESSO": "An espresso calibration record: black drinks use the espresso score sheet, milk drinks the milk drink sheet.",
       "FILTER": "A filter calibration record, scored on the 7 Brewers Cup items.",
-      "RECIPE": "An approved drink recipe of an outlet: visual, taste balance, tactile, flavour, overall and an opinion."
+      "RECIPE": "An approved drink recipe of an outlet: visual, taste balance, tactile, flavour, overall and an opinion.",
+      "CUSTOM": "Rate something without a record or recipe: choose the type and give it a name."
     },
+    "customTypeLabel": "Type",
+    "customType": {
+      "ESPRESSO": "Espresso",
+      "FILTER": "Filter",
+      "RECIPE": "Signature Beverage"
+    },
+    "nameLabel": "Survey name",
+    "pickName": "Enter a survey name.",
     "record": "Calibration record",
     "recordHint": "Daily records of your outlets from the last 14 days, and your own Custom records.",
     "noRecords": "No records to survey yet.",

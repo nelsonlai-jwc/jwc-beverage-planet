@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useSubjectLabel, type SurveyInfo } from "@/components/surveys/SurveyForm";
+import { useSubjectBadge, useSubjectLabel, type SurveyInfo } from "@/components/surveys/SurveyForm";
 import { cardClass, mutedText, primaryButton, smallButton } from "@/components/ui/styles";
 import { Link } from "@/i18n/navigation";
 
@@ -12,9 +12,10 @@ export type SurveyRow = { id: string; token: string; info: SurveyInfo; answers: 
 function Badges({ info }: { info: SurveyInfo }) {
   const t = useTranslations("Tasting");
   const s = useTranslations("Surveys");
+  const badge = useSubjectBadge();
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
-      <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5">{s(`subject.${info.subject_type}`)}</span>
+      <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5">{badge(info)}</span>
       <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5">{s(`audience.${info.audience}`)}</span>
       {info.subject_type === "ESPRESSO" && (
         <span className={mutedText}>{info.drinks.map((d) => t(`drink.${d}`)).join(" · ")}</span>

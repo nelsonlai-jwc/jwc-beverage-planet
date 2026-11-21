@@ -3257,6 +3257,7 @@ export type Database = {
           recipe_id: string | null
           revision: number
           subject_type: string
+          title: string | null
           token: string
           updated_at: string
         }
@@ -3276,6 +3277,7 @@ export type Database = {
           recipe_id?: string | null
           revision?: number
           subject_type: string
+          title?: string | null
           token?: string
           updated_at?: string
         }
@@ -3295,6 +3297,7 @@ export type Database = {
           recipe_id?: string | null
           revision?: number
           subject_type?: string
+          title?: string | null
           token?: string
           updated_at?: string
         }

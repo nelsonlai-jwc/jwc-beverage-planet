@@ -21,6 +21,8 @@ import {
 export type SurveyInfo = {
   id: string;
   subject_type: SubjectType;
+  /** Name of a custom survey (one with no record or recipe); null otherwise. */
+  title: string | null;
   audience: "OUTLET" | "PUBLIC";
   drinks: SurveyDrink[];
   note: string | null;
@@ -85,13 +87,29 @@ function ScoreRow({
   );
 }
 
-/** Subject of a survey in one line: the bean, or the recipe with its temperature. */
+/** Subject of a survey in one line: a custom survey's name, the bean, or the recipe with its temperature. */
 export function useSubjectLabel() {
   const r = useTranslations("Recipes");
-  return (s: { subject_type: SubjectType; bean: string | null; brand: string | null; recipe: string | null; temperature: string | null }) =>
-    s.subject_type === "RECIPE"
-      ? `${s.recipe ?? "—"}${s.temperature ? ` (${r(`temp.${s.temperature}`)})` : ""}`
-      : `${s.bean ?? "—"}${s.brand ? ` · ${s.brand}` : ""}`;
+  return (s: {
+    subject_type: SubjectType;
+    title: string | null;
+    bean: string | null;
+    brand: string | null;
+    recipe: string | null;
+    temperature: string | null;
+  }) =>
+    s.title
+      ? s.title
+      : s.subject_type === "RECIPE"
+        ? `${s.recipe ?? "—"}${s.temperature ? ` (${r(`temp.${s.temperature}`)})` : ""}`
+        : `${s.bean ?? "—"}${s.brand ? ` · ${s.brand}` : ""}`;
+}
+
+/** Badge of what a survey rates: "Espresso", or "Custom · Espresso" for a custom survey. */
+export function useSubjectBadge() {
+  const t = useTranslations("Surveys");
+  return (s: { subject_type: SubjectType; title: string | null }) =>
+    s.title ? `${t("subject.CUSTOM")} · ${t(`customType.${s.subject_type}`)}` : t(`subject.${s.subject_type}`);
 }
 
 /** Answer form for one survey: one drink at a time, then the next drink left. */

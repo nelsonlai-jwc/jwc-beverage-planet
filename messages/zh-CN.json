@@ -2050,7 +2050,8 @@
     "subject": {
       "ESPRESSO": "Espresso",
       "FILTER": "Filter",
-      "RECIPE": "饮品配方"
+      "RECIPE": "饮品配方",
+      "CUSTOM": "Custom"
     },
     "audience": {
       "OUTLET": "分店",
@@ -2063,8 +2064,17 @@
     "subjectHint": {
       "ESPRESSO": "Espresso 校准纪录：黑咖啡用 Espresso 评分表，牛奶咖啡用 Milk Drinks 评分表。",
       "FILTER": "Filter 校准纪录，用 Brewers Cup 的 7 项评分。",
-      "RECIPE": "分店已核准的饮品配方：外观、味道平衡、口感、风味、整体，再加一栏意见。"
+      "RECIPE": "分店已核准的饮品配方：外观、味道平衡、口感、风味、整体，再加一栏意见。",
+      "CUSTOM": "不需要校准纪录或配方：选类型，再填个名称。"
     },
+    "customTypeLabel": "类型",
+    "customType": {
+      "ESPRESSO": "Espresso",
+      "FILTER": "Filter",
+      "RECIPE": "Signature Beverage"
+    },
+    "nameLabel": "问卷名称",
+    "pickName": "请填写问卷名称。",
     "record": "校准纪录",
     "recordHint": "你分店最近 14 天的 Daily 纪录，以及你自己的 Custom 纪录。",
     "noRecords": "目前没有可以开问卷的纪录。",
