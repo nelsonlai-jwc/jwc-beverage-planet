@@ -2056,7 +2056,8 @@
     "subject": {
       "ESPRESSO": "Espresso",
       "FILTER": "Tapis",
-      "RECIPE": "Resipi minuman"
+      "RECIPE": "Resipi minuman",
+      "CUSTOM": "Tersuai"
     },
     "audience": {
       "OUTLET": "Kakitangan cawangan",
@@ -2069,8 +2070,17 @@
     "subjectHint": {
       "ESPRESSO": "Rekod kalibrasi espresso: kopi hitam guna borang espresso, kopi susu guna borang minuman susu.",
       "FILTER": "Rekod kalibrasi tapis, dinilai pada 7 perkara Brewers Cup.",
-      "RECIPE": "Resipi minuman cawangan yang diluluskan: visual, keseimbangan rasa, taktil, perisa, keseluruhan dan pendapat."
+      "RECIPE": "Resipi minuman cawangan yang diluluskan: visual, keseimbangan rasa, taktil, perisa, keseluruhan dan pendapat.",
+      "CUSTOM": "Nilai sesuatu tanpa rekod atau resipi: pilih jenis dan beri nama."
     },
+    "customTypeLabel": "Jenis",
+    "customType": {
+      "ESPRESSO": "Espresso",
+      "FILTER": "Tapis",
+      "RECIPE": "Minuman Signature"
+    },
+    "nameLabel": "Nama tinjauan",
+    "pickName": "Masukkan nama tinjauan.",
     "record": "Rekod kalibrasi",
     "recordHint": "Rekod Harian cawangan anda dalam 14 hari lepas, dan rekod Tersuai anda sendiri.",
     "noRecords": "Belum ada rekod untuk soal selidik.",

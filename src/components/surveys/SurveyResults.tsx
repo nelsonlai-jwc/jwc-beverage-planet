@@ -3,7 +3,7 @@
 import QRCode from "qrcode";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { useSubjectLabel, type SurveyInfo } from "@/components/surveys/SurveyForm";
+import { useSubjectBadge, useSubjectLabel, type SurveyInfo } from "@/components/surveys/SurveyForm";
 import { cardClass, errorText, mutedText, secondaryButton, smallButton } from "@/components/ui/styles";
 import { toast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -49,6 +49,7 @@ export function SurveyResults({
   const format = useFormatter();
   const router = useRouter();
   const subject = useSubjectLabel();
+  const badge = useSubjectBadge();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
@@ -115,7 +116,7 @@ export function SurveyResults({
     <>
       <div className={`${cardClass} flex flex-col gap-3`}>
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
-          <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5">{t(`subject.${info.subject_type}`)}</span>
+          <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5">{badge(info)}</span>
           <span className="rounded-full bg-[#eceee8] px-2.5 py-0.5">{t(`audience.${info.audience}`)}</span>
           <span className={`rounded-full px-2.5 py-0.5 ${info.open ? "bg-brand-green" : "bg-[#eceee8]"}`}>
             {info.open ? t("openUntil", { time: time(info.closes_at) }) : t("closed")}
