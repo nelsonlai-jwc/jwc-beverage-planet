@@ -265,8 +265,12 @@
       },
       "brewerTypeLabel": "Jenis kit",
       "brewerType": {
-        "POUR_OVER": "Pour-over",
-        "BATCH": "Pembancuh batch"
+        "POUR_OVER": "Penitis pour-over",
+        "BATCH": "Pembancuh batch",
+        "IMMERSION": "Rendaman",
+        "SIPHON": "Sifon",
+        "COLD_BREW": "Cold brew",
+        "OTHER": "Lain-lain"
       },
       "brewerPlaceholder": "cth. V60 #1",
       "noBrewers": "Belum ada kit bancuhan tangan.",
