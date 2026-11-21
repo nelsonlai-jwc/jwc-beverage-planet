@@ -1998,6 +1998,7 @@
       "bug": "Pepijat",
       "idea": "Idea",
       "closed": "Ditutup",
+      "switchTo": "Tukar ke {tab}",
       "bugCount": "{count} laporan",
       "ideaCount": "{count} laporan",
       "closedCount": "{count} laporan"
