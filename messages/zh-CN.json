@@ -129,22 +129,20 @@
       "grinders": {
         "label": "磨豆机",
         "rule": "各分店可使用的磨豆机。",
-        "adminRule": "在这里新增磨豆机，各分店在“分店设备”中选择自己用的。磨豆机不能删除，只能停用，以保留旧记录。"
+        "adminRule": "在这里新增磨豆机，并勾选使用它的分店。磨豆机不能删除，只能停用，以保留旧记录。",
+        "outletAdminRule": "勾选你的分店使用的磨豆机。每日校准只会显示这些设备。"
       },
       "machines": {
         "label": "咖啡机",
         "rule": "各分店可使用的咖啡机。",
-        "adminRule": "在这里新增咖啡机，各分店在“分店设备”中选择自己用的。咖啡机不能删除，只能停用，以保留旧记录。"
+        "adminRule": "在这里新增咖啡机，并勾选使用它的分店。咖啡机不能删除，只能停用，以保留旧记录。",
+        "outletAdminRule": "勾选你的分店使用的咖啡机。每日校准只会显示这些设备。"
       },
       "brewers": {
         "label": "手冲器具",
         "rule": "各分店冲煮滤泡咖啡可使用的手冲器具。",
-        "adminRule": "在这里添加手冲或批量手冲器具，各分店在“分店设备”中选择自己用的。器具不能删除，只能停用，旧记录会保留。"
-      },
-      "outletEquipment": {
-        "label": "分店设备",
-        "rule": "各分店使用的咖啡机、磨豆机和手冲器具。",
-        "adminRule": "勾选你的分店使用的咖啡机、磨豆机和手冲器具。每日校准只会显示这些设备。"
+        "adminRule": "在这里添加手冲或批量手冲器具，并勾选使用它的分店。器具不能删除，只能停用，旧记录会保留。",
+        "outletAdminRule": "勾选你的分店使用的手冲器具。每日校准只会显示这些设备。"
       }
     },
     "values": {
@@ -274,17 +272,13 @@
       },
       "brewerPlaceholder": "例如 V60 #1",
       "noBrewers": "还没有手冲器具。",
-      "addBrewer": "添加手冲器具"
-    },
-    "outletEquipment": {
-      "kinds": {
-        "MACHINE": "咖啡机",
-        "GRINDER": "磨豆机",
-        "BREWER": "手冲器具"
-      },
-      "noneSetUp": "还没有设备，请 Super Admin 在上方添加。",
-      "noneUsed": "还没有。",
-      "noOutlets": "你还没有分店。"
+      "addBrewer": "添加手冲器具",
+      "outlets": "分店",
+      "allOutlets": "所有分店",
+      "noOutlet": "还没有分店",
+      "allOutletsHint": "所有分店，包括以后新增的分店。",
+      "outletsHint": "这些分店的每日校准会显示此设备。",
+      "ownOutletsHint": "你只能勾选或取消自己的分店。"
     }
   },
   "Invite": {

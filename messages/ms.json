@@ -129,22 +129,20 @@
       "grinders": {
         "label": "Pengisar",
         "rule": "Pengisar yang boleh digunakan oleh cawangan.",
-        "adminRule": "Tambah pengisar di sini; setiap cawangan memilih sendiri dalam Peralatan Cawangan. Pengisar tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+        "adminRule": "Tambah pengisar di sini dan tandakan cawangan yang menggunakannya. Pengisar tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal.",
+        "outletAdminRule": "Tandakan pengisar yang digunakan oleh cawangan anda. Kalibrasi harian hanya menawarkan peralatan ini."
       },
       "machines": {
         "label": "Mesin espresso",
         "rule": "Mesin espresso yang boleh digunakan oleh cawangan.",
-        "adminRule": "Tambah mesin espresso di sini; setiap cawangan memilih sendiri dalam Peralatan Cawangan. Mesin tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
+        "adminRule": "Tambah mesin espresso di sini dan tandakan cawangan yang menggunakannya. Mesin tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal.",
+        "outletAdminRule": "Tandakan mesin espresso yang digunakan oleh cawangan anda. Kalibrasi harian hanya menawarkan peralatan ini."
       },
       "brewers": {
         "label": "Kit Bancuhan Tangan",
         "rule": "Kit bancuhan tangan yang boleh digunakan oleh cawangan untuk kopi penapis.",
-        "adminRule": "Tambah kit bancuhan tangan pour-over atau batch di sini; setiap cawangan memilih sendiri dalam Peralatan Cawangan. Kit tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal."
-      },
-      "outletEquipment": {
-        "label": "Peralatan Cawangan",
-        "rule": "Mesin espresso, pengisar dan kit bancuhan tangan yang digunakan oleh setiap cawangan.",
-        "adminRule": "Tandakan mesin espresso, pengisar dan kit bancuhan tangan yang digunakan oleh cawangan anda. Kalibrasi harian hanya menawarkan peralatan ini."
+        "adminRule": "Tambah kit bancuhan tangan pour-over atau batch di sini dan tandakan cawangan yang menggunakannya. Kit tidak boleh dipadam, hanya dinyahaktifkan, supaya rekod lama kekal.",
+        "outletAdminRule": "Tandakan kit bancuhan tangan yang digunakan oleh cawangan anda. Kalibrasi harian hanya menawarkan peralatan ini."
       }
     },
     "values": {
@@ -274,17 +272,13 @@
       },
       "brewerPlaceholder": "cth. V60 #1",
       "noBrewers": "Belum ada kit bancuhan tangan.",
-      "addBrewer": "Tambah kit bancuhan tangan"
-    },
-    "outletEquipment": {
-      "kinds": {
-        "MACHINE": "Mesin espresso",
-        "GRINDER": "Pengisar",
-        "BREWER": "Kit bancuhan tangan"
-      },
-      "noneSetUp": "Belum ada. Super Admin menambahnya di atas.",
-      "noneUsed": "Belum ada.",
-      "noOutlets": "Anda belum mempunyai cawangan."
+      "addBrewer": "Tambah kit bancuhan tangan",
+      "outlets": "Cawangan",
+      "allOutlets": "Semua cawangan",
+      "noOutlet": "Belum ada cawangan",
+      "allOutletsHint": "Setiap cawangan, termasuk yang ditambah kemudian.",
+      "outletsHint": "Kalibrasi harian cawangan ini menawarkan item ini.",
+      "ownOutletsHint": "Anda hanya boleh menanda atau menyahtanda cawangan anda sendiri."
     }
   },
   "Invite": {

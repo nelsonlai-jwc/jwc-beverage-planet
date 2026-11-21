@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { EquipmentEditor, type EquipmentItem } from "@/components/settings/EquipmentEditor";
-import { OutletEquipmentEditor, type OutletEquipmentOutlet } from "@/components/settings/OutletEquipmentEditor";
 import { BeanOptionsEditor, Chevron, ListValuesEditor, OptionLabelsEditor } from "@/components/settings/SettingsEditors";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { beanOptionName, toBeanOptions } from "@/lib/materials/coffeeBean";
@@ -52,6 +51,9 @@ export default async function SettingsPage({
     return fallback.map((value) => (t.has(`values.${value}`) ? t(`values.${value}`) : value));
   };
 
+  // Outlets each item is for: "All outlets" or the ticked ones.
+  const ticked = (column: "grinder_id" | "espresso_machine_id" | "brewer_id", id: string) =>
+    (assignments ?? []).filter((a) => a[column] === id).map((a) => a.outlet_id);
   const grinderItems: EquipmentItem[] = (grinders ?? []).map((g) => ({
     id: g.id,
     name: g.name,
@@ -68,6 +70,8 @@ export default async function SettingsPage({
     rpmAdjustable: g.rpm_adjustable,
     rpmMin: g.rpm_min,
     rpmMax: g.rpm_max,
+    allOutlets: g.all_outlets,
+    outletIds: ticked("grinder_id", g.id),
   }));
   const machineItems: EquipmentItem[] = (machines ?? []).map((m) => ({
     id: m.id,
@@ -80,6 +84,8 @@ export default async function SettingsPage({
     groupCount: m.group_count,
     defaultWaterTempC: m.default_water_temp_c,
     defaultPressureBar: m.default_pressure_bar,
+    allOutlets: m.all_outlets,
+    outletIds: ticked("espresso_machine_id", m.id),
   }));
   const brewerItems: EquipmentItem[] = (brewers ?? []).map((b) => ({
     id: b.id,
@@ -90,22 +96,12 @@ export default async function SettingsPage({
     notes: b.notes,
     active: b.is_active,
     brewerType: b.brewer_type,
+    allOutlets: b.all_outlets,
+    outletIds: ticked("brewer_id", b.id),
   }));
-  // Outlet Equipment: the viewer's outlets (Super Admin: all). Outlet Admins and the Super Admin edit.
-  const canSetOutletEquipment = isAdmin || Boolean(user?.outletAdmin);
-  const equipmentOutlets: OutletEquipmentOutlet[] = (user?.outlets ?? []).map((o) => {
-    const mine = (assignments ?? []).filter((a) => a.outlet_id === o.id);
-    return {
-      id: o.id,
-      name: o.name,
-      used: {
-        GRINDER: mine.flatMap((a) => (a.grinder_id ? [a.grinder_id] : [])),
-        MACHINE: mine.flatMap((a) => (a.espresso_machine_id ? [a.espresso_machine_id] : [])),
-        BREWER: mine.flatMap((a) => (a.brewer_id ? [a.brewer_id] : [])),
-      },
-    };
-  });
-  const option = (item: EquipmentItem) => ({ id: item.id, name: item.name, active: item.active });
+  // Equipment outlets: the Super Admin sets all; an outlet Admin ticks only their own outlets.
+  const activeOutlets = (outlets ?? []).filter((o) => o.is_active).map((o) => ({ id: o.id, name: o.name }));
+  const ownOutletIds = user?.outletAdmin ? user.outlets.map((o) => o.id) : undefined;
   const equipmentCards = [
     { key: "grinders", kind: "GRINDER" as const, items: grinderItems },
     { key: "machines", kind: "MACHINE" as const, items: machineItems },
@@ -180,7 +176,11 @@ export default async function SettingsPage({
                     {t(`groups.${card.key}.label`)}
                   </h2>
                   <p className="text-[13px] text-[#3d3f3a]">
-                    {isAdmin ? t(`groups.${card.key}.adminRule`) : t(`groups.${card.key}.rule`)}
+                    {isAdmin
+                    ? t(`groups.${card.key}.adminRule`)
+                    : ownOutletIds
+                      ? t(`groups.${card.key}.outletAdminRule`)
+                      : t(`groups.${card.key}.rule`)}
                   </p>
                 </div>
                 <Chevron className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
@@ -218,8 +218,8 @@ export default async function SettingsPage({
               </div>
               <Chevron className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
             </summary>
-            {isAdmin ? (
-              <EquipmentEditor kind={card.kind} items={card.items} />
+            {isAdmin || ownOutletIds ? (
+              <EquipmentEditor kind={card.kind} items={card.items} outlets={activeOutlets} ownOutletIds={ownOutletIds} />
             ) : (
               <ul className="flex flex-wrap gap-2">
                 {card.items
@@ -233,31 +233,6 @@ export default async function SettingsPage({
             )}
           </details>
         ))}
-        <details
-          aria-labelledby="setting-outletEquipment"
-          className="group flex flex-col rounded-[20px] bg-white p-5 sm:p-6 [&[open]>summary]:mb-3"
-        >
-          <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
-            <div className="flex flex-col gap-1">
-              <h2 id="setting-outletEquipment" className="text-base font-semibold">
-                {t("groups.outletEquipment.label")}
-              </h2>
-              <p className="text-[13px] text-[#3d3f3a]">
-                {canSetOutletEquipment ? t("groups.outletEquipment.adminRule") : t("groups.outletEquipment.rule")}
-              </p>
-            </div>
-            <Chevron className="mt-1 shrink-0 transition-transform group-open:rotate-180" />
-          </summary>
-          <OutletEquipmentEditor
-            outlets={equipmentOutlets}
-            equipment={{
-              GRINDER: grinderItems.map(option),
-              MACHINE: machineItems.map(option),
-              BREWER: brewerItems.map(option),
-            }}
-            editable={canSetOutletEquipment}
-          />
-        </details>
       </div>
     </div>
   );

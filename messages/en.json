@@ -129,22 +129,20 @@
       "grinders": {
         "label": "Grinders",
         "rule": "Grinders the outlets can use.",
-        "adminRule": "Add grinders here; each outlet picks its own in Outlet Equipment. A grinder cannot be deleted, only disabled, so past records keep it."
+        "adminRule": "Add grinders here and tick the outlets that use each one. A grinder cannot be deleted, only disabled, so past records keep it.",
+        "outletAdminRule": "Tick the grinders your outlet uses. Daily calibration offers only these."
       },
       "machines": {
         "label": "Espresso machines",
         "rule": "Espresso machines the outlets can use.",
-        "adminRule": "Add espresso machines here; each outlet picks its own in Outlet Equipment. A machine cannot be deleted, only disabled, so past records keep it."
+        "adminRule": "Add espresso machines here and tick the outlets that use each one. A machine cannot be deleted, only disabled, so past records keep it.",
+        "outletAdminRule": "Tick the espresso machines your outlet uses. Daily calibration offers only these."
       },
       "brewers": {
         "label": "Hand Brew Kits",
         "rule": "Hand brew kits the outlets can use for filter coffee.",
-        "adminRule": "Add pour-over or batch hand brew kits here; each outlet picks its own in Outlet Equipment. A kit cannot be deleted, only disabled, so past records keep it."
-      },
-      "outletEquipment": {
-        "label": "Outlet Equipment",
-        "rule": "The espresso machines, grinders and hand brew kits each outlet uses.",
-        "adminRule": "Tick the espresso machines, grinders and hand brew kits your outlet uses. Daily calibration offers only these."
+        "adminRule": "Add pour-over or batch hand brew kits here and tick the outlets that use each one. A kit cannot be deleted, only disabled, so past records keep it.",
+        "outletAdminRule": "Tick the hand brew kits your outlet uses. Daily calibration offers only these."
       }
     },
     "values": {
@@ -274,17 +272,13 @@
       },
       "brewerPlaceholder": "e.g. V60 #1",
       "noBrewers": "No hand brew kits yet.",
-      "addBrewer": "Add hand brew kit"
-    },
-    "outletEquipment": {
-      "kinds": {
-        "MACHINE": "Espresso machines",
-        "GRINDER": "Grinders",
-        "BREWER": "Hand brew kits"
-      },
-      "noneSetUp": "None set up yet. The Super Admin adds them above.",
-      "noneUsed": "None yet.",
-      "noOutlets": "You have no outlet yet."
+      "addBrewer": "Add hand brew kit",
+      "outlets": "Outlets",
+      "allOutlets": "All outlets",
+      "noOutlet": "No outlet yet",
+      "allOutletsHint": "Every outlet, including ones added later.",
+      "outletsHint": "Daily calibration of these outlets offers this item.",
+      "ownOutletsHint": "You can tick or untick only your own outlets."
     }
   },
   "Invite": {

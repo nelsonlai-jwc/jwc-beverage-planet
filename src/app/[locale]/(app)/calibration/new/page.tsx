@@ -61,9 +61,9 @@ export default async function NewCalibrationPage({
     supabase.from("materials").select("id, name, brand").eq("filter_calibration", true).eq("status", "APPROVED").order("name"),
     supabase.from("coffee_bean_targets").select("*"),
     supabase.from("coffee_bean_filter_targets").select("*"),
-    supabase.from("grinders").select(GRINDER_COLUMNS).order("name"),
-    supabase.from("espresso_machines").select(MACHINE_COLUMNS).order("name"),
-    supabase.from("brewers").select(BREWER_COLUMNS).order("name"),
+    supabase.from("grinders").select(`${GRINDER_COLUMNS}, all_outlets`).order("name"),
+    supabase.from("espresso_machines").select(`${MACHINE_COLUMNS}, all_outlets`).order("name"),
+    supabase.from("brewers").select(`${BREWER_COLUMNS}, all_outlets`).order("name"),
     supabase.from("outlet_equipment").select("grinder_id, espresso_machine_id, brewer_id").eq("outlet_id", outletId),
     // Recent beans and yesterday's values (daily); my earlier records (custom).
     supabase
@@ -122,12 +122,12 @@ export default async function NewCalibrationPage({
   const filter = [...(filDaily ?? []), ...(filCustom ?? [])];
   const { espresso: espRecords, filter: filRecords } = await withUses(supabase, espresso, filter);
 
-  // Daily: only equipment the outlet uses (Outlet Equipment). Custom: any equipment in use.
+  // Daily: only equipment for this outlet ("All outlets" or ticked). Custom: any equipment in use.
   const usedIds = new Set(
     (outletEquipment ?? []).flatMap((e) => [e.grinder_id, e.espresso_machine_id, e.brewer_id].filter(Boolean)),
   );
-  const both = <T extends { id: string; is_active: boolean }>(list: T[] | null) => ({
-    DAILY: (list ?? []).map((x) => ({ ...x, is_active: x.is_active && usedIds.has(x.id) })),
+  const both = <T extends { id: string; is_active: boolean; all_outlets: boolean }>(list: T[] | null) => ({
+    DAILY: (list ?? []).map((x) => ({ ...x, is_active: x.is_active && (x.all_outlets || usedIds.has(x.id)) })),
     CUSTOM: list ?? [],
   });
   const before = (r: { business_date: string }) => r.business_date < date;

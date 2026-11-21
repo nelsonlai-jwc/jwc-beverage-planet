@@ -43,8 +43,16 @@ const num = (value: string | undefined): number | null | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-/** Super Admin adds (id null) or edits a grinder, espresso machine or hand brew kit. */
-export async function saveEquipment(kind: EquipmentKind, id: string | null, input: EquipmentInput): Promise<SettingResult> {
+/** The outlets an item is for: every outlet (also later ones), or the ticked ones. */
+export type EquipmentOutlets = { allOutlets: boolean; outletIds: string[] };
+
+/** Super Admin adds (id null) or edits a grinder, espresso machine or hand brew kit, with its outlets. */
+export async function saveEquipment(
+  kind: EquipmentKind,
+  id: string | null,
+  input: EquipmentInput,
+  outlets: EquipmentOutlets,
+): Promise<SettingResult> {
   const name = input.name.trim();
   if (!name) return { ok: false, error: "NAME_REQUIRED" };
   if (name.length > 60) return { ok: false, error: "INVALID" };
@@ -57,6 +65,7 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
   };
   const supabase = await createClient();
   let error;
+  let saved: { id: string }[] | null;
   if (kind === "GRINDER") {
     const burrSize = num(input.burrSizeMm);
     const scaleMin = num(input.scaleMin);
@@ -84,26 +93,30 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
       rpm_min: rpmMin,
       rpm_max: rpmMax,
     };
-    ({ error } = id
-      ? await supabase.from("grinders").update(values).eq("id", id)
-      : await supabase.from("grinders").insert(values));
+    ({ data: saved, error } = id
+      ? await supabase.from("grinders").update(values).eq("id", id).select("id")
+      : await supabase.from("grinders").insert(values).select("id"));
   } else if (kind === "BREWER") {
     const values = { ...common, brewer_type: (BREWER_TYPES as readonly string[]).includes(input.brewerType ?? "") ? input.brewerType : "POUR_OVER" };
-    ({ error } = id
-      ? await supabase.from("brewers").update(values).eq("id", id)
-      : await supabase.from("brewers").insert(values));
+    ({ data: saved, error } = id
+      ? await supabase.from("brewers").update(values).eq("id", id).select("id")
+      : await supabase.from("brewers").insert(values).select("id"));
   } else {
     const groups = num(input.groupCount);
     const temp = num(input.defaultWaterTempC);
     const pressure = num(input.defaultPressureBar);
     if (groups === undefined || temp === undefined || pressure === undefined) return { ok: false, error: "NUMBER" };
     const values = { ...common, group_count: groups, default_water_temp_c: temp, default_pressure_bar: pressure };
-    ({ error } = id
-      ? await supabase.from("espresso_machines").update(values).eq("id", id)
-      : await supabase.from("espresso_machines").insert(values));
+    ({ data: saved, error } = id
+      ? await supabase.from("espresso_machines").update(values).eq("id", id).select("id")
+      : await supabase.from("espresso_machines").insert(values).select("id"));
+  }
+  if (!error && saved?.[0]) {
+    const result = await setEquipmentOutlets(kind, saved[0].id, outlets);
+    if (!result.ok) return result;
   }
   revalidatePath("/", "layout");
-  if (!error) return { ok: true };
+  if (!error) return saved?.length ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
   if (error.code === "23505") return { ok: false, error: "DUPLICATE" };
   if (error.code === "23514") return { ok: false, error: "NUMBER" };
   if (error.code === "42501") return { ok: false, error: "NOT_ALLOWED" };
@@ -120,31 +133,24 @@ export async function setEquipmentActive(kind: EquipmentKind, id: string, active
   return data?.length ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
 }
 
-const EQUIPMENT_COLUMN = { GRINDER: "grinder_id", MACHINE: "espresso_machine_id", BREWER: "brewer_id" } as const;
-
-/** Outlet Equipment: an outlet's Admin (or the Super Admin) picks or removes one item for the outlet. */
-export async function setOutletEquipment(
-  outletId: string,
+/**
+ * Saves which outlets use one item. The Super Admin sets "All outlets" and any outlet;
+ * an outlet Admin ticks or unticks only their own outlets (checked in the database).
+ */
+export async function setEquipmentOutlets(
   kind: EquipmentKind,
-  equipmentId: string,
-  used: boolean,
+  id: string,
+  outlets: EquipmentOutlets,
 ): Promise<SettingResult> {
   const supabase = await createClient();
-  const column = EQUIPMENT_COLUMN[kind];
-  const { data, error } = used
-    ? await supabase
-        .from("outlet_equipment")
-        .insert({
-          outlet_id: outletId,
-          grinder_id: kind === "GRINDER" ? equipmentId : null,
-          espresso_machine_id: kind === "MACHINE" ? equipmentId : null,
-          brewer_id: kind === "BREWER" ? equipmentId : null,
-        })
-        .select("id")
-    : await supabase.from("outlet_equipment").delete().eq("outlet_id", outletId).eq(column, equipmentId).select("id");
+  const { error } = await supabase.rpc("set_equipment_outlets", {
+    p_kind: kind,
+    p_equipment_id: id,
+    p_all_outlets: outlets.allOutlets,
+    p_outlet_ids: outlets.allOutlets ? [] : outlets.outletIds,
+  });
   revalidatePath("/", "layout");
-  if (error?.code === "23505") return { ok: true };
-  if (error?.code === "42501") return { ok: false, error: "NOT_ALLOWED" };
-  if (error) return { ok: false, error: "UNKNOWN" };
-  return data?.length || used ? { ok: true } : { ok: false, error: "NOT_ALLOWED" };
+  if (!error) return { ok: true };
+  if (error.code === "42501") return { ok: false, error: "NOT_ALLOWED" };
+  return { ok: false, error: "UNKNOWN" };
 }
