@@ -2001,6 +2001,7 @@
       "bug": "Bugs",
       "idea": "Ideas",
       "closed": "Closed",
+      "switchTo": "Switch to {tab}",
       "bugCount": "{count, plural, one {# bug} other {# bugs}}",
       "ideaCount": "{count, plural, one {# idea} other {# ideas}}",
       "closedCount": "{count, plural, one {# report} other {# reports}}"

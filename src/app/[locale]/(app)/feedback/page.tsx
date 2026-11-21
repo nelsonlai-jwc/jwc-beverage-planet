@@ -1,6 +1,7 @@
 import { ChevronDown, Download, ImageIcon, MessageSquare, MessageSquareReply, Plus, SearchX } from "lucide-react";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { CopyForClaudeButton } from "@/components/feedback/CopyForClaudeButton";
+import { FeedbackTabKeys } from "@/components/feedback/FeedbackTabKeys";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
@@ -140,39 +141,49 @@ export default async function FeedbackPage({
 
       <section className="border border-black/10 bg-white">
         {/* Tab cards with counts */}
+        <FeedbackTabKeys />
         <nav aria-label={t("tabs.label")} className="grid grid-cols-3 border-b border-black/10 sm:flex">
-          {TABS.map((key) => {
+          {TABS.map((key, index) => {
             const active = tab === key;
             return (
               <Link
                 key={key}
                 href={href({ tab: key })}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-0 flex-col gap-0.5 border-r border-black/10 px-3 py-2 sm:min-w-44 sm:px-6 sm:py-2.5 ${
+                aria-keyshortcuts={String(index + 1)}
+                className={`group relative flex min-w-0 flex-col border-r border-black/10 px-3 py-1.5 sm:min-w-32 sm:px-4 sm:py-2 ${
                   active ? "bg-white shadow-[inset_0_2px_0_#000]" : "bg-[#f4f5f2] text-black/60 hover:bg-[#eceee8]"
                 }`}
               >
-                <span className="flex items-center gap-2 text-sm font-semibold sm:text-base">
-                  <MessageSquare size={18} aria-hidden fill={tabColour[key]} color={tabColour[key]} className="shrink-0" />
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <MessageSquare size={14} aria-hidden fill={tabColour[key]} color={tabColour[key]} className="shrink-0" />
                   <span className="truncate">{t(`tabs.${key}`)}</span>
                 </span>
-                <span className="text-[13px] sm:text-sm">{t(`tabs.${key}Count`, { count: counts[key] })}</span>
+                <span className="text-xs">{t(`tabs.${key}Count`, { count: counts[key] })}</span>
+                {/* Keyboard hint, like Supabase: "Switch to Ideas [2]". */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute bottom-full left-2 z-30 mb-1 hidden items-center gap-2 rounded-md border border-black/10 bg-white px-2 py-1 text-xs whitespace-nowrap text-black shadow-[0_4px_12px_rgba(0,0,0,0.1)] sm:group-hover:flex"
+                >
+                  {t("tabs.switchTo", { tab: t(`tabs.${key}`) })}
+                  <kbd className="rounded border border-black/20 px-1.5 font-sans text-[11px]">{index + 1}</kbd>
+                </span>
               </Link>
             );
           })}
         </nav>
 
         {/* Filter bar */}
-        <div className="flex flex-wrap items-center gap-3 border-b border-black/10 bg-[#f4f5f2] px-3 py-3 sm:px-4">
+        <div className="flex flex-wrap items-center gap-3 border-b border-black/10 bg-[#f4f5f2] px-3 py-1.5 sm:px-3">
           <details key={`${tab}-${status}-${kind}-${sort}`} className="relative">
-            <summary className="flex h-9 cursor-pointer list-none items-center gap-2 rounded-xl border border-dashed border-black/30 bg-white px-4 text-sm text-black/70 hover:border-black [&::-webkit-details-marker]:hidden">
+            <summary className="flex h-[26px] cursor-pointer list-none items-center gap-1.5 rounded-md border border-dashed border-black/30 bg-white px-2.5 text-xs text-black/70 hover:border-black [&::-webkit-details-marker]:hidden">
               {t("filter")}
               {filterCount > 0 && (
                 <span className="flex size-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white">
                   {filterCount}
                 </span>
               )}
-              <ChevronDown size={16} aria-hidden />
+              <ChevronDown size={14} aria-hidden />
             </summary>
             <div className="absolute left-0 z-20 mt-2 flex w-64 flex-col gap-3 rounded-2xl border border-black/10 bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
               <div className="flex flex-col">
@@ -227,7 +238,7 @@ export default async function FeedbackPage({
 
         {/* Table header (desktop) */}
         <div
-          className={`hidden border-b border-black/10 font-mono text-[13px] text-black/80 md:grid ${cols} [&>span]:border-r [&>span]:border-black/10 [&>span]:px-4 [&>span]:py-3 [&>span:last-child]:border-r-0`}
+          className={`hidden border-b border-black/10 font-mono text-xs text-black/80 md:grid ${cols} [&>span]:border-r [&>span]:border-black/10 [&>span]:px-4 [&>span]:py-2 [&>span:last-child]:border-r-0`}
         >
           <span>#</span>
           <span>{t("table.title")}</span>
@@ -258,11 +269,11 @@ export default async function FeedbackPage({
                 <li key={report.id} className="border-b border-black/10 last:border-b-0">
                   <Link
                     href={`/feedback/${report.id}`}
-                    className={`flex flex-col gap-1.5 px-4 py-3 hover:bg-[#f4f5f2] md:grid md:items-center md:gap-0 md:px-0 md:py-0 ${cols} md:[&>*]:px-4 md:[&>*]:py-3`}
+                    className={`flex flex-col gap-1.5 px-4 py-3 hover:bg-[#f4f5f2] md:grid md:items-center md:gap-0 md:px-0 md:py-0 ${cols} md:[&>*]:px-4 md:[&>*]:py-2`}
                   >
                     <span className="hidden font-mono text-sm text-black/60 md:block">#{report.number}</span>
                     <span className="flex min-w-0 flex-col gap-1">
-                      <span className="text-sm font-semibold break-words">
+                      <span className="text-[13px] font-semibold break-words">
                         <span className="text-black/50 md:hidden">#{report.number} </span>
                         {report.title}
                       </span>
@@ -287,20 +298,20 @@ export default async function FeedbackPage({
                     )}
                     {/* Phone: status, priority, sender and time on one wrapping line. */}
                     <span className="flex flex-wrap items-center gap-1.5 md:contents">
-                      <span className="md:block md:px-4 md:py-3">
+                      <span className="md:block md:px-4 md:py-2">
                         {isStatus(report.status) && (
                           <StatusBadge tone={statusTone[report.status]}>{statusText(report.status)}</StatusBadge>
                         )}
                       </span>
                       {isSuperAdmin && (
-                        <span className="md:block md:px-4 md:py-3">
+                        <span className="md:block md:px-4 md:py-2">
                           {priority && <StatusBadge tone={priorityTone[priority]}>{t(`priority.${priority}`)}</StatusBadge>}
                         </span>
                       )}
                       {isSuperAdmin && (
                         <span className={`${mutedText} md:hidden`}>{people.get(report.created_by) ?? "—"}</span>
                       )}
-                      <span className={`${mutedText} md:block md:px-4 md:py-3`}>{when(report.created_at)}</span>
+                      <span className={`${mutedText} md:block md:px-4 md:py-2`}>{when(report.created_at)}</span>
                     </span>
                   </Link>
                 </li>
