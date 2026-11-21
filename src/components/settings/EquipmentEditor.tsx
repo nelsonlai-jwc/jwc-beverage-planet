@@ -6,9 +6,13 @@ import { BREWER_TYPES } from "./brewer-types";
 import {
   saveEquipment,
   setEquipmentActive,
+  setEquipmentOutlets,
   type EquipmentInput,
   type EquipmentKind,
+  type EquipmentOutlets,
 } from "@/app/[locale]/(app)/settings/equipment-actions";
+import { OutletChecklist } from "@/components/recipes/OutletChecklist";
+import type { Outlet } from "@/lib/recipes/types";
 import { alertClass, inputClass, primaryButton, secondaryButton } from "@/components/recipes/ui";
 import { useRouter } from "@/i18n/navigation";
 import { Chevron } from "./SettingsEditors";
@@ -33,6 +37,10 @@ export type EquipmentItem = {
   defaultWaterTempC?: number | null;
   defaultPressureBar?: number | null;
   brewerType?: string | null;
+  /** Every outlet, also ones added later. */
+  allOutlets: boolean;
+  /** Ticked outlets (ignored while allOutlets). */
+  outletIds: string[];
 };
 
 const s = (value: string | number | null | undefined) => (value == null ? "" : String(value));
@@ -90,9 +98,50 @@ function Field({ label, children, wide }: { label: string; children: React.React
   );
 }
 
+/** Outlets an item is for: "All outlets" (Super Admin only) or ticked one by one. */
+function OutletsField({
+  outlets,
+  value,
+  onChange,
+  editableIds,
+}: {
+  outlets: Outlet[];
+  value: EquipmentOutlets;
+  onChange: (value: EquipmentOutlets) => void;
+  /** Outlet Admin: only their own outlets; undefined for the Super Admin. */
+  editableIds?: string[];
+}) {
+  const t = useTranslations("Settings.equipment");
+  return (
+    <fieldset className="flex flex-col gap-1 sm:col-span-2">
+      <legend className="text-[13px] font-semibold">{t("outlets")}</legend>
+      <OutletChecklist
+        outlets={outlets}
+        allowAll={editableIds === undefined}
+        outletIds={value.outletIds}
+        allOutlets={value.allOutlets}
+        editableIds={editableIds}
+        onChange={(outletIds, allOutlets) => onChange({ outletIds, allOutlets })}
+      />
+      <span className="text-[13px] text-[#3d3f3a]">
+        {value.allOutlets ? t("allOutletsHint") : editableIds ? t("ownOutletsHint") : t("outletsHint")}
+      </span>
+    </fieldset>
+  );
+}
+
+/** Names of the outlets an item is for, for the card summary. */
+function outletSummary(item: EquipmentItem, outlets: Outlet[], t: (key: string) => string) {
+  if (item.allOutlets) return t("allOutlets");
+  const names = outlets.filter((o) => item.outletIds.includes(o.id)).map((o) => o.name);
+  return names.length ? names.join(", ") : t("noOutlet");
+}
+
 function EquipmentForm({
   kind,
   initial,
+  initialOutlets,
+  outlets,
   pending,
   submitLabel,
   onSubmit,
@@ -100,13 +149,16 @@ function EquipmentForm({
 }: {
   kind: EquipmentKind;
   initial: EquipmentInput;
+  initialOutlets: EquipmentOutlets;
+  outlets: Outlet[];
   pending: boolean;
   submitLabel: string;
-  onSubmit: (input: EquipmentInput) => void;
+  onSubmit: (input: EquipmentInput, outlets: EquipmentOutlets) => void;
   onCancel?: () => void;
 }) {
   const t = useTranslations("Settings.equipment");
   const [form, setForm] = useState(initial);
+  const [picked, setPicked] = useState(initialOutlets);
   const set = (key: keyof EquipmentInput) => (e: { target: { value: string } }) =>
     setForm({ ...form, [key]: e.target.value });
   const numberProps = { type: "number", inputMode: "decimal" as const, step: "any", className: inputClass };
@@ -116,7 +168,7 @@ function EquipmentForm({
       className="grid gap-2 sm:grid-cols-2"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        onSubmit(form, picked);
       }}
     >
       <Field label={t("name")}>
@@ -202,6 +254,7 @@ function EquipmentForm({
       <Field label={t("notes")} wide>
         <input value={form.notes} maxLength={500} onChange={set("notes")} className={inputClass} />
       </Field>
+      <OutletsField outlets={outlets} value={picked} onChange={setPicked} />
       <div className="flex flex-wrap gap-2 sm:col-span-2">
         <button type="submit" className={primaryButton} disabled={pending || !form.name.trim()}>
           {submitLabel}
@@ -216,8 +269,54 @@ function EquipmentForm({
   );
 }
 
-/** Settings card body: the Super Admin lists, adds, edits and disables grinders, machines or hand brew kits. */
-export function EquipmentEditor({ kind, items }: { kind: EquipmentKind; items: EquipmentItem[] }) {
+/** Outlet Admin: only the outlet ticks of one item, their own outlets editable. */
+function OutletAdminForm({
+  item,
+  outlets,
+  ownOutletIds,
+  pending,
+  onSubmit,
+}: {
+  item: EquipmentItem;
+  outlets: Outlet[];
+  ownOutletIds: string[];
+  pending: boolean;
+  onSubmit: (picked: EquipmentOutlets) => void;
+}) {
+  const tEdit = useTranslations("Settings.edit");
+  const [picked, setPicked] = useState<EquipmentOutlets>({ allOutlets: item.allOutlets, outletIds: item.outletIds });
+  return (
+    <form
+      className="grid gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(picked);
+      }}
+    >
+      <OutletsField outlets={outlets} value={picked} onChange={setPicked} editableIds={ownOutletIds} />
+      <button type="submit" className={`${primaryButton} justify-self-start`} disabled={pending || item.allOutlets}>
+        {tEdit("save")}
+      </button>
+    </form>
+  );
+}
+
+/**
+ * Settings card body: the Super Admin lists, adds, edits and disables grinders, machines
+ * or hand brew kits and picks their outlets. An outlet Admin (ownOutletIds set) only
+ * ticks or unticks their own outlets.
+ */
+export function EquipmentEditor({
+  kind,
+  items,
+  outlets,
+  ownOutletIds,
+}: {
+  kind: EquipmentKind;
+  items: EquipmentItem[];
+  outlets: Outlet[];
+  ownOutletIds?: string[];
+}) {
   const t = useTranslations("Settings.equipment");
   const tEdit = useTranslations("Settings.edit");
   const router = useRouter();
@@ -241,7 +340,12 @@ export function EquipmentEditor({ kind, items }: { kind: EquipmentKind; items: E
     });
   }
 
-  const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name));
+  // Outlet Admin: a disabled item only while one of their outlets still has it, so they can untick it.
+  const shown = ownOutletIds
+    ? items.filter((i) => i.active || i.outletIds.some((id) => ownOutletIds.includes(id)))
+    : items;
+  const sorted = [...shown].sort((a, b) => a.name.localeCompare(b.name));
+  const itemOutlets = (item: EquipmentItem): EquipmentOutlets => ({ allOutlets: item.allOutlets, outletIds: item.outletIds });
 
   return (
     <div className="flex flex-col gap-3">
@@ -265,17 +369,33 @@ export function EquipmentEditor({ kind, items }: { kind: EquipmentKind; items: E
                     )}
                   </span>
                   <span className="text-[13px] text-[#3d3f3a]">{equipmentSummary(kind, item, t)}</span>
+                  <span className="text-[13px] text-[#3d3f3a]">
+                    {t("outlets")}: {outletSummary(item, outlets, t)}
+                  </span>
                 </span>
                 <Chevron className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
               </button>
-              {open && (
+              {open && ownOutletIds && (
+                <OutletAdminForm
+                  item={item}
+                  outlets={outlets}
+                  ownOutletIds={ownOutletIds}
+                  pending={pending}
+                  onSubmit={(picked) => run(() => setEquipmentOutlets(kind, item.id, picked), () => setNotice(tEdit("saved")))}
+                />
+              )}
+              {open && !ownOutletIds && (
                 <>
                   <EquipmentForm
                     kind={kind}
                     initial={toInput(item)}
+                    initialOutlets={itemOutlets(item)}
+                    outlets={outlets}
                     pending={pending}
                     submitLabel={tEdit("save")}
-                    onSubmit={(input) => run(() => saveEquipment(kind, item.id, input), () => setNotice(tEdit("saved")))}
+                    onSubmit={(input, picked) =>
+                      run(() => saveEquipment(kind, item.id, input, picked), () => setNotice(tEdit("saved")))
+                    }
                   />
                   <button
                     type="button"
@@ -296,31 +416,35 @@ export function EquipmentEditor({ kind, items }: { kind: EquipmentKind; items: E
           );
         })}
       </ul>
-      <div className="border-t border-black/10 pt-3">
-        {adding ? (
-          <EquipmentForm
-            kind={kind}
-            initial={toInput(null)}
-            pending={pending}
-            submitLabel={tEdit("add")}
-            onCancel={() => setAdding(false)}
-            onSubmit={(input) =>
-              run(
-                () => saveEquipment(kind, null, input),
-                () => {
-                  setAdding(false);
-                  setNotice(tEdit("added"));
-                },
-              )
-            }
-          />
-        ) : (
-          <button type="button" className={secondaryButton} onClick={() => setAdding(true)}>
-            {t(kind === "GRINDER" ? "addGrinder" : kind === "BREWER" ? "addBrewer" : "addMachine")}
-          </button>
-        )}
-      </div>
-      <p className="text-[13px] text-[#3d3f3a]">{t("hint")}</p>
+      {!ownOutletIds && (
+        <div className="border-t border-black/10 pt-3">
+          {adding ? (
+            <EquipmentForm
+              kind={kind}
+              initial={toInput(null)}
+              initialOutlets={{ allOutlets: false, outletIds: [] }}
+              outlets={outlets}
+              pending={pending}
+              submitLabel={tEdit("add")}
+              onCancel={() => setAdding(false)}
+              onSubmit={(input, picked) =>
+                run(
+                  () => saveEquipment(kind, null, input, picked),
+                  () => {
+                    setAdding(false);
+                    setNotice(tEdit("added"));
+                  },
+                )
+              }
+            />
+          ) : (
+            <button type="button" className={secondaryButton} onClick={() => setAdding(true)}>
+              {t(kind === "GRINDER" ? "addGrinder" : kind === "BREWER" ? "addBrewer" : "addMachine")}
+            </button>
+          )}
+        </div>
+      )}
+      {!ownOutletIds && <p className="text-[13px] text-[#3d3f3a]">{t("hint")}</p>}
       {notice && (
         <p role="status" className="text-sm font-semibold">
           {notice}

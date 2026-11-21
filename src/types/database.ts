@@ -132,6 +132,7 @@ export type Database = {
       }
       brewers: {
         Row: {
+          all_outlets: boolean
           brand: string | null
           brewer_type: string
           created_at: string
@@ -145,6 +146,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          all_outlets?: boolean
           brand?: string | null
           brewer_type?: string
           created_at?: string
@@ -158,6 +160,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          all_outlets?: boolean
           brand?: string | null
           brewer_type?: string
           created_at?: string
@@ -918,6 +921,7 @@ export type Database = {
       }
       espresso_machines: {
         Row: {
+          all_outlets: boolean
           brand: string | null
           created_at: string
           default_pressure_bar: number | null
@@ -933,6 +937,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          all_outlets?: boolean
           brand?: string | null
           created_at?: string
           default_pressure_bar?: number | null
@@ -948,6 +953,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          all_outlets?: boolean
           brand?: string | null
           created_at?: string
           default_pressure_bar?: number | null
@@ -1310,6 +1316,7 @@ export type Database = {
       }
       grinders: {
         Row: {
+          all_outlets: boolean
           brand: string | null
           burr_size_mm: number | null
           burr_type: string | null
@@ -1330,6 +1337,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          all_outlets?: boolean
           brand?: string | null
           burr_size_mm?: number | null
           burr_type?: string | null
@@ -1350,6 +1358,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          all_outlets?: boolean
           brand?: string | null
           burr_size_mm?: number | null
           burr_type?: string | null
@@ -3379,6 +3388,10 @@ export type Database = {
       }
     }
     Functions: {
+      set_equipment_outlets: {
+        Args: { p_kind: string; p_equipment_id: string; p_all_outlets: boolean; p_outlet_ids: string[] }
+        Returns: undefined
+      }
       save_espresso_calibration: {
         Args: { p_record: Json; p_uses: string[]; p_replace: string[] | null }
         Returns: string
