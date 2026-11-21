@@ -23,7 +23,7 @@ export type FilterValues = {
 
 export type FilterRecord = FilterValues & FinalBase & { brewer_id: string | null };
 
-export type FilterBrew = FilterValues & { id: string; created_at: string };
+export type FilterBrew = FilterValues & { id: string; created_at: string; temperature: string | null };
 
 export type FilterTarget = {
   material_id: string;

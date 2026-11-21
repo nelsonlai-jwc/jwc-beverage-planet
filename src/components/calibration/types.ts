@@ -52,7 +52,7 @@ export type FinalBase = {
 
 export type CalibrationRecord = SharedValues & EspressoValues & FinalBase;
 
-export type CalibrationShot = SharedValues & EspressoValues & { id: string; created_at: string };
+export type CalibrationShot = SharedValues & EspressoValues & { id: string; created_at: string; drink_type: string | null };
 
 /** Production number of a bag, e.g. PR-47481. */
 export const PRODUCTION_NO = /^PR-\d{5}$/;

@@ -203,7 +203,12 @@ export function CalibrationTable({
       x.coffee_bean_material_id === r.coffee_bean_material_id &&
       x.purpose === r.purpose &&
       (r.purpose === "DAILY" ? x.grinder_id === r.grinder_id : x.created_by === r.created_by);
-    const tries = row.kind === "ESPRESSO" ? shots.filter(sameKey) : brews.filter(sameKey);
+    // Only the tries of this Final's drinks (tries saved before tabs have no drink and always show).
+    const items = r.uses.map((u) => u.item);
+    const tries =
+      row.kind === "ESPRESSO"
+        ? shots.filter((x) => sameKey(x) && (!x.drink_type || items.includes(x.drink_type)))
+        : brews.filter((x) => sameKey(x) && (!x.temperature || items.includes(x.temperature)));
     return (
       <div className="flex flex-col gap-3 text-sm">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">

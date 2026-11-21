@@ -10,10 +10,10 @@ import { filterExtractionYield, waterRatio } from "@/lib/calibration/filterCalc"
 import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "../BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "../EquipmentSelect";
-import { AppliesTo, FormError, ProductionNoField, productionNoProblem, useFinalSave } from "../FinalParts";
+import { ApplyTo, FormError, ItemTabs, ProductionNoField, productionNoProblem, useFinalSave, type FinalToSave } from "../FinalParts";
 import { rpmProblem, type Grinder, type Purpose, type TasteBalance } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
-import { FILTER_TEMPS, type Brewer, type FilterBrew, type FilterRecord, type FilterTarget, type FilterValues } from "./types";
+import { FILTER_TEMPS, type Brewer, type FilterBrew, type FilterRecord, type FilterTarget, type FilterTemp, type FilterValues } from "./types";
 
 type FormState = {
   brewerId: string;
@@ -22,6 +22,11 @@ type FormState = {
   grinderName: string;
   grind: string;
   rpm: string;
+  roastDate: string;
+};
+
+/** The brew values of one tab (Hot or Iced). */
+type BrewState = {
   dose: string;
   water: string;
   temp: string;
@@ -31,10 +36,24 @@ type FormState = {
   time: string;
   beverage: string;
   tds: string;
-  roastDate: string;
   balance: string;
   notes: string;
 };
+
+const EMPTY_BREW: BrewState = {
+  dose: "",
+  water: "",
+  temp: "",
+  bloomWater: "",
+  bloomSeconds: "",
+  pours: "",
+  time: "",
+  beverage: "",
+  tds: "",
+  balance: "",
+  notes: "",
+};
+const isFilled = (brew: BrewState) => Object.values(brew).some((v) => v.trim() !== "");
 
 const str = (value: number | string | null | undefined) => (value == null ? "" : String(value));
 
@@ -45,6 +64,12 @@ function fromValues(v: Partial<FilterValues> & { roast_date?: string | null }, b
     grinderName: v.grinder_name ?? base.grinderName,
     grind: v.grind_setting ?? "",
     rpm: str(v.grinder_rpm),
+    roastDate: v.roast_date !== undefined ? str(v.roast_date) : base.roastDate,
+  };
+}
+
+function brewFromValues(v: FilterValues): BrewState {
+  return {
     dose: str(v.dose_g),
     water: str(v.water_g),
     temp: str(v.water_temp_c),
@@ -54,7 +79,6 @@ function fromValues(v: Partial<FilterValues> & { roast_date?: string | null }, b
     time: str(v.total_time_seconds),
     beverage: str(v.beverage_g),
     tds: str(v.tds_percent),
-    roastDate: v.roast_date !== undefined ? str(v.roast_date) : base.roastDate,
     balance: v.taste_balance ?? "",
     notes: v.taste_notes ?? "",
   };
@@ -68,7 +92,7 @@ function optionalNumber(value: string): number | null | undefined {
 
 const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
 
-/** Filter: dial in with test brews, then save a Final ticked Hot and / or Iced. */
+/** Filter: dial in with test brews in Hot / Iced tabs, then save each filled tab as its own Final. */
 export function FilterForm({
   purpose,
   outletId,
@@ -106,7 +130,8 @@ export function FilterForm({
   const final = useFinalSave({ kind: "FILTER", purpose, outletId, date, onSaved: onDone });
   const { busy, setBusy, error, setError } = final;
   const [editTarget, setEditTarget] = useState(false);
-  const [items, setItems] = useState<string[]>([]);
+  const [tab, setTab] = useState<FilterTemp>("HOT");
+  const [tabs, setTabs] = useState<Record<FilterTemp, BrewState>>({ HOT: EMPTY_BREW, ICED: EMPTY_BREW });
   const [productionNo, setProductionNo] = useState("");
   const [form, setForm] = useState<FormState>(() => ({
     brewerId: brewers.find((b) => b.is_active)?.id ?? (custom ? OTHER : ""),
@@ -115,28 +140,23 @@ export function FilterForm({
     grinderName: "",
     grind: "",
     rpm: "",
-    dose: "",
-    water: "",
-    temp: "",
-    bloomWater: "",
-    bloomSeconds: "",
-    pours: "",
-    time: "",
-    beverage: "",
-    tds: "",
     roastDate: "",
-    balance: "",
-    notes: "",
   }));
   const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
+  const brew = tabs[tab];
+  const setBrew = (key: keyof BrewState) => (e: { target: { value: string } }) => setTabs({ ...tabs, [tab]: { ...brew, [key]: e.target.value } });
+  const filled = FILTER_TEMPS.filter((x) => isFilled(tabs[x]));
+  const tabBrews = brews.filter((b) => !b.temperature || b.temperature === tab);
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
-  const prev = custom ? previous[0] : previous.find((r) => r.grinder_id === form.grinderId);
-  const dose = Number(form.dose);
-  const water = Number(form.water);
-  const time = Number(form.time);
+  // Earlier Finals to reuse: custom my last ones, daily yesterday's of this grinder.
+  const reusable = custom ? previous : previous.filter((r) => r.grinder_id === form.grinderId);
+  const prev = reusable[0];
+  const dose = Number(brew.dose);
+  const water = Number(brew.water);
+  const time = Number(brew.time);
   const ratio = waterRatio(dose, water);
-  const ey = filterExtractionYield(dose, Number(form.beverage) || null, Number(form.tds) || null);
+  const ey = filterExtractionYield(dose, Number(brew.beverage) || null, Number(brew.tds) || null);
   const age = daysOffRoast(form.roastDate || null, date);
   const grindNumber = Number(form.grind);
   const grindOutOfRange =
@@ -149,18 +169,36 @@ export function FilterForm({
   const rpmGrinder = grinder?.rpm_adjustable ? grinder : undefined;
   const rpmOutOfRange = rpmProblem(rpmGrinder, form.rpm);
 
-  function values(): (FilterValues & { roast_date: string | null }) | null {
+  /** Use earlier Finals: equipment of the newest, and each temperature's values into its tab. */
+  function useEarlier() {
+    if (!prev) return;
+    setForm(fromValues(prev, form));
+    const next = { ...tabs };
+    for (const x of FILTER_TEMPS) {
+      const r = reusable.find((f) => f.uses.some((u) => u.item === x));
+      if (r) next[x] = brewFromValues(r);
+    }
+    setTabs(next);
+  }
+
+  /** One tab's values with the shared settings, or null after showing why they are not valid. */
+  function values(x: FilterTemp): (FilterValues & { roast_date: string | null }) | null {
+    const s = tabs[x];
+    const dose = Number(s.dose);
+    const water = Number(s.water);
+    const time = Number(s.time);
     const optional = {
-      water_temp_c: optionalNumber(form.temp),
-      bloom_water_g: optionalNumber(form.bloomWater),
-      bloom_seconds: optionalNumber(form.bloomSeconds),
-      pour_count: optionalNumber(form.pours),
-      beverage_g: optionalNumber(form.beverage),
-      tds_percent: optionalNumber(form.tds),
+      water_temp_c: optionalNumber(s.temp),
+      bloom_water_g: optionalNumber(s.bloomWater),
+      bloom_seconds: optionalNumber(s.bloomSeconds),
+      pour_count: optionalNumber(s.pours),
+      beverage_g: optionalNumber(s.beverage),
+      tds_percent: optionalNumber(s.tds),
     };
     const b = equipmentColumns(form.brewerId, form.brewerName);
     const g = equipmentColumns(form.grinderId, form.grinderName);
     if (!(dose > 0 && water > 0 && time > 0) || !form.grind.trim() || (!b.id && !b.name) || (!g.id && !g.name)) {
+      setTab(x);
       setError(tf("invalid"));
       return null;
     }
@@ -172,6 +210,7 @@ export function FilterForm({
       (tds != null && (tds <= 0 || tds > 25)) ||
       (beverage != null && beverage <= 0)
     ) {
+      setTab(x);
       setError(tf("invalidOptional"));
       return null;
     }
@@ -200,8 +239,8 @@ export function FilterForm({
       total_time_seconds: time,
       beverage_g: beverage ?? null,
       tds_percent: tds ?? null,
-      taste_balance: form.balance || null,
-      taste_notes: form.notes.trim() || null,
+      taste_balance: s.balance || null,
+      taste_notes: s.notes.trim() || null,
       roast_date: form.roastDate || null,
     };
   }
@@ -209,30 +248,34 @@ export function FilterForm({
   async function saveFinal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    const v = values();
-    if (!v) return;
+    if (filled.length === 0) {
+      setError(t("needShotValues"));
+      return;
+    }
+    const finals: FinalToSave[] = [];
+    for (const x of filled) {
+      const v = values(x);
+      if (!v) return;
+      finals.push({ record: { ...v, production_no: productionNo.trim() || null }, items: [x] });
+    }
     if (productionNoProblem(productionNo)) {
       setError(t("productionNoInvalid"));
       return;
     }
-    if (items.length === 0) {
-      setError(t("needAppliesTo"));
-      return;
-    }
-    await final.submit({ ...v, production_no: productionNo.trim() || null }, items);
+    await final.submit(finals);
   }
 
   async function saveBrew() {
     if (busy) return;
-    const v = values();
+    const v = values(tab);
     if (!v) return;
     setBusy(true);
     setError(null);
-    const { roast_date: _roast, ...brew } = v;
+    const { roast_date: _roast, ...row } = v;
     void _roast;
     const { error: insertError } = await createClient()
       .from("filter_calibration_brews")
-      .insert({ ...brew, purpose, outlet_id: outletId, business_date: date });
+      .insert({ ...row, temperature: tab, purpose, outlet_id: outletId, business_date: date });
     setBusy(false);
     if (insertError) {
       setError(t("saveFailed"));
@@ -251,7 +294,7 @@ export function FilterForm({
     );
   };
 
-  const numberField = (key: keyof FormState, label: string, opts: { required?: boolean; step?: string; hint?: React.ReactNode } = {}) => (
+  const numberField = (key: keyof BrewState, label: string, opts: { required?: boolean; step?: string; hint?: React.ReactNode } = {}) => (
     <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={`fc-${key}`} className={labelClass}>
         {label}
@@ -263,8 +306,8 @@ export function FilterForm({
         min="0"
         step={opts.step ?? "any"}
         required={opts.required}
-        value={form[key]}
-        onChange={set(key)}
+        value={brew[key]}
+        onChange={setBrew(key)}
         className={inputClass}
       />
       {opts.hint && <span className={mutedText}>{opts.hint}</span>}
@@ -308,25 +351,7 @@ export function FilterForm({
         />
       </div>
 
-      {prev && (
-        <button type="button" className={`${secondaryButton} self-start`} onClick={() => setForm(fromValues(prev, form))}>
-          {custom ? t("useLast") : t("useYesterday")}
-        </button>
-      )}
-
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-sm font-semibold">{tf("recipe")}</legend>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {numberField("dose", t("doseG"), {
-            required: true,
-            hint: target ? hint(dose || null, target.dose_min_g, target.dose_max_g, t("targetRange", { min: target.dose_min_g, max: target.dose_max_g, unit: "g" })) : undefined,
-          })}
-          {numberField("water", tf("waterG"), {
-            required: true,
-            hint: target
-              ? hint(ratio, target.ratio_min, target.ratio_max, tf("targetRatio", { min: target.ratio_min, max: target.ratio_max }))
-              : undefined,
-          })}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="flex min-w-0 flex-col gap-1.5">
             <label htmlFor="fc-grind" className={labelClass}>
               {t("grind")}
@@ -363,6 +388,29 @@ export function FilterForm({
               </span>
             </div>
           )}
+      </div>
+
+      {prev && (
+        <button type="button" className={`${secondaryButton} self-start`} onClick={useEarlier}>
+          {custom ? t("useLast") : t("useYesterday")}
+        </button>
+      )}
+
+      <ItemTabs kind="FILTER" items={FILTER_TEMPS} value={tab} filled={filled} onChange={(x) => setTab(x as FilterTemp)} />
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-sm font-semibold">{tf("recipe")}</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {numberField("dose", t("doseG"), {
+            required: true,
+            hint: target ? hint(dose || null, target.dose_min_g, target.dose_max_g, t("targetRange", { min: target.dose_min_g, max: target.dose_max_g, unit: "g" })) : undefined,
+          })}
+          {numberField("water", tf("waterG"), {
+            required: true,
+            hint: target
+              ? hint(ratio, target.ratio_min, target.ratio_max, tf("targetRatio", { min: target.ratio_min, max: target.ratio_max }))
+              : undefined,
+          })}
           {numberField("temp", tf("waterTempC"))}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -408,10 +456,10 @@ export function FilterForm({
                 key={b}
                 type="button"
                 role="radio"
-                aria-checked={form.balance === b}
-                onClick={() => setForm({ ...form, balance: form.balance === b ? "" : b })}
+                aria-checked={brew.balance === b}
+                onClick={() => setTabs({ ...tabs, [tab]: { ...brew, balance: brew.balance === b ? "" : b } })}
                 className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
-                  form.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
+                  brew.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
                 }`}
               >
                 {t(`balance.${b}`)}
@@ -427,8 +475,8 @@ export function FilterForm({
             id="fc-notes"
             rows={2}
             maxLength={1000}
-            value={form.notes}
-            onChange={set("notes")}
+            value={brew.notes}
+            onChange={setBrew("notes")}
             className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
           />
         </div>
@@ -439,16 +487,18 @@ export function FilterForm({
           {tf("saveBrew")}
         </button>
         <p className={mutedText}>{tf("brewHint")}</p>
-        {brews.length > 0 && (
+        {tabBrews.length > 0 && (
           <FilterBrewList
-            brews={brews}
+            brews={tabBrews}
             brewerNames={brewerNames}
-            onUse={(brew) => setForm(fromValues(brew, { ...form, brewerId: brew.brewer_id ?? OTHER, brewerName: brew.brewer_name ?? "" }))}
+            onUse={(b) => {
+              setForm(fromValues(b, { ...form, brewerId: b.brewer_id ?? OTHER, brewerName: b.brewer_name ?? "" }));
+              setTabs({ ...tabs, [tab]: brewFromValues(b) });
+            }}
           />
         )}
+        <ApplyTo kind="FILTER" items={FILTER_TEMPS} current={tab} onApply={(x) => setTabs({ ...tabs, [x]: { ...brew } })} />
       </div>
-
-      <AppliesTo kind="FILTER" items={FILTER_TEMPS} value={items} onChange={setItems} />
 
       <FormError error={error} />
       {final.warning}
