@@ -146,7 +146,14 @@ export function FilterForm({
   const brew = tabs[tab];
   const setBrew = (key: keyof BrewState) => (e: { target: { value: string } }) => setTabs({ ...tabs, [tab]: { ...brew, [key]: e.target.value } });
   const filled = FILTER_TEMPS.filter((x) => isFilled(tabs[x]));
-  const tabBrews = brews.filter((b) => !b.temperature || b.temperature === tab);
+  const summary = Object.fromEntries(
+    filled.map((x) => {
+      const b = tabs[x];
+      return [x, [b.dose && b.water ? `${b.dose} g : ${b.water} g` : b.dose ? `${b.dose} g` : "", b.time ? `${b.time} s` : ""].filter(Boolean).join(" · ") || "…"];
+    }),
+  );
+  // Only this tab's test brews; brews saved before tabs have no temperature and are not shown here.
+  const tabBrews = brews.filter((b) => b.temperature === tab);
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
   // Earlier Finals to reuse: custom my last ones, daily yesterday's of this grinder.
@@ -396,109 +403,110 @@ export function FilterForm({
         </button>
       )}
 
-      <ItemTabs kind="FILTER" items={FILTER_TEMPS} value={tab} filled={filled} onChange={(x) => setTab(x as FilterTemp)} />
+      <ItemTabs kind="FILTER" items={FILTER_TEMPS} value={tab} summary={summary} onChange={(x) => setTab(x as FilterTemp)}>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-sm font-semibold">{tf("recipe")}</legend>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {numberField("dose", t("doseG"), {
-            required: true,
-            hint: target ? hint(dose || null, target.dose_min_g, target.dose_max_g, t("targetRange", { min: target.dose_min_g, max: target.dose_max_g, unit: "g" })) : undefined,
-          })}
-          {numberField("water", tf("waterG"), {
-            required: true,
-            hint: target
-              ? hint(ratio, target.ratio_min, target.ratio_max, tf("targetRatio", { min: target.ratio_min, max: target.ratio_max }))
-              : undefined,
-          })}
-          {numberField("temp", tf("waterTempC"))}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-          <span>
-            <span className={mutedText}>{t("ratio")}: </span>
-            <span className="font-semibold">{ratio ? `1:${ratio}` : "—"}</span>
-          </span>
-          {canManage && (
-            <button type="button" className="text-[13px] underline" onClick={() => setEditTarget(!editTarget)}>
-              {target ? t("editTarget") : t("setTarget")}
-            </button>
-          )}
-        </div>
-        {editTarget && <BeanTargetForm beanId={beanId} target={target} filter onClose={() => setEditTarget(false)} />}
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-sm font-semibold">{tf("pouring")}</legend>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {numberField("bloomWater", tf("bloomWaterG"))}
-          {numberField("bloomSeconds", tf("bloomS"))}
-          {numberField("pours", tf("pours"), { step: "1" })}
-          {numberField("time", tf("totalTimeS"), {
-            required: true,
-            hint: target
-              ? hint(time || null, target.time_min_seconds, target.time_max_seconds, t("targetRange", { min: target.time_min_seconds, max: target.time_max_seconds, unit: "s" }))
-              : undefined,
-          })}
-        </div>
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-sm font-semibold">{t("beanAndTaste")}</legend>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {numberField("beverage", tf("beverageG"))}
-          {numberField("tds", t("tdsPercent"), { hint: ey != null ? t("eyValue", { value: ey }) : tf("eyHint") })}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <span className={labelClass}>{t("tasteBalance")}</span>
-          <div role="radiogroup" aria-label={t("tasteBalance")} className="flex flex-wrap gap-2">
-            {(["SOUR", "BALANCED", "BITTER"] as TasteBalance[]).map((b) => (
-              <button
-                key={b}
-                type="button"
-                role="radio"
-                aria-checked={brew.balance === b}
-                onClick={() => setTabs({ ...tabs, [tab]: { ...brew, balance: brew.balance === b ? "" : b } })}
-                className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
-                  brew.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
-                }`}
-              >
-                {t(`balance.${b}`)}
-              </button>
-            ))}
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-2 text-sm font-semibold">{tf("recipe")}</legend>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {numberField("dose", t("doseG"), {
+              required: true,
+              hint: target ? hint(dose || null, target.dose_min_g, target.dose_max_g, t("targetRange", { min: target.dose_min_g, max: target.dose_max_g, unit: "g" })) : undefined,
+            })}
+            {numberField("water", tf("waterG"), {
+              required: true,
+              hint: target
+                ? hint(ratio, target.ratio_min, target.ratio_max, tf("targetRatio", { min: target.ratio_min, max: target.ratio_max }))
+                : undefined,
+            })}
+            {numberField("temp", tf("waterTempC"))}
           </div>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="fc-notes" className={labelClass}>
-            {t("tasteNotes")}
-          </label>
-          <textarea
-            id="fc-notes"
-            rows={2}
-            maxLength={1000}
-            value={brew.notes}
-            onChange={setBrew("notes")}
-            className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
-          />
-        </div>
-      </fieldset>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span>
+              <span className={mutedText}>{t("ratio")}: </span>
+              <span className="font-semibold">{ratio ? `1:${ratio}` : "—"}</span>
+            </span>
+            {canManage && (
+              <button type="button" className="text-[13px] underline" onClick={() => setEditTarget(!editTarget)}>
+                {target ? t("editTarget") : t("setTarget")}
+              </button>
+            )}
+          </div>
+          {editTarget && <BeanTargetForm beanId={beanId} target={target} filter onClose={() => setEditTarget(false)} />}
+        </fieldset>
 
-      <div className="flex flex-col gap-3">
-        <button type="button" disabled={busy} onClick={saveBrew} className={`${secondaryButton} self-start`}>
-          {tf("saveBrew")}
-        </button>
-        <p className={mutedText}>{tf("brewHint")}</p>
-        {tabBrews.length > 0 && (
-          <FilterBrewList
-            brews={tabBrews}
-            brewerNames={brewerNames}
-            onUse={(b) => {
-              setForm(fromValues(b, { ...form, brewerId: b.brewer_id ?? OTHER, brewerName: b.brewer_name ?? "" }));
-              setTabs({ ...tabs, [tab]: brewFromValues(b) });
-            }}
-          />
-        )}
-        <ApplyTo kind="FILTER" items={FILTER_TEMPS} current={tab} onApply={(x) => setTabs({ ...tabs, [x]: { ...brew } })} />
-      </div>
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-2 text-sm font-semibold">{tf("pouring")}</legend>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {numberField("bloomWater", tf("bloomWaterG"))}
+            {numberField("bloomSeconds", tf("bloomS"))}
+            {numberField("pours", tf("pours"), { step: "1" })}
+            {numberField("time", tf("totalTimeS"), {
+              required: true,
+              hint: target
+                ? hint(time || null, target.time_min_seconds, target.time_max_seconds, t("targetRange", { min: target.time_min_seconds, max: target.time_max_seconds, unit: "s" }))
+                : undefined,
+            })}
+          </div>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-2 text-sm font-semibold">{t("beanAndTaste")}</legend>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {numberField("beverage", tf("beverageG"))}
+            {numberField("tds", t("tdsPercent"), { hint: ey != null ? t("eyValue", { value: ey }) : tf("eyHint") })}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className={labelClass}>{t("tasteBalance")}</span>
+            <div role="radiogroup" aria-label={t("tasteBalance")} className="flex flex-wrap gap-2">
+              {(["SOUR", "BALANCED", "BITTER"] as TasteBalance[]).map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  role="radio"
+                  aria-checked={brew.balance === b}
+                  onClick={() => setTabs({ ...tabs, [tab]: { ...brew, balance: brew.balance === b ? "" : b } })}
+                  className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
+                    brew.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
+                  }`}
+                >
+                  {t(`balance.${b}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="fc-notes" className={labelClass}>
+              {t("tasteNotes")}
+            </label>
+            <textarea
+              id="fc-notes"
+              rows={2}
+              maxLength={1000}
+              value={brew.notes}
+              onChange={setBrew("notes")}
+              className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
+            />
+          </div>
+        </fieldset>
+
+        <div className="flex flex-col gap-3">
+          <button type="button" disabled={busy} onClick={saveBrew} className={`${secondaryButton} self-start`}>
+            {tf("saveBrew")}
+          </button>
+          <p className={mutedText}>{tf("brewHint")}</p>
+          {tabBrews.length > 0 && (
+            <FilterBrewList
+              brews={tabBrews}
+              brewerNames={brewerNames}
+              onUse={(b) => {
+                setForm(fromValues(b, { ...form, brewerId: b.brewer_id ?? OTHER, brewerName: b.brewer_name ?? "" }));
+                setTabs({ ...tabs, [tab]: brewFromValues(b) });
+              }}
+            />
+          )}
+          <ApplyTo kind="FILTER" items={FILTER_TEMPS} current={tab} onApply={(x) => setTabs({ ...tabs, [x]: { ...brew } })} />
+        </div>
+      </ItemTabs>
 
       <FormError error={error} />
       {final.warning}

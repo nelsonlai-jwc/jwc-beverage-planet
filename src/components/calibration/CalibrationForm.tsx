@@ -151,7 +151,14 @@ export function CalibrationForm({
   const shot = tabs[tab];
   const setShot = (key: keyof ShotState) => (e: { target: { value: string } }) => setTabs({ ...tabs, [tab]: { ...shot, [key]: e.target.value } });
   const filled = DRINK_TYPES.filter((d) => isFilled(tabs[d]));
-  const tabShots = shots.filter((s) => !s.drink_type || s.drink_type === tab);
+  const summary = Object.fromEntries(
+    filled.map((d) => {
+      const x = tabs[d];
+      return [d, [x.dose && x.yield ? `${x.dose} g → ${x.yield} g` : x.dose ? `${x.dose} g` : "", x.time ? `${x.time} s` : ""].filter(Boolean).join(" · ") || "…"];
+    }),
+  );
+  // Only this tab's test shots; shots saved before tabs have no drink and are not shown here.
+  const tabShots = shots.filter((s) => s.drink_type === tab);
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
   // Earlier Finals to reuse: custom my last ones, daily yesterday's of this grinder.
@@ -426,82 +433,83 @@ export function CalibrationForm({
 
       <fieldset className="flex min-w-0 flex-col gap-3">
         <legend className="mb-2 text-sm font-semibold">{t("shot")}</legend>
-        <ItemTabs kind="ESPRESSO" items={DRINK_TYPES} value={tab} filled={filled} onChange={(d) => setTab(d as DrinkType)} />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {numberField("dose", t("doseG"), {
-            min: "0.1",
-            required: true,
-            hint: target ? targetLine(dose, target.dose_min_g, target.dose_max_g, "g") : undefined,
-          })}
-          {numberField("yield", t("yieldG"), {
-            min: "0.1",
-            required: true,
-            hint: target ? targetLine(yieldG, target.yield_min_g, target.yield_max_g, "g") : undefined,
-          })}
-          {numberField("time", t("timeS"), {
-            min: "0.1",
-            required: true,
-            hint: target ? targetLine(time, target.time_min_seconds, target.time_max_seconds, "s") : undefined,
-          })}
-          {numberField("tds", t("tdsPercent"), { max: "25", hint: ey != null ? t("eyValue", { value: ey }) : t("eyHint") })}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-          <span>
-            <span className={mutedText}>{t("ratio")}: </span>
-            <span className="font-semibold">{brewRatio(dose, yieldG) ?? "—"}</span>
-          </span>
-          {canManage && (
-            <button type="button" className="text-[13px] underline" onClick={() => setEditTarget(!editTarget)}>
-              {targets.length ? t("editTarget") : t("setTarget")}
-            </button>
+        <ItemTabs kind="ESPRESSO" items={DRINK_TYPES} value={tab} summary={summary} onChange={(d) => setTab(d as DrinkType)}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {numberField("dose", t("doseG"), {
+              min: "0.1",
+              required: true,
+              hint: target ? targetLine(dose, target.dose_min_g, target.dose_max_g, "g") : undefined,
+            })}
+            {numberField("yield", t("yieldG"), {
+              min: "0.1",
+              required: true,
+              hint: target ? targetLine(yieldG, target.yield_min_g, target.yield_max_g, "g") : undefined,
+            })}
+            {numberField("time", t("timeS"), {
+              min: "0.1",
+              required: true,
+              hint: target ? targetLine(time, target.time_min_seconds, target.time_max_seconds, "s") : undefined,
+            })}
+            {numberField("tds", t("tdsPercent"), { max: "25", hint: ey != null ? t("eyValue", { value: ey }) : t("eyHint") })}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span>
+              <span className={mutedText}>{t("ratio")}: </span>
+              <span className="font-semibold">{brewRatio(dose, yieldG) ?? "—"}</span>
+            </span>
+            {canManage && (
+              <button type="button" className="text-[13px] underline" onClick={() => setEditTarget(!editTarget)}>
+                {targets.length ? t("editTarget") : t("setTarget")}
+              </button>
+            )}
+          </div>
+          {editTarget && <BeanTargetForm beanId={beanId} espressoTargets={targets} onClose={() => setEditTarget(false)} />}
+          <div role="radiogroup" aria-label={t("tasteBalance")} className="flex flex-wrap items-center gap-2">
+            <span className={labelClass}>{t("tasteBalance")}</span>
+            {(["SOUR", "BALANCED", "BITTER"] as TasteBalance[]).map((b) => (
+              <button
+                key={b}
+                type="button"
+                role="radio"
+                aria-checked={shot.balance === b}
+                onClick={() => setTabs({ ...tabs, [tab]: { ...shot, balance: shot.balance === b ? "" : b } })}
+                className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
+                  shot.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
+                }`}
+              >
+                {t(`balance.${b}`)}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="cal-notes" className={labelClass}>
+              {t("tasteNotes")}
+            </label>
+            <textarea
+              id="cal-notes"
+              rows={2}
+              maxLength={1000}
+              value={shot.notes}
+              onChange={setShot("notes")}
+              className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
+            />
+          </div>
+          <button type="button" disabled={busy} onClick={saveShot} className={`${secondaryButton} self-start`}>
+            {t("saveShot")}
+          </button>
+          <p className={mutedText}>{t("shotHint")}</p>
+          {tabShots.length > 0 && (
+            <ShotList
+              shots={tabShots}
+              grinderNames={grinderNames}
+              onUse={(s) => {
+                setForm(fromValues(s, form));
+                setTabs({ ...tabs, [tab]: shotFromValues(s) });
+              }}
+            />
           )}
-        </div>
-        {editTarget && <BeanTargetForm beanId={beanId} espressoTargets={targets} onClose={() => setEditTarget(false)} />}
-        <div role="radiogroup" aria-label={t("tasteBalance")} className="flex flex-wrap items-center gap-2">
-          <span className={labelClass}>{t("tasteBalance")}</span>
-          {(["SOUR", "BALANCED", "BITTER"] as TasteBalance[]).map((b) => (
-            <button
-              key={b}
-              type="button"
-              role="radio"
-              aria-checked={shot.balance === b}
-              onClick={() => setTabs({ ...tabs, [tab]: { ...shot, balance: shot.balance === b ? "" : b } })}
-              className={`inline-flex h-9 items-center rounded-full border-[1.5px] px-4 text-sm font-semibold ${
-                shot.balance === b ? "border-black bg-black text-white" : "border-black/40 bg-white"
-              }`}
-            >
-              {t(`balance.${b}`)}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="cal-notes" className={labelClass}>
-            {t("tasteNotes")}
-          </label>
-          <textarea
-            id="cal-notes"
-            rows={2}
-            maxLength={1000}
-            value={shot.notes}
-            onChange={setShot("notes")}
-            className="rounded-[10px] border-[1.5px] border-black px-3.5 py-2.5 text-base"
-          />
-        </div>
-        <button type="button" disabled={busy} onClick={saveShot} className={`${secondaryButton} self-start`}>
-          {t("saveShot")}
-        </button>
-        <p className={mutedText}>{t("shotHint")}</p>
-        {tabShots.length > 0 && (
-          <ShotList
-            shots={tabShots}
-            grinderNames={grinderNames}
-            onUse={(s) => {
-              setForm(fromValues(s, form));
-              setTabs({ ...tabs, [tab]: shotFromValues(s) });
-            }}
-          />
-        )}
-        <ApplyTo kind="ESPRESSO" items={DRINK_TYPES} current={tab} onApply={(d) => setTabs({ ...tabs, [d]: { ...shot } })} />
+          <ApplyTo kind="ESPRESSO" items={DRINK_TYPES} current={tab} onApply={(d) => setTabs({ ...tabs, [d]: { ...shot } })} />
+        </ItemTabs>
       </fieldset>
 
       <FormError error={error} />

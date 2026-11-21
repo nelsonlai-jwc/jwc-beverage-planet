@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { errorText, inputClass, labelClass, mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
 import { createClient } from "@/lib/supabase/client";
@@ -18,43 +18,86 @@ export function useItemLabel() {
   return (kind: FinalKind, item: string) => (kind === "ESPRESSO" ? t(`drink.${item}`) : t(`temp.${item}`));
 }
 
-/** Tabs for the drinks a Final is for: each tab has its own shot values and saves as its own Final. */
+/**
+ * Tabs for the drinks a Final is for, with the open tab's panel attached below.
+ * Each tab has its own values and saves as its own Final.
+ */
 export function ItemTabs({
   kind,
   items,
   value,
-  filled,
+  summary,
   onChange,
+  children,
 }: {
   kind: FinalKind;
   items: string[];
   value: string;
-  /** Tabs that have values; they are saved as Finals. */
-  filled: string[];
+  /** Short values of each filled tab; a tab without one is not filled and is not saved. */
+  summary: Partial<Record<string, string>>;
   onChange: (item: string) => void;
+  children: React.ReactNode;
 }) {
   const t = useTranslations("Calibration");
   const label = useItemLabel();
+
+  // Keys 1, 2, 3… open the tabs, except while typing in a field.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName))) return;
+      const item = items[Number(e.key) - 1];
+      if (/^[1-9]$/.test(e.key) && item) {
+        e.preventDefault();
+        onChange(item);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [items, onChange]);
+
   return (
-    <div role="tablist" aria-label={t("tabsLabel")} className="flex gap-1.5 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
-      {items.map((item) => {
-        const on = value === item;
-        return (
-          <button
-            key={item}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(item)}
-            className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-4 text-sm font-semibold whitespace-nowrap ${
-              on ? "border-black bg-black text-white" : "border-black/40 bg-white"
-            }`}
-          >
-            {label(kind, item)}
-            {filled.includes(item) && <span aria-label={t("tabFilled")}>●</span>}
-          </button>
-        );
-      })}
+    <div className="min-w-0 rounded-[10px] border border-black/15 bg-white">
+      <div role="tablist" aria-label={t("tabsLabel")} className="grid grid-cols-2 rounded-t-[9px] bg-[#f5f5f3] sm:flex">
+        {items.map((item, index) => {
+          const on = value === item;
+          const text = summary[item];
+          return (
+            <button
+              key={item}
+              id={`tab-${item}`}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              aria-controls="tab-panel"
+              aria-keyshortcuts={String(index + 1)}
+              onClick={() => onChange(item)}
+              className={`group relative flex h-[50px] min-w-0 flex-col items-start justify-center gap-0.5 border-t-2 border-r border-b border-r-black/15 px-3 text-left first:rounded-tl-[9px] sm:px-4 ${
+                on ? "border-t-black border-b-transparent bg-white" : "border-t-transparent border-b-black/15 hover:bg-white/60"
+              }`}
+            >
+              <span className={`flex max-w-full items-center gap-1.5 text-[14px] leading-5 ${on ? "text-black" : "text-[#4d4d4d]"}`}>
+                <span aria-hidden className={`size-2.5 shrink-0 rounded-[2px] ${text ? "bg-brand-green" : "bg-black/20"}`} />
+                <span className="truncate">{label(kind, item)}</span>
+              </span>
+              <span className="max-w-full truncate text-[12px] leading-4 text-[#6b6d67]">{text ?? t("tabEmpty")}</span>
+              {/* Hover hint with the key, like Supabase. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-full left-1/2 z-10 mt-1.5 hidden -translate-x-1/2 items-center gap-1.5 rounded-md bg-black px-2 py-1 text-[12px] whitespace-nowrap text-white sm:group-hover:flex"
+              >
+                {t("switchTo", { name: label(kind, item) })}
+                <kbd className="rounded border border-white/30 px-1 font-sans text-[11px]">{index + 1}</kbd>
+              </span>
+            </button>
+          );
+        })}
+        <div aria-hidden className="hidden flex-1 rounded-tr-[9px] border-b border-black/15 sm:block" />
+      </div>
+      <div id="tab-panel" role="tabpanel" aria-labelledby={`tab-${value}`} className="flex flex-col gap-3 p-3 sm:p-4">
+        {children}
+      </div>
     </div>
   );
 }
