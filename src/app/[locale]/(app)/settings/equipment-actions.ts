@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SettingResult } from "./actions";
+import { BREWER_TYPES } from "@/components/settings/brewer-types";
 
 export type EquipmentKind = "GRINDER" | "MACHINE" | "BREWER";
 
@@ -87,7 +88,7 @@ export async function saveEquipment(kind: EquipmentKind, id: string | null, inpu
       ? await supabase.from("grinders").update(values).eq("id", id)
       : await supabase.from("grinders").insert(values));
   } else if (kind === "BREWER") {
-    const values = { ...common, brewer_type: input.brewerType === "BATCH" ? "BATCH" : "POUR_OVER" };
+    const values = { ...common, brewer_type: (BREWER_TYPES as readonly string[]).includes(input.brewerType ?? "") ? input.brewerType : "POUR_OVER" };
     ({ error } = id
       ? await supabase.from("brewers").update(values).eq("id", id)
       : await supabase.from("brewers").insert(values));

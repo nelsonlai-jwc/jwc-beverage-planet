@@ -265,8 +265,12 @@
       },
       "brewerTypeLabel": "器具类型",
       "brewerType": {
-        "POUR_OVER": "手冲",
-        "BATCH": "批量萃取机"
+        "POUR_OVER": "手冲滤杯",
+        "BATCH": "批量萃取机",
+        "IMMERSION": "浸泡式",
+        "SIPHON": "虹吸",
+        "COLD_BREW": "冷萃",
+        "OTHER": "其他"
       },
       "brewerPlaceholder": "例如 V60 #1",
       "noBrewers": "还没有手冲器具。",

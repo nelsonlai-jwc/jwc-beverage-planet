@@ -265,8 +265,12 @@
       },
       "brewerTypeLabel": "Kit type",
       "brewerType": {
-        "POUR_OVER": "Pour-over",
-        "BATCH": "Batch brewer"
+        "POUR_OVER": "Pour Over Dripper",
+        "BATCH": "Batch Brewer",
+        "IMMERSION": "Immersion",
+        "SIPHON": "Siphon",
+        "COLD_BREW": "Cold Brew",
+        "OTHER": "Other"
       },
       "brewerPlaceholder": "e.g. V60 #1",
       "noBrewers": "No hand brew kits yet.",

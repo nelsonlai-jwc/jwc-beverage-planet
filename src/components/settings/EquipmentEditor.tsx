@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { BREWER_TYPES } from "./brewer-types";
 import {
   saveEquipment,
   setEquipmentActive,
@@ -177,8 +178,9 @@ function EquipmentForm({
       ) : kind === "BREWER" ? (
         <Field label={t("brewerTypeLabel")}>
           <select value={form.brewerType} onChange={set("brewerType")} className={inputClass}>
-            <option value="POUR_OVER">{t("brewerType.POUR_OVER")}</option>
-            <option value="BATCH">{t("brewerType.BATCH")}</option>
+            {BREWER_TYPES.map((type) => (
+              <option key={type} value={type}>{t(`brewerType.${type}`)}</option>
+            ))}
           </select>
         </Field>
       ) : (
