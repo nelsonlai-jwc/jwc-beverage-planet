@@ -339,6 +339,7 @@ export type Database = {
       }
       calibrations: {
         Row: {
+          session_id: string
           dose_g: number
           yield_g: number
           extraction_time_seconds: number
@@ -372,6 +373,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          session_id?: string
           dose_g: number
           yield_g: number
           extraction_time_seconds: number
@@ -405,6 +407,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          session_id?: string
           dose_g?: number
           yield_g?: number
           extraction_time_seconds?: number
@@ -1211,6 +1214,7 @@ export type Database = {
       }
       filter_calibrations: {
         Row: {
+          session_id: string
           production_no: string | null
           purpose: string
           brewer_name: string | null
@@ -1245,6 +1249,7 @@ export type Database = {
           water_temp_c: number | null
         }
         Insert: {
+          session_id?: string
           production_no?: string | null
           purpose?: string
           brewer_name?: string | null
@@ -1279,6 +1284,7 @@ export type Database = {
           water_temp_c?: number | null
         }
         Update: {
+          session_id?: string
           production_no?: string | null
           purpose?: string
           brewer_name?: string | null
@@ -3402,6 +3408,14 @@ export type Database = {
       save_filter_calibration: {
         Args: { p_record: Json; p_uses: string[]; p_replace: string[] | null }
         Returns: string
+      }
+      edit_espresso_calibrations: {
+        Args: { p_session: string; p_updates: Json; p_finals: Json }
+        Returns: undefined
+      }
+      edit_filter_calibrations: {
+        Args: { p_session: string; p_updates: Json; p_finals: Json }
+        Returns: undefined
       }
       save_espresso_calibrations: {
         Args: { p_finals: Json }

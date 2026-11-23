@@ -38,6 +38,7 @@ export function NewCalibration({
   brews,
   grinderNames,
   brewerNames,
+  edit,
 }: {
   outletId: string | null;
   outletName: string | null;
@@ -60,13 +61,27 @@ export function NewCalibration({
   brews: ByPurpose<FilterBrew>;
   grinderNames: Map<string, string>;
   brewerNames: Map<string, string>;
+  /** Editing a saved session: purpose, kind and bean are fixed; its current Finals fill the form. */
+  edit?: {
+    session: string;
+    purpose: Purpose;
+    kind: FinalKind;
+    beanId: string;
+    espresso: CalibrationRecord[];
+    filter: FilterRecord[];
+  };
 }) {
   const t = useTranslations("Calibration");
   const tf = useTranslations("FilterCalibration");
   const router = useRouter();
-  const [purpose, setPurpose] = useState<Purpose | null>(dailyAllowed ? null : "CUSTOM");
-  const [kind, setKind] = useState<FinalKind | null>(null);
-  const [beanId, setBeanId] = useState<string | null>(null);
+  const [purpose, setPurpose] = useState<Purpose | null>(edit ? edit.purpose : dailyAllowed ? null : "CUSTOM");
+  const [kind, setKind] = useState<FinalKind | null>(edit?.kind ?? null);
+  const [beanId, setBeanId] = useState<string | null>(edit?.beanId ?? null);
+  // Editing keeps the session's grinder, machine and brewer in the lists even when no longer in use.
+  const editIds = new Set(
+    [...(edit?.espresso ?? []).flatMap((r) => [r.grinder_id, r.espresso_machine_id]), ...(edit?.filter ?? []).flatMap((r) => [r.grinder_id, r.brewer_id])],
+  );
+  const inUse = <T extends { id: string; is_active: boolean }>(list: T[]) => list.filter((x) => x.is_active || editIds.has(x.id));
 
   const back = () => {
     const params = new URLSearchParams({ date });
@@ -97,7 +112,7 @@ export function NewCalibration({
     </div>
   );
 
-  /** A step already answered: its answer and a way to change it. */
+  /** A step already answered: its answer and a way to change it (not while editing). */
   const done = (n: number, title: string, answer: string, reset: () => void) => (
     <div className={`${cardClass} flex items-center justify-between gap-3`}>
       <p className="min-w-0 text-sm">
@@ -106,9 +121,11 @@ export function NewCalibration({
         </span>
         <span className="font-semibold">{answer}</span>
       </p>
-      <button type="button" className="shrink-0 text-[13px] underline" onClick={reset}>
-        {t("change")}
-      </button>
+      {!edit && (
+        <button type="button" className="shrink-0 text-[13px] underline" onClick={reset}>
+          {t("change")}
+        </button>
+      )}
     </div>
   );
 
@@ -167,6 +184,7 @@ export function NewCalibration({
         <section className={`${cardClass} flex flex-col gap-3`}>
           <h2 className="text-base font-semibold">4. {t("stepDialIn")}</h2>
           {purpose === "DAILY" &&
+          !edit &&
           (grinders.DAILY.every((g) => !g.is_active) || (kind === "FILTER" && brewers.DAILY.every((b) => !b.is_active))) ? (
             <p className="text-sm font-semibold">{kind === "FILTER" ? tf("noEquipment") : t("noGrinders")}</p>
           ) : kind === "ESPRESSO" ? (
@@ -176,13 +194,14 @@ export function NewCalibration({
               outletId={purpose === "DAILY" ? outletId : null}
               date={date}
               beanId={bean.id}
-              grinders={grinders[purpose].filter((g) => g.is_active)}
-              machines={machines[purpose].filter((m) => m.is_active)}
+              grinders={inUse(grinders[purpose])}
+              machines={inUse(machines[purpose])}
               targets={espressoTargets.filter((x) => x.material_id === bean.id)}
               previous={previousEspresso[purpose].filter((r) => r.coffee_bean_material_id === bean.id)}
               shots={shots[purpose].filter((s) => s.coffee_bean_material_id === bean.id)}
               grinderNames={grinderNames}
               canManage={canManage}
+              edit={edit && { session: edit.session, records: edit.espresso }}
               onDone={back}
             />
           ) : (
@@ -192,13 +211,14 @@ export function NewCalibration({
               outletId={purpose === "DAILY" ? outletId : null}
               date={date}
               beanId={bean.id}
-              brewers={brewers[purpose].filter((b) => b.is_active)}
-              grinders={grinders[purpose].filter((g) => g.is_active)}
+              brewers={inUse(brewers[purpose])}
+              grinders={inUse(grinders[purpose])}
               target={filterTargets.find((x) => x.material_id === bean.id)}
               previous={previousFilter[purpose].filter((r) => r.coffee_bean_material_id === bean.id)}
               brews={brews[purpose].filter((b) => b.coffee_bean_material_id === bean.id)}
               brewerNames={brewerNames}
               canManage={canManage}
+              edit={edit && { session: edit.session, records: edit.filter }}
               onDone={back}
             />
           )}

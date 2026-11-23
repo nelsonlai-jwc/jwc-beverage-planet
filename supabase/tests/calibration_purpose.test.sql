@@ -89,13 +89,20 @@ begin
   exception when serialization_failure then
     null;
   end;
-  -- A Final cannot be edited.
+  -- The bean of a Final cannot be changed.
   begin
-    update public.calibrations set grind_setting = '10' where id = v_daily;
-    raise exception 'edit should fail';
+    update public.calibrations set coffee_bean_material_id = '00000000-0000-0000-0000-0000000000b2' where id = v_daily;
+    raise exception 'bean change should fail';
   exception when check_violation then
     null;
   end;
+  -- Its creator can edit today's Final through the session edit (2026-11-23).
+  perform public.edit_espresso_calibrations(
+    (select session_id from public.calibrations where id = v_daily),
+    jsonb_build_array(jsonb_build_object('id', v_daily, 'revision', (select revision from public.calibrations where id = v_daily),
+                                         'record', v_rec || '{"grind_setting":"10"}')),
+    '[]');
+  assert (select grind_setting from public.calibrations where id = v_daily) = '10', 'creator edit';
 
   -- Custom: typed grinder name, and a grinder of an outlet the barista is not in; no rule.
   v_custom := public.save_espresso_calibration(
@@ -182,14 +189,20 @@ begin
 end;
 $$;
 
--- Super Admin sees custom records but cannot change them.
+-- Super Admin sees custom records and can edit them (2026-11-23), but cannot delete someone's.
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', true);
 do $$
 begin
   assert (select count(*) from public.calibrations where purpose = 'CUSTOM') = 3, 'admin sees custom';
   assert (select count(*) from public.filter_calibration_brews where purpose = 'CUSTOM') = 1, 'admin sees custom brews';
-  update public.calibrations set grind_setting = '9' where purpose = 'CUSTOM';
-  assert not exists (select 1 from public.calibrations where grind_setting = '9'), 'admin cannot edit custom';
+  update public.calibrations set grind_setting = '9' where purpose = 'CUSTOM' and deleted_at is null;
+  assert (select count(*) from public.calibrations where grind_setting = '9') = 2, 'admin can edit custom';
+  begin
+    update public.calibrations set deleted_at = now(), delete_reason = 'x' where purpose = 'CUSTOM' and deleted_at is null;
+    raise exception 'admin delete of custom should fail';
+  exception when insufficient_privilege then
+    null;
+  end;
 end;
 $$;
 

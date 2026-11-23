@@ -99,14 +99,20 @@ begin
   exception when check_violation then
     null;
   end;
-  -- A Final cannot be changed.
+  -- The grinder (part of the Final's key) cannot be changed.
   begin
-    update public.calibrations set grind_setting = '4'
+    update public.calibrations set grinder_id = '00000000-0000-0000-0000-0000000000a1'
      where grinder_id = '00000000-0000-0000-0000-0000000000a2';
-    raise exception 'record change should fail';
+    raise exception 'grinder change should fail';
   exception when check_violation then
     null;
   end;
+  -- Its creator can edit the values of today's Final (2026-11-23: Finals are editable).
+  update public.calibrations set grind_setting = '4'
+   where grinder_id = '00000000-0000-0000-0000-0000000000a2';
+  if not exists (select 1 from public.calibrations where grinder_id = '00000000-0000-0000-0000-0000000000a2' and grind_setting = '4') then
+    raise exception 'creator edit should work';
+  end if;
 
   -- Test shots: insert only, never changed.
   insert into public.calibration_shots (outlet_id, coffee_bean_material_id, grinder_id,

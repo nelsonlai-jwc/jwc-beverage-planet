@@ -10,7 +10,16 @@ import { filterExtractionYield, waterRatio } from "@/lib/calibration/filterCalc"
 import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "../BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "../EquipmentSelect";
-import { ApplyTo, FormError, ItemTabs, ProductionNoField, productionNoProblem, useFinalSave, type FinalToSave } from "../FinalParts";
+import {
+  ApplyTo,
+  FormError,
+  ItemTabs,
+  ProductionNoField,
+  productionNoProblem,
+  useFinalSave,
+  type FinalToSave,
+  type FinalUpdate,
+} from "../FinalParts";
 import { rpmProblem, type Grinder, type Purpose, type TasteBalance } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
 import { FILTER_TEMPS, type Brewer, type FilterBrew, type FilterRecord, type FilterTarget, type FilterTemp, type FilterValues } from "./types";
@@ -105,6 +114,7 @@ export function FilterForm({
   brews,
   brewerNames,
   canManage,
+  edit,
   onDone,
 }: {
   purpose: Purpose;
@@ -121,27 +131,43 @@ export function FilterForm({
   brews: FilterBrew[];
   brewerNames: Map<string, string>;
   canManage: boolean;
+  /** Editing a saved session: its current Finals (one per tab). */
+  edit?: { session: string; records: FilterRecord[] };
   onDone: () => void;
 }) {
   const t = useTranslations("Calibration");
   const tf = useTranslations("FilterCalibration");
   const router = useRouter();
   const custom = purpose === "CUSTOM";
-  const final = useFinalSave({ kind: "FILTER", purpose, outletId, date, onSaved: onDone });
+  const final = useFinalSave({ kind: "FILTER", purpose, outletId, date, session: edit?.session, onSaved: onDone });
   const { busy, setBusy, error, setError } = final;
+  // Editing: the saved Final of each tab.
+  const recordOf = new Map<string, FilterRecord>();
+  for (const r of edit?.records ?? []) for (const u of r.uses) if (!u.superseded_by && !recordOf.has(u.item)) recordOf.set(u.item, r);
+  const first = edit?.records[0];
   const [editTarget, setEditTarget] = useState(false);
-  const [tab, setTab] = useState<FilterTemp>("HOT");
-  const [tabs, setTabs] = useState<Record<FilterTemp, BrewState>>({ HOT: EMPTY_BREW, ICED: EMPTY_BREW });
-  const [productionNo, setProductionNo] = useState("");
-  const [form, setForm] = useState<FormState>(() => ({
-    brewerId: brewers.find((b) => b.is_active)?.id ?? (custom ? OTHER : ""),
-    brewerName: "",
-    grinderId: grinders.find((g) => g.is_active)?.id ?? (custom ? OTHER : ""),
-    grinderName: "",
-    grind: "",
-    rpm: "",
-    roastDate: "",
-  }));
+  const [tab, setTab] = useState<FilterTemp>(() => FILTER_TEMPS.find((x) => recordOf.has(x)) ?? "HOT");
+  const [tabs, setTabs] = useState<Record<FilterTemp, BrewState>>(() => {
+    const start: Record<FilterTemp, BrewState> = { HOT: EMPTY_BREW, ICED: EMPTY_BREW };
+    for (const [x, r] of recordOf) start[x as FilterTemp] = brewFromValues(r);
+    return start;
+  });
+  const [productionNo, setProductionNo] = useState(first?.production_no ?? "");
+  const [form, setForm] = useState<FormState>(() => {
+    const blank: FormState = {
+      brewerId: brewers.find((b) => b.is_active)?.id ?? (custom ? OTHER : ""),
+      brewerName: "",
+      grinderId: grinders.find((g) => g.is_active)?.id ?? (custom ? OTHER : ""),
+      grinderName: "",
+      grind: "",
+      rpm: "",
+      roastDate: "",
+    };
+    // Editing: the saved values, with the saved brewer.
+    return first
+      ? { ...fromValues(first, blank), brewerId: first.brewer_id ?? (first.brewer_name ? OTHER : ""), brewerName: first.brewer_name ?? "" }
+      : blank;
+  });
   const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
   const brew = tabs[tab];
   const setBrew = (key: keyof BrewState) => (e: { target: { value: string } }) => setTabs({ ...tabs, [tab]: { ...brew, [key]: e.target.value } });
@@ -260,16 +286,22 @@ export function FilterForm({
       return;
     }
     const finals: FinalToSave[] = [];
+    const updates: FinalUpdate[] = [];
     for (const x of filled) {
       const v = values(x);
       if (!v) return;
-      finals.push({ record: { ...v, production_no: productionNo.trim() || null }, items: [x] });
+      const record = { ...v, production_no: productionNo.trim() || null };
+      const saved = recordOf.get(x);
+      // Editing: a tab that has a Final updates it; an empty tab filled now is added as a new Final.
+      if (saved) {
+        if (!updates.some((u) => u.id === saved.id)) updates.push({ id: saved.id, revision: saved.revision, record });
+      } else finals.push({ record, items: [x] });
     }
     if (productionNoProblem(productionNo)) {
       setError(t("productionNoInvalid"));
       return;
     }
-    await final.submit(finals);
+    await final.submit(finals, updates);
   }
 
   async function saveBrew() {
@@ -354,6 +386,7 @@ export function FilterForm({
           value={form.grinderId}
           typed={form.grinderName}
           allowOther={custom}
+          disabled={!!edit}
           onChange={(value, typed) => setForm({ ...form, grinderId: value, grinderName: typed })}
         />
       </div>
@@ -397,7 +430,7 @@ export function FilterForm({
           )}
       </div>
 
-      {prev && (
+      {prev && !edit && (
         <button type="button" className={`${secondaryButton} self-start`} onClick={useEarlier}>
           {custom ? t("useLast") : t("useYesterday")}
         </button>
@@ -513,7 +546,7 @@ export function FilterForm({
       {!final.pending && (
         <div className="flex flex-wrap gap-2">
           <button type="submit" disabled={busy} className={primaryButton}>
-            {busy ? t("saving") : t("saveFinal")}
+            {busy ? t("saving") : edit ? t("saveChanges") : t("saveFinal")}
           </button>
           <button type="button" onClick={onDone} className={secondaryButton}>
             {t("cancel")}

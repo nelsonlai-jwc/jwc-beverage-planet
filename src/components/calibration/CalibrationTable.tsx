@@ -10,9 +10,9 @@ import type { Outlet } from "@/lib/auth/currentUser";
 import { brewRatio, daysOffRoast, extractionYield } from "@/lib/calibration/calc";
 import { filterExtractionYield, minutes, waterRatio } from "@/lib/calibration/filterCalc";
 import { createClient } from "@/lib/supabase/client";
-import { type FinalKind, useItemLabel } from "./FinalParts";
+import { type FinalKind, ItemTabs, useItemLabel } from "./FinalParts";
 import { FilterBrewList } from "./filter/FilterBrewList";
-import type { FilterBrew, FilterRecord } from "./filter/types";
+import { FILTER_TEMPS, type FilterBrew, type FilterRecord } from "./filter/types";
 import { ShotList } from "./ShotList";
 import { DRINK_TYPES, equipmentName, type CalibrationRecord, type CalibrationShot, type FinalUse } from "./types";
 
@@ -20,13 +20,17 @@ type Row =
   | { kind: "ESPRESSO"; record: CalibrationRecord }
   | { kind: "FILTER"; record: FilterRecord };
 
+/** The Finals of one "Save as final" (one per drink tab), shown as one card with tabs. */
+type Group = { kind: FinalKind; session: string; rows: Row[] };
+
 const ITEM_ORDER = [...DRINK_TYPES, "HOT", "ICED"];
 const sortUses = (uses: FinalUse[]) => [...uses].sort((a, b) => ITEM_ORDER.indexOf(a.item) - ITEM_ORDER.indexOf(b.item));
 const replaced = (r: { uses: FinalUse[] }) => r.uses.length > 0 && r.uses.every((u) => u.superseded_by);
 
-/** The day's Finals of an outlet (and my custom ones), newest first. */
+/** The day's Finals of an outlet (and my custom ones), newest first, one card per save. */
 export function CalibrationTable({
   userId,
+  isSuperAdmin,
   outlets,
   outletId,
   date,
@@ -44,6 +48,7 @@ export function CalibrationTable({
   people,
 }: {
   userId: string;
+  isSuperAdmin: boolean;
   outlets: Outlet[];
   outletId: string | null;
   date: string;
@@ -69,6 +74,8 @@ export function CalibrationTable({
   const itemLabel = useItemLabel();
   const [show, setShow] = useState<"ALL" | FinalKind>("ALL");
   const [open, setOpen] = useState<string | null>(null);
+  /** Open drink tab of each card. */
+  const [tabOf, setTabOf] = useState<Record<string, string>>({});
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -77,8 +84,45 @@ export function CalibrationTable({
   const rows: Row[] = [
     ...espresso.map((record) => ({ kind: "ESPRESSO" as const, record })),
     ...filter.map((record) => ({ kind: "FILTER" as const, record })),
-  ].sort((a, b) => b.record.created_at.localeCompare(a.record.created_at));
-  const shown = rows.filter((r) => show === "ALL" || r.kind === show);
+  ].sort((a, b) => a.record.created_at.localeCompare(b.record.created_at) || a.record.id.localeCompare(b.record.id));
+  // One card per session; its first Final gives the time and the creator.
+  const bySession = new Map<string, Group>();
+  for (const row of rows) {
+    const key = `${row.kind}:${row.record.session_id}`;
+    const group = bySession.get(key);
+    if (group) group.rows.push(row);
+    else bySession.set(key, { kind: row.kind, session: row.record.session_id, rows: [row] });
+  }
+  const groups = [...bySession.values()].sort((a, b) => b.rows[0].record.created_at.localeCompare(a.rows[0].record.created_at));
+  const shown = groups.filter((g) => show === "ALL" || g.kind === show);
+  const groupKey = (g: Group) => `${g.kind}:${g.session}`;
+  const itemsOf = (kind: FinalKind): string[] => (kind === "ESPRESSO" ? DRINK_TYPES : FILTER_TEMPS);
+  /** The Final of a tab: the current one, else the newest that had this drink. */
+  const rowFor = (g: Group, item: string) => {
+    const withItem = g.rows.filter((r) => r.record.uses.some((u) => u.item === item));
+    return (
+      withItem.find((r) => !r.record.deleted_at && r.record.uses.some((u) => u.item === item && !u.superseded_by)) ??
+      withItem[withItem.length - 1]
+    );
+  };
+  const tabFor = (g: Group) => {
+    const chosen = tabOf[groupKey(g)];
+    if (chosen && itemsOf(g.kind).includes(chosen)) return chosen;
+    return itemsOf(g.kind).find((x) => rowFor(g, x)) ?? itemsOf(g.kind)[0];
+  };
+  const isCurrentRow = (r: Row) => !r.record.deleted_at && r.record.uses.some((u) => !u.superseded_by);
+  const groupDeleted = (g: Group) => g.rows.every((r) => r.record.deleted_at);
+  const groupReplaced = (g: Group) => !groupDeleted(g) && g.rows.every((r) => r.record.deleted_at || replaced(r.record));
+  const groupMain = (g: Group) => g.rows.find(isCurrentRow) ?? g.rows[0];
+  /** Daily: its creator, or a Manager / Admin, on the same day. Custom: its creator or the Super Admin. */
+  const canEdit = (g: Group) => {
+    const owner = g.rows[0].record;
+    if (!g.rows.some(isCurrentRow)) return false;
+    return owner.purpose === "DAILY"
+      ? date === today && (owner.created_by === userId || canManage)
+      : owner.created_by === userId || isSuperAdmin;
+  };
+  const editHref = (g: Group) => `/calibration/new?${new URLSearchParams({ edit: g.session, kind: g.kind })}`;
 
   function navigate(next: { outlet?: string; date?: string }) {
     const params = new URLSearchParams({ date: next.date ?? date });
@@ -130,34 +174,6 @@ export function CalibrationTable({
     }
     router.refresh();
   }
-
-  const usesChips = (row: Row) => (
-    <span className="flex flex-wrap gap-1">
-      {sortUses(row.record.uses).map((u) => (
-        <span
-          key={u.id}
-          title={replacedNote(u)}
-          className={`rounded-full border px-2 py-0.5 text-xs whitespace-nowrap ${
-            u.superseded_by ? "border-black/20 text-[#6b6d67] line-through" : "border-black bg-white font-semibold"
-          }`}
-        >
-          {itemLabel(row.kind, u.item)}
-        </span>
-      ))}
-    </span>
-  );
-
-  const badges = (row: Row) => (
-    <span className="flex flex-wrap gap-1">
-      <StatusBadge tone={row.kind === "ESPRESSO" ? "purple" : "green"}>{t(`kind.${row.kind}`)}</StatusBadge>
-      {row.record.purpose === "CUSTOM" && <StatusBadge tone="grey">{t("purpose.CUSTOM")}</StatusBadge>}
-      {row.record.deleted_at ? (
-        <StatusBadge tone="red">{t("deleted")}</StatusBadge>
-      ) : (
-        replaced(row.record) && <StatusBadge tone="orange">{t("replaced")}</StatusBadge>
-      )}
-    </span>
-  );
 
   const detail = (row: Row) => {
     const r = row.record;
@@ -277,12 +293,80 @@ export function CalibrationTable({
             </div>
           </div>
         )}
-        {error && open === r.id && (
+        {error && (
           <p role="alert" className={errorText}>
             {error}
           </p>
         )}
       </div>
+    );
+  };
+
+  const shortRecipe = (row: Row) =>
+    `${recipe(row)} · ${ratio(row)}${row.record.taste_balance ? ` · ${t(`balance.${row.record.taste_balance}`)}` : ""}`;
+
+  /** Badges of a whole card. */
+  const groupBadges = (g: Group) => (
+    <span className="flex flex-wrap gap-1">
+      <StatusBadge tone={g.kind === "ESPRESSO" ? "purple" : "green"}>{t(`kind.${g.kind}`)}</StatusBadge>
+      {g.rows[0].record.purpose === "CUSTOM" && <StatusBadge tone="grey">{t("purpose.CUSTOM")}</StatusBadge>}
+      {groupDeleted(g) ? (
+        <StatusBadge tone="red">{t("deleted")}</StatusBadge>
+      ) : (
+        groupReplaced(g) && <StatusBadge tone="orange">{t("replaced")}</StatusBadge>
+      )}
+    </span>
+  );
+
+  const editButton = (g: Group) =>
+    canEdit(g) ? (
+      <Link href={editHref(g)} className={`${smallButton} whitespace-nowrap`} onClick={(e) => e.stopPropagation()}>
+        {t("edit")}
+      </Link>
+    ) : null;
+
+  /** The drink tabs of a card, as in the form; the open tab shows its values (and details when expanded). */
+  const groupTabs = (g: Group, expanded: boolean) => {
+    const items = itemsOf(g.kind);
+    const tab = tabFor(g);
+    const row = rowFor(g, tab);
+    const use = row?.record.uses.find((u) => u.item === tab);
+    const summary = Object.fromEntries(
+      items.flatMap((x) => {
+        const r = rowFor(g, x);
+        return r ? [[x, recipe(r)]] : [];
+      }),
+    );
+    return (
+      <ItemTabs
+        kind={g.kind}
+        items={items}
+        value={tab}
+        summary={summary}
+        onChange={(x) => {
+          setTabOf({ ...tabOf, [groupKey(g)]: x });
+          setDeleteFor(null);
+          setError(null);
+        }}
+        idPrefix={`cal-${g.session}`}
+        shortcuts={false}
+      >
+        {!row ? (
+          <p className={`${mutedText} text-sm`}>{t("tabEmpty")}</p>
+        ) : (
+          <div className="flex flex-col gap-2 text-sm">
+            <p className={`flex flex-wrap items-center gap-2 ${row.record.deleted_at || use?.superseded_by ? "text-[#6b6d67]" : ""}`}>
+              <span className="font-semibold tabular-nums">{shortRecipe(row)}</span>
+              {row.record.deleted_at ? (
+                <StatusBadge tone="red">{t("deleted")}</StatusBadge>
+              ) : (
+                use?.superseded_by && <StatusBadge tone="orange">{t("replaced")}</StatusBadge>
+              )}
+            </p>
+            {expanded && <div className="border-t border-black/10 pt-3">{detail(row)}</div>}
+          </div>
+        )}
+      </ItemTabs>
     );
   };
 
@@ -300,7 +384,7 @@ export function CalibrationTable({
       onClick={() => setShow(key)}
       className={`rounded-full border-[1.5px] border-black px-3 py-1 text-sm whitespace-nowrap ${show === key ? "bg-black text-white" : "bg-white"}`}
     >
-      {label} <span className={show === key ? "" : "text-[#6b6d67]"}>{rows.filter((r) => key === "ALL" || r.kind === key).length}</span>
+      {label} <span className={show === key ? "" : "text-[#6b6d67]"}>{groups.filter((g) => key === "ALL" || g.kind === key).length}</span>
     </button>
   );
 
@@ -349,42 +433,41 @@ export function CalibrationTable({
         <p className={`${cardClass} text-sm`}>{date === today ? t("emptyToday") : t("emptyDay")}</p>
       ) : (
         <>
-          {/* Phone: one card per Final. */}
+          {/* Phone: one card per save, drinks as tabs. */}
           <ul className="flex flex-col gap-3 md:hidden">
-            {shown.map((row) => {
-              const r = row.record;
+            {shown.map((g) => {
+              const key = groupKey(g);
+              const r = groupMain(g).record;
               return (
-                <li key={r.id} className={`${cardClass} flex flex-col gap-2 ${r.deleted_at || replaced(r) ? "opacity-70" : ""}`}>
-                  <button type="button" onClick={() => toggle(r.id)} aria-expanded={open === r.id} className="flex flex-col gap-2 text-left">
+                <li key={key} className={`${cardClass} flex flex-col gap-2 ${groupDeleted(g) || groupReplaced(g) ? "opacity-70" : ""}`}>
+                  <button type="button" onClick={() => toggle(key)} aria-expanded={open === key} className="flex flex-col gap-2 text-left">
                     <span className="flex items-start justify-between gap-2">
                       <span className="min-w-0">
                         <span className="block font-semibold">{bean(r.coffee_bean_material_id)}</span>
                         <span className={`block ${mutedText}`}>
-                          {time(r.created_at)} · {people.get(r.created_by) ?? "—"}
+                          {time(g.rows[0].record.created_at)} · {people.get(g.rows[0].record.created_by) ?? "—"}
                         </span>
                       </span>
                       <span aria-hidden className="text-xs">
-                        {open === r.id ? "▲" : "▼"}
+                        {open === key ? "▲" : "▼"}
                       </span>
                     </span>
-                    {badges(row)}
-                    {usesChips(row)}
                     <span className="text-sm">
                       {grinder(r)} · {t("grind")} {r.grind_setting}
                       {r.grinder_rpm != null ? ` · ${r.grinder_rpm} RPM` : ""}
                     </span>
-                    <span className="text-sm">
-                      {recipe(row)} · {ratio(row)}
-                      {r.taste_balance ? ` · ${t(`balance.${r.taste_balance}`)}` : ""}
-                    </span>
                   </button>
-                  {open === r.id && <div className="border-t border-black/10 pt-3">{detail(row)}</div>}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    {groupBadges(g)}
+                    {editButton(g)}
+                  </div>
+                  {groupTabs(g, open === key)}
                 </li>
               );
             })}
           </ul>
 
-          {/* Desktop: table, click a row for details. */}
+          {/* Desktop: one row per save; click a row for its drink tabs and details. */}
           <div className="hidden overflow-x-auto rounded-[20px] bg-white md:block">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-black/15 text-[#3d3f3a]">
@@ -392,32 +475,36 @@ export function CalibrationTable({
                   <th className="px-4 py-3 font-semibold">{t("colTime")}</th>
                   <th className="px-4 py-3 font-semibold">{t("colType")}</th>
                   <th className="px-4 py-3 font-semibold">{t("bean")}</th>
-                  <th className="px-4 py-3 font-semibold">{t("appliesTo")}</th>
                   <th className="px-4 py-3 font-semibold">{t("colGrind")}</th>
                   <th className="px-4 py-3 font-semibold">{t("colRecipe")}</th>
-                  <th className="px-4 py-3 font-semibold">{t("tasteBalance")}</th>
                   <th className="px-4 py-3 font-semibold">{t("colBy")}</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
-                {shown.map((row) => {
-                  const r = row.record;
+                {shown.map((g) => {
+                  const key = groupKey(g);
+                  const r = groupMain(g).record;
+                  const lines = itemsOf(g.kind).flatMap((x) => {
+                    const row = rowFor(g, x);
+                    const use = row?.record.uses.find((u) => u.item === x);
+                    return row ? [{ x, row, off: !!row.record.deleted_at || !!use?.superseded_by }] : [];
+                  });
                   return (
-                    <Fragment key={r.id}>
+                    <Fragment key={key}>
                       <tr
-                        onClick={() => toggle(r.id)}
-                        aria-expanded={open === r.id}
+                        onClick={() => toggle(key)}
+                        aria-expanded={open === key}
                         className={`cursor-pointer border-b border-black/10 align-top hover:bg-[#f7f7f4] ${
-                          r.deleted_at || replaced(r) ? "text-[#6b6d67]" : ""
+                          groupDeleted(g) || groupReplaced(g) ? "text-[#6b6d67]" : ""
                         }`}
                       >
-                        <td className="px-4 py-3 whitespace-nowrap tabular-nums">{time(r.created_at)}</td>
-                        <td className="px-4 py-3">{badges(row)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap tabular-nums">{time(g.rows[0].record.created_at)}</td>
+                        <td className="px-4 py-3">{groupBadges(g)}</td>
                         <td className="px-4 py-3">
                           <span className="font-semibold">{bean(r.coffee_bean_material_id)}</span>
                           {r.production_no && <span className={`block ${mutedText}`}>{r.production_no}</span>}
                         </td>
-                        <td className="px-4 py-3">{usesChips(row)}</td>
                         <td className="px-4 py-3">
                           {grinder(r)}
                           <span className={`block ${mutedText}`}>
@@ -425,17 +512,22 @@ export function CalibrationTable({
                             {r.grinder_rpm != null ? ` · ${r.grinder_rpm} RPM` : ""}
                           </span>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                          {recipe(row)}
-                          <span className={`block ${mutedText}`}>{ratio(row)}</span>
+                        <td className="px-4 py-3">
+                          <ul className="flex flex-col gap-0.5">
+                            {lines.map(({ x, row, off }) => (
+                              <li key={x} className={`whitespace-nowrap tabular-nums ${off ? "text-[#6b6d67] line-through" : ""}`}>
+                                <span className="font-semibold">{itemLabel(g.kind, x)}</span> {shortRecipe(row)}
+                              </li>
+                            ))}
+                          </ul>
                         </td>
-                        <td className="px-4 py-3">{r.taste_balance ? t(`balance.${r.taste_balance}`) : "—"}</td>
-                        <td className="px-4 py-3">{people.get(r.created_by) ?? "—"}</td>
+                        <td className="px-4 py-3">{people.get(g.rows[0].record.created_by) ?? "—"}</td>
+                        <td className="px-4 py-3 text-right">{editButton(g)}</td>
                       </tr>
-                      {open === r.id && (
+                      {open === key && (
                         <tr className="border-b border-black/10 bg-[#fafaf8]">
-                          <td colSpan={8} className="px-4 py-4">
-                            {detail(row)}
+                          <td colSpan={7} className="px-4 py-4">
+                            {groupTabs(g, true)}
                           </td>
                         </tr>
                       )}

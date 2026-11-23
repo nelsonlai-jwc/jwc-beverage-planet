@@ -69,6 +69,7 @@ export default async function CalibrationPage({
       <CalibrationTable
         key={`${outlet?.id ?? "none"}-${date}`}
         userId={user.id}
+        isSuperAdmin={user.role === "ADMIN"}
         outlets={user.outlets}
         outletId={outlet?.id ?? null}
         date={date}

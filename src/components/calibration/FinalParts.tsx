@@ -29,6 +29,8 @@ export function ItemTabs({
   summary,
   onChange,
   children,
+  idPrefix = "tab",
+  shortcuts = true,
 }: {
   kind: FinalKind;
   items: string[];
@@ -37,12 +39,17 @@ export function ItemTabs({
   summary: Partial<Record<string, string>>;
   onChange: (item: string) => void;
   children: React.ReactNode;
+  /** Unique per page when several tab sets show at once (the list of Finals). */
+  idPrefix?: string;
+  /** Keys 1, 2, 3… switch tabs; off where several tab sets show at once. */
+  shortcuts?: boolean;
 }) {
   const t = useTranslations("Calibration");
   const label = useItemLabel();
 
   // Keys 1, 2, 3… open the tabs, except while typing in a field.
   useEffect(() => {
+    if (!shortcuts) return;
     function onKey(e: KeyboardEvent) {
       if (e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
       const el = e.target as HTMLElement | null;
@@ -55,7 +62,7 @@ export function ItemTabs({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [items, onChange]);
+  }, [items, onChange, shortcuts]);
 
   return (
     <div className="min-w-0 rounded-[10px] border border-black/15 bg-white">
@@ -66,12 +73,12 @@ export function ItemTabs({
           return (
             <button
               key={item}
-              id={`tab-${item}`}
+              id={`${idPrefix}-${item}`}
               type="button"
               role="tab"
               aria-selected={on}
-              aria-controls="tab-panel"
-              aria-keyshortcuts={String(index + 1)}
+              aria-controls={`${idPrefix}-panel`}
+              aria-keyshortcuts={shortcuts ? String(index + 1) : undefined}
               onClick={() => onChange(item)}
               className={`group relative flex h-[50px] min-w-0 flex-col items-start justify-center gap-0.5 border-t-2 border-r border-b border-r-black/15 px-3 text-left first:rounded-tl-[9px] sm:px-4 ${
                 on ? "border-t-black border-b-transparent bg-white" : "border-t-transparent border-b-black/15 hover:bg-white/60"
@@ -83,19 +90,21 @@ export function ItemTabs({
               </span>
               <span className="max-w-full truncate text-[12px] leading-4 text-[#6b6d67]">{text ?? t("tabEmpty")}</span>
               {/* Hover hint with the key, like Supabase. */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-full left-1/2 z-10 mt-1.5 hidden -translate-x-1/2 items-center gap-1.5 rounded-md bg-black px-2 py-1 text-[12px] whitespace-nowrap text-white sm:group-hover:flex"
-              >
-                {t("switchTo", { name: label(kind, item) })}
-                <kbd className="rounded border border-white/30 px-1 font-sans text-[11px]">{index + 1}</kbd>
-              </span>
+              {shortcuts && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute top-full left-1/2 z-10 mt-1.5 hidden -translate-x-1/2 items-center gap-1.5 rounded-md bg-black px-2 py-1 text-[12px] whitespace-nowrap text-white sm:group-hover:flex"
+                >
+                  {t("switchTo", { name: label(kind, item) })}
+                  <kbd className="rounded border border-white/30 px-1 font-sans text-[11px]">{index + 1}</kbd>
+                </span>
+              )}
             </button>
           );
         })}
         <div aria-hidden className="hidden flex-1 rounded-tr-[9px] border-b border-black/15 sm:block" />
       </div>
-      <div id="tab-panel" role="tabpanel" aria-labelledby={`tab-${value}`} className="flex flex-col gap-3 p-3 sm:p-4">
+      <div id={`${idPrefix}-panel`} role="tabpanel" aria-labelledby={`${idPrefix}-${value}`} className="flex flex-col gap-3 p-3 sm:p-4">
         {children}
       </div>
     </div>
@@ -225,7 +234,10 @@ async function currentFinals(
 /** One Final to save: a record and the drink(s) it is for. */
 export type FinalToSave = { record: Record<string, unknown>; items: string[] };
 
-type Pending = { finals: FinalToSave[]; conflicts: Conflict[] };
+/** Editing: new values for a Final of the session (revision guards against edits meanwhile). */
+export type FinalUpdate = { id: string; revision: number; record: Record<string, unknown> };
+
+type Pending = { finals: FinalToSave[]; updates: FinalUpdate[]; conflicts: Conflict[] };
 
 /**
  * Saves one or more Finals together (all or none). Daily Finals first look for current Finals of
@@ -237,12 +249,15 @@ export function useFinalSave({
   purpose,
   outletId,
   date,
+  session,
   onSaved,
 }: {
   kind: FinalKind;
   purpose: Purpose;
   outletId: string | null;
   date: string;
+  /** Editing this session: its Finals are updated and empty tabs are added to it. */
+  session?: string;
   onSaved: () => void;
 }) {
   const t = useTranslations("Calibration");
@@ -253,7 +268,7 @@ export function useFinalSave({
   const allItems = (finals: FinalToSave[]) => finals.flatMap((f) => f.items);
 
   async function check(finals: FinalToSave[]): Promise<Conflict[] | null> {
-    if (purpose !== "DAILY" || !outletId) return [];
+    if (purpose !== "DAILY" || !outletId || finals.length === 0) return [];
     // Bean and grinder are shared by every tab.
     const record = finals[0].record;
     return currentFinals(
@@ -263,7 +278,7 @@ export function useFinalSave({
     );
   }
 
-  async function save(finals: FinalToSave[], conflicts: Conflict[]) {
+  async function save(finals: FinalToSave[], updates: FinalUpdate[], conflicts: Conflict[]) {
     setBusy(true);
     setError(null);
     const p_finals = finals.map((f) => ({
@@ -271,17 +286,26 @@ export function useFinalSave({
       uses: f.items,
       replace: conflicts.filter((c) => f.items.includes(c.item)).map((c) => c.useId),
     }));
-    const { error: saveError } = await createClient().rpc(
-      kind === "ESPRESSO" ? "save_espresso_calibrations" : "save_filter_calibrations",
-      { p_finals } as never,
-    );
+    const supabase = createClient();
+    const { error: saveError } = session
+      ? await supabase.rpc(kind === "ESPRESSO" ? "edit_espresso_calibrations" : "edit_filter_calibrations", {
+          p_session: session,
+          p_updates: updates,
+          p_finals,
+        } as never)
+      : await supabase.rpc(kind === "ESPRESSO" ? "save_espresso_calibrations" : "save_filter_calibrations", { p_finals } as never);
     if (saveError) {
-      // 40001 / 23505: someone saved a Final for the same drink meanwhile. Show the new situation.
+      // 40001 / 23505: someone saved a Final for the same drink (or edited this one) meanwhile.
       if (saveError.code === "40001" || saveError.code === "23505") {
         const now = await check(finals);
         setBusy(false);
-        setError(t("changedMeanwhile"));
-        if (now?.length) setPending({ finals, conflicts: now });
+        setError(session && !now?.length ? t("conflict") : t("changedMeanwhile"));
+        if (now?.length) setPending({ finals, updates, conflicts: now });
+        return;
+      }
+      if (saveError.code === "42501" && session) {
+        setBusy(false);
+        setError(t("editNotAllowed"));
         return;
       }
       setBusy(false);
@@ -294,8 +318,8 @@ export function useFinalSave({
     onSaved();
   }
 
-  async function submit(finals: FinalToSave[]) {
-    if (busy || finals.length === 0) return;
+  async function submit(finals: FinalToSave[], updates: FinalUpdate[] = []) {
+    if (busy || finals.length + updates.length === 0) return;
     setBusy(true);
     setError(null);
     const conflicts = await check(finals);
@@ -306,10 +330,10 @@ export function useFinalSave({
     }
     if (conflicts.length) {
       setBusy(false);
-      setPending({ finals, conflicts });
+      setPending({ finals, updates, conflicts });
       return;
     }
-    await save(finals, []);
+    await save(finals, updates, []);
   }
 
   const warning = pending ? (
@@ -317,7 +341,7 @@ export function useFinalSave({
       kind={kind}
       conflicts={pending.conflicts}
       busy={busy}
-      onConfirm={() => save(pending.finals, pending.conflicts)}
+      onConfirm={() => save(pending.finals, pending.updates, pending.conflicts)}
       onCancel={() => setPending(null)}
     />
   ) : null;

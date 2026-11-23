@@ -608,7 +608,11 @@
     "colBy": "提交人",
     "emptyToday": "今天还没有校准。按「新增」开始。",
     "emptyDay": "这一天没有校准记录。",
-    "drinksTitle": "饮品"
+    "drinksTitle": "饮品",
+    "saveChanges": "保存修改",
+    "editTitle": "编辑校准",
+    "editNote": "修改每个饮品 Tab 的数值，或补填空的 Tab。咖啡豆、磨豆机、分店和日期不变，修改前的数值会保留在历史记录。",
+    "editNotAllowed": "你不能编辑这笔校准。Daily 校准只能在当天由创建者或 Manager / Admin 编辑；Custom 校准由创建者或 Super Admin 编辑。"
   },
   "FilterCalibration": {
     "noEquipment": "这个分店至少需要一个手冲器具和一台磨豆机。请 Admin 在 设置 > 分店设备 中选择。",

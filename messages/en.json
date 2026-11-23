@@ -608,7 +608,11 @@
     "colBy": "By",
     "emptyToday": "No calibration yet today. Press New to start.",
     "emptyDay": "No calibration on this day.",
-    "drinksTitle": "Drinks"
+    "drinksTitle": "Drinks",
+    "saveChanges": "Save changes",
+    "editTitle": "Edit calibration",
+    "editNote": "Change the values of each drink tab, or fill an empty tab. Bean, grinder, outlet and date stay the same. Earlier values are kept in the history.",
+    "editNotAllowed": "You cannot edit this calibration. Daily calibrations can be edited on the same day by the person who made them or a Manager / Admin; custom ones by their creator or the Super Admin."
   },
   "FilterCalibration": {
     "noEquipment": "This outlet needs at least one hand brew kit and one grinder. An Admin picks them in Settings > Outlet Equipment.",

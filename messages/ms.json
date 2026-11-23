@@ -608,7 +608,11 @@
     "colBy": "Oleh",
     "emptyToday": "Belum ada kalibrasi hari ini. Tekan Baharu untuk mula.",
     "emptyDay": "Tiada kalibrasi pada hari ini.",
-    "drinksTitle": "Minuman"
+    "drinksTitle": "Minuman",
+    "saveChanges": "Simpan perubahan",
+    "editTitle": "Edit kalibrasi",
+    "editNote": "Tukar nilai setiap tab minuman, atau isi tab yang kosong. Biji kopi, pengisar, cawangan dan tarikh kekal sama. Nilai lama disimpan dalam sejarah.",
+    "editNotAllowed": "Anda tidak boleh mengedit kalibrasi ini. Kalibrasi Daily boleh diedit pada hari yang sama oleh pembuatnya atau Manager / Admin; kalibrasi Custom oleh pembuatnya atau Super Admin."
   },
   "FilterCalibration": {
     "noEquipment": "Cawangan ini memerlukan sekurang-kurangnya satu kit bancuhan tangan dan satu pengisar. Admin memilihnya dalam Tetapan > Peralatan Cawangan.",

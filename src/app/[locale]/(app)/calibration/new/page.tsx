@@ -11,18 +11,24 @@ import {
   withUses,
 } from "@/components/calibration/data";
 import { NewCalibration } from "@/components/calibration/NewCalibration";
+import { cardClass } from "@/components/ui/styles";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { addDays, isIsoDate, malaysiaToday } from "@/lib/calibration/dates";
 import { createClient } from "@/lib/supabase/server";
 
-/** New calibration: Daily / Custom, Espresso / Filter, bean, then test shots and the Final. */
+const isUuid = (value: string | undefined): value is string => !!value && /^[0-9a-f-]{36}$/i.test(value);
+
+/**
+ * New calibration: Daily / Custom, Espresso / Filter, bean, then test shots and the Final.
+ * With ?edit=<session>&kind=ESPRESSO|FILTER the same form edits a saved session.
+ */
 export default async function NewCalibrationPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ outlet?: string; date?: string }>;
+  searchParams: Promise<{ outlet?: string; date?: string; edit?: string; kind?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -32,13 +38,58 @@ export default async function NewCalibrationPage({
   if (!user) return null;
 
   const today = malaysiaToday();
-  const outlet = user.outlets.find((o) => o.id === query.outlet) ?? user.outlets[0];
-  const date = isIsoDate(query.date) && query.date <= today ? query.date : today;
   const canManage = user.role !== "BARISTA";
+  const supabase = await createClient();
+
+  // Editing a saved session: its current Finals, when this person may edit them.
+  let edit: React.ComponentProps<typeof NewCalibration>["edit"];
+  if (query.edit !== undefined) {
+    const kind = query.kind === "FILTER" ? "FILTER" : "ESPRESSO";
+    const { data: rows } = !isUuid(query.edit)
+      ? { data: [] }
+      : kind === "ESPRESSO"
+        ? await supabase.from("calibrations").select(ESPRESSO_COLUMNS).eq("session_id", query.edit).order("created_at")
+        : await supabase.from("filter_calibrations").select(FILTER_COLUMNS).eq("session_id", query.edit).order("created_at");
+    const records = await withUses(
+      supabase,
+      kind === "ESPRESSO" ? ((rows ?? []) as Parameters<typeof withUses>[1]) : [],
+      kind === "FILTER" ? ((rows ?? []) as Parameters<typeof withUses>[2]) : [],
+    );
+    const list = kind === "ESPRESSO" ? records.espresso : records.filter;
+    const owner = list[0];
+    const current = list.filter((r) => !r.deleted_at && r.uses.some((u) => !u.superseded_by));
+    // Daily: its creator, or a Manager / Admin of the outlet, on the same day. Custom: its creator or the Super Admin.
+    const allowed =
+      !!owner &&
+      current.length > 0 &&
+      (owner.purpose === "DAILY"
+        ? owner.business_date === today && (owner.created_by === user.id || (canManage && user.outlets.some((o) => o.id === owner.outlet_id)))
+        : owner.created_by === user.id || user.role === "ADMIN");
+    if (!owner || !allowed) {
+      return (
+        <div className="flex flex-col gap-6">
+          <PageHeader title={t("editTitle")} />
+          <p className={`${cardClass} text-sm`}>{t("editNotAllowed")}</p>
+        </div>
+      );
+    }
+    edit = {
+      session: query.edit,
+      purpose: owner.purpose,
+      kind,
+      beanId: owner.coffee_bean_material_id,
+      espresso: kind === "ESPRESSO" ? (current as typeof records.espresso) : [],
+      filter: kind === "FILTER" ? (current as typeof records.filter) : [],
+    };
+    query.date = owner.business_date;
+    if (owner.outlet_id) query.outlet = owner.outlet_id;
+  }
+
+  const outlet = user.outlets.find((o) => o.id === query.outlet) ?? user.outlets[0];
+  const date = edit ? (query.date ?? today) : isIsoDate(query.date) && query.date <= today ? query.date : today;
   // Daily: Barista today only, Manager/Admin the last 7 days (O13). Custom: any date.
   const dailyAllowed = !!outlet && (canManage ? date >= addDays(today, -7) : date === today);
 
-  const supabase = await createClient();
   const outletId = outlet?.id ?? NO_OUTLET;
   const recentFrom = addDays(date, -7);
   const [
@@ -137,7 +188,7 @@ export default async function NewCalibrationPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("newTitle")} note={t("newNote")} />
+      <PageHeader title={edit ? t("editTitle") : t("newTitle")} note={edit ? t("editNote") : t("newNote")} />
       <NewCalibration
         outletId={outlet?.id ?? null}
         outletName={outlet?.name ?? null}
@@ -177,6 +228,7 @@ export default async function NewCalibrationPage({
         }}
         grinderNames={new Map((grinders ?? []).map((g) => [g.id, g.name]))}
         brewerNames={new Map((brewers ?? []).map((b) => [b.id, b.name]))}
+        edit={edit}
       />
     </div>
   );
