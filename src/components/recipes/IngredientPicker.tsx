@@ -19,14 +19,16 @@ const PREP = "__prep__";
 const ALL = "";
 
 // Splits text around the matched part so it can be highlighted.
+// Each part sits in its own element: Chrome's page translation swaps bare text nodes
+// for its own <font> elements, and React then crashes removing them while typing.
 function Highlight({ text, query }: { text: string; query: string }) {
   const at = query ? text.toLowerCase().indexOf(query.toLowerCase()) : -1;
-  if (at < 0) return <>{text}</>;
+  if (at < 0) return <span>{text}</span>;
   return (
     <>
-      {text.slice(0, at)}
+      <span>{text.slice(0, at)}</span>
       <mark className="bg-brand-green">{text.slice(at, at + query.length)}</mark>
-      {text.slice(at + query.length)}
+      <span>{text.slice(at + query.length)}</span>
     </>
   );
 }
@@ -237,7 +239,7 @@ export function IngredientPicker({
                     </span>
                     <span className="block text-xs text-[#6b6d67]">
                       {o.brand ? <Highlight text={o.brand} query={q} /> : o.type === PREP ? t("prepChip") : "—"}
-                      {type === ALL && o.type && o.type !== PREP ? ` · ${o.type}` : ""}
+                      {type === ALL && o.type && o.type !== PREP && <span>{` · ${o.type}`}</span>}
                       {o.approved === false && (
                         <span className="ml-1.5 rounded-md bg-brand-orange px-1.5 py-px text-[11px] text-black">
                           {t("notApproved")}
