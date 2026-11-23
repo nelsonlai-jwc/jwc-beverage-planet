@@ -9,7 +9,16 @@ import { brewRatio, checkRange, daysOffRoast, extractionYield, type RangeCheck }
 import { createClient } from "@/lib/supabase/client";
 import { BeanTargetForm } from "./BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "./EquipmentSelect";
-import { ApplyTo, FormError, ItemTabs, ProductionNoField, productionNoProblem, useFinalSave, type FinalToSave } from "./FinalParts";
+import {
+  ApplyTo,
+  FormError,
+  ItemTabs,
+  ProductionNoField,
+  productionNoProblem,
+  useFinalSave,
+  type FinalToSave,
+  type FinalUpdate,
+} from "./FinalParts";
 import { ShotList } from "./ShotList";
 import {
   DRINK_TYPES,
@@ -103,6 +112,7 @@ export function CalibrationForm({
   shots,
   grinderNames,
   canManage,
+  edit,
   onDone,
 }: {
   purpose: Purpose;
@@ -121,32 +131,46 @@ export function CalibrationForm({
   shots: CalibrationShot[];
   grinderNames: Map<string, string>;
   canManage: boolean;
+  /** Editing a saved session: its current Finals (one per drink tab). */
+  edit?: { session: string; records: CalibrationRecord[] };
   onDone: () => void;
 }) {
   const t = useTranslations("Calibration");
   const router = useRouter();
   const custom = purpose === "CUSTOM";
-  const final = useFinalSave({ kind: "ESPRESSO", purpose, outletId, date, onSaved: onDone });
+  const final = useFinalSave({ kind: "ESPRESSO", purpose, outletId, date, session: edit?.session, onSaved: onDone });
   const { busy, setBusy, error, setError } = final;
+  // Editing: the saved Final of each drink tab.
+  const recordOf = new Map<string, CalibrationRecord>();
+  for (const r of edit?.records ?? []) for (const u of r.uses) if (!u.superseded_by && !recordOf.has(u.item)) recordOf.set(u.item, r);
+  const first = edit?.records[0];
   const [editTarget, setEditTarget] = useState(false);
-  const [tab, setTab] = useState<DrinkType>("BLACK_HOT");
-  const [tabs, setTabs] = useState(emptyTabs);
-  const [roastDate, setRoastDate] = useState("");
-  const [productionNo, setProductionNo] = useState("");
+  const [tab, setTab] = useState<DrinkType>(() => DRINK_TYPES.find((d) => recordOf.has(d)) ?? "BLACK_HOT");
+  const [tabs, setTabs] = useState(() => {
+    const start = emptyTabs();
+    for (const [d, r] of recordOf) start[d as DrinkType] = shotFromValues(r);
+    return start;
+  });
+  const [roastDate, setRoastDate] = useState(first?.roast_date ?? "");
+  const [productionNo, setProductionNo] = useState(first?.production_no ?? "");
 
   const firstMachine = custom ? undefined : machines.find((m) => m.is_active);
-  const [form, setForm] = useState<FormState>(() => ({
-    grinderId: grinders[0]?.id ?? (custom ? OTHER : ""),
-    grinderName: "",
-    machineId: firstMachine?.id ?? "",
-    machineName: "",
-    grind: "",
-    rpm: "",
-    temp: str(firstMachine?.default_water_temp_c),
-    pressure: str(firstMachine?.default_pressure_bar),
-    preinfusion: "",
-    basket: "",
-  }));
+  const [form, setForm] = useState<FormState>(() => {
+    const blank: FormState = {
+      grinderId: grinders[0]?.id ?? (custom ? OTHER : ""),
+      grinderName: "",
+      machineId: firstMachine?.id ?? "",
+      machineName: "",
+      grind: "",
+      rpm: "",
+      temp: str(firstMachine?.default_water_temp_c),
+      pressure: str(firstMachine?.default_pressure_bar),
+      preinfusion: "",
+      basket: "",
+    };
+    // Editing: the saved values; a Final without a machine keeps none.
+    return first ? { ...fromValues(first, blank), machineId: first.espresso_machine_id ?? (first.machine_name ? OTHER : "") } : blank;
+  });
   const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
   const shot = tabs[tab];
   const setShot = (key: keyof ShotState) => (e: { target: { value: string } }) => setTabs({ ...tabs, [tab]: { ...shot, [key]: e.target.value } });
@@ -275,10 +299,16 @@ export function CalibrationForm({
       return;
     }
     const finals: FinalToSave[] = [];
+    const updates: FinalUpdate[] = [];
     for (const d of filled) {
       const v = values(d);
       if (!v) return;
-      finals.push({ record: { ...v, roast_date: roastDate || null, production_no: productionNo.trim() || null }, items: [d] });
+      const record = { ...v, roast_date: roastDate || null, production_no: productionNo.trim() || null };
+      const saved = recordOf.get(d);
+      // Editing: a tab that has a Final updates it; an empty tab filled now is added as a new Final.
+      if (saved) {
+        if (!updates.some((u) => u.id === saved.id)) updates.push({ id: saved.id, revision: saved.revision, record });
+      } else finals.push({ record, items: [d] });
     }
     if (roastDate && roastDate > date) {
       setError(t("roastFuture"));
@@ -288,7 +318,7 @@ export function CalibrationForm({
       setError(t("productionNoInvalid"));
       return;
     }
-    await final.submit(finals);
+    await final.submit(finals, updates);
   }
 
   async function saveShot() {
@@ -369,6 +399,7 @@ export function CalibrationForm({
             value={form.grinderId}
             typed={form.grinderName}
             allowOther={custom}
+            disabled={!!edit}
             onChange={(value, typed) => setForm({ ...form, grinderId: value, grinderName: typed })}
           />
           <EquipmentSelect
@@ -382,7 +413,7 @@ export function CalibrationForm({
             onChange={pickMachine}
           />
         </div>
-        {prev && (
+        {prev && !edit && (
           <button type="button" className={`${secondaryButton} self-start`} onClick={useEarlier}>
             {custom ? t("useLast") : t("useYesterday")}
           </button>
@@ -517,7 +548,7 @@ export function CalibrationForm({
       {!final.pending && (
         <div className="flex flex-wrap gap-2">
           <button type="submit" disabled={busy} className={primaryButton}>
-            {busy ? t("saving") : t("saveFinal")}
+            {busy ? t("saving") : edit ? t("saveChanges") : t("saveFinal")}
           </button>
           <button type="button" onClick={onDone} className={secondaryButton}>
             {t("cancel")}

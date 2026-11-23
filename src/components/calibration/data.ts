@@ -5,7 +5,7 @@ import type { CalibrationRecord, FinalUse } from "./types";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-const FINAL_BASE = "id, purpose, outlet_id, business_date, created_by, created_at, roast_date, production_no, deleted_at, delete_reason, revision";
+const FINAL_BASE = "id, session_id, purpose, outlet_id, business_date, created_by, created_at, roast_date, production_no, deleted_at, delete_reason, revision";
 export const ESPRESSO_VALUES = `coffee_bean_material_id, grinder_id, grinder_name, espresso_machine_id, machine_name,
   grind_setting, grinder_rpm, water_temp_c, pressure_bar, preinfusion_seconds, basket_g,
   dose_g, yield_g, extraction_time_seconds, tds_percent, taste_balance, taste_notes`;

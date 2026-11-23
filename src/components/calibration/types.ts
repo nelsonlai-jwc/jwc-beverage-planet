@@ -37,6 +37,8 @@ export type FinalUse = { id: string; item: string; superseded_by: string | null;
 /** Fields every Final has, espresso or filter. */
 export type FinalBase = {
   id: string;
+  /** Finals saved together (one per drink tab) share a session; the list shows them as one card. */
+  session_id: string;
   purpose: Purpose;
   outlet_id: string | null;
   business_date: string;
