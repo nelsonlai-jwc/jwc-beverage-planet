@@ -20,7 +20,8 @@ export function MobileNav({ viewer }: { viewer: NavViewer | null }) {
         className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-full border border-black bg-white px-4 text-sm font-semibold hover:bg-black/5"
       >
         {open ? <X size={16} strokeWidth={2} aria-hidden /> : <Menu size={16} strokeWidth={2} aria-hidden />}
-        {open ? t("closeMenu") : t("menu")}
+        {/* Text in its own span: Chrome page translation swaps bare text nodes, which crashed the icon swap. */}
+        <span>{open ? t("closeMenu") : t("menu")}</span>
       </button>
       {open && (
         <nav
