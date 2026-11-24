@@ -3529,6 +3529,7 @@ export type Database = {
         }[]
       }
       delete_invitations: { Args: { p_email: string }; Returns: number }
+      delete_survey: { Args: { p_survey_id: string }; Returns: undefined }
       delete_material_draft: { Args: { p_material_id: string }; Returns: undefined }
       delete_packaging_draft: { Args: { p_item_id: string }; Returns: undefined }
       import_materials: { Args: { p_approve?: boolean; p_rows: Json }; Returns: number }

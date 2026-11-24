@@ -57,11 +57,13 @@ export function SurveyResults({
   info,
   responses,
   invitees,
+  canDelete,
 }: {
   survey: Survey;
   info: SurveyInfo;
   responses: SurveyResponse[];
   invitees: { id: string; full_name: string; answered: boolean }[];
+  canDelete: boolean;
 }) {
   const t = useTranslations("Surveys");
   const d = useTranslations("Tasting");
@@ -74,6 +76,7 @@ export function SurveyResults({
   const [error, setError] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
   const [big, setBig] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
 
@@ -134,6 +137,22 @@ export function SurveyResults({
         .eq("id", survey.id)
         .select("id"),
     );
+  // Deletes the survey with its answers; back to the survey list.
+  async function remove() {
+    setBusy(true);
+    setError(null);
+    const { error: deleteError } = await createClient().rpc("delete_survey", {
+      p_survey_id: survey.id,
+    });
+    if (deleteError) {
+      setBusy(false);
+      setError(t("deleteFailed"));
+      return;
+    }
+    toast("deleted");
+    router.push("/surveys");
+    router.refresh();
+  }
   const toggleHidden = (r: SurveyResponse) =>
     save(() =>
       createClient()
@@ -205,7 +224,49 @@ export function SurveyResults({
           <Link href="/surveys" className={smallButton}>
             {t("back")}
           </Link>
+          {canDelete && !confirmDelete && (
+            <button
+              type="button"
+              disabled={busy}
+              className={`${smallButton} border-[#c4161c] text-[#c4161c] hover:bg-[#c4161c]/5`}
+              onClick={() => setConfirmDelete(true)}
+            >
+              {t("delete")}
+            </button>
+          )}
         </div>
+        {confirmDelete && (
+          <div
+            role="alertdialog"
+            aria-label={t("delete")}
+            className="flex flex-col gap-3 rounded-[12px] border-[1.5px] border-[#c4161c] p-4"
+          >
+            <p className="text-sm font-semibold">
+              {t("deleteConfirm", {
+                name: subject(info),
+                count: responses.length,
+              })}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                className="inline-flex h-9 items-center justify-center rounded-full bg-[#c4161c] px-5 text-sm font-semibold text-white hover:bg-[#c4161c]/85 disabled:opacity-50"
+                onClick={remove}
+              >
+                {t("deleteYes")}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                className={secondaryButton}
+                onClick={() => setConfirmDelete(false)}
+              >
+                {t("cancel")}
+              </button>
+            </div>
+          </div>
+        )}
         {error && <p className={errorText}>{error}</p>}
       </div>
 
