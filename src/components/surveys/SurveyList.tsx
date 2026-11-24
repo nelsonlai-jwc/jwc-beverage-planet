@@ -12,8 +12,8 @@ import {
   cardClass,
   mutedText,
   primaryButton,
-  smallButton,
 } from "@/components/ui/styles";
+import { SurveyTable } from "@/components/surveys/SurveyTable";
 import { Link } from "@/i18n/navigation";
 
 export type SurveyRow = {
@@ -106,34 +106,7 @@ export function SurveyList({
               {t("newSurvey")}
             </Link>
           </div>
-          {run.length === 0 ? (
-            <p className={`${cardClass} text-sm`}>{t("noRun")}</p>
-          ) : (
-            run.map((r) => (
-              <div
-                key={r.id}
-                className={`${cardClass} flex flex-wrap items-center justify-between gap-3`}
-              >
-                <div className="flex min-w-0 flex-col gap-1">
-                  <Badges info={r.info} />
-                  <span className="text-base font-semibold">
-                    {subject(r.info)}
-                  </span>
-                  <span className={mutedText}>
-                    {outletPrefix(r.info)}
-                    {r.info.date} ·{" "}
-                    {r.info.open
-                      ? t("openUntil", { time: time(r.info.closes_at) })
-                      : t("closed")}{" "}
-                    · {t("answers", { count: r.answers })}
-                  </span>
-                </div>
-                <Link href={`/surveys/${r.id}`} className={smallButton}>
-                  {t("results")}
-                </Link>
-              </div>
-            ))
-          )}
+          <SurveyTable rows={run} />
         </section>
       )}
     </>

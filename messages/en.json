@@ -2194,6 +2194,15 @@
       "60": "1 hour",
       "300": "5 hours",
       "none": "No limit"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "date": "Date",
+      "status": "Status",
+      "open": "Open",
+      "answers": "Answers",
+      "noMatch": "No surveys match these filters."
     }
   }
 }
