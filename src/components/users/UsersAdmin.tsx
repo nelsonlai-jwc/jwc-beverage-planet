@@ -48,6 +48,9 @@ type Invitation = {
   outletIds: string[];
 };
 
+// Matches the profiles.full_name check: letters, spaces, ' / @ - (O17).
+const NAME_PATTERN = /^[\p{L} '/@-]+$/u;
+
 const roles: UserRole[] = ["BARISTA", "MANAGER", "ADMIN"];
 const statuses: UserStatus[] = ["ACTIVE", "SUSPENDED", "DEACTIVATED"];
 
@@ -288,6 +291,7 @@ export function UsersAdmin({
 
   // Users ----------------------------------------------------------------
   const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState<UserRole>("BARISTA");
   const [editStatus, setEditStatus] = useState<UserStatus>("ACTIVE");
   const [editOutlets, setEditOutlets] = useState<string[]>([]);
@@ -297,6 +301,7 @@ export function UsersAdmin({
 
   function startEdit(user: User) {
     setEditing(user.id);
+    setEditName(user.fullName);
     setEditRole(user.role);
     setEditStatus(user.status === "INVITED" ? "ACTIVE" : user.status);
     setEditOutlets(user.outletIds);
@@ -306,6 +311,12 @@ export function UsersAdmin({
   async function saveUser(event: FormEvent<HTMLFormElement>, user: User) {
     event.preventDefault();
     if (editBusy) return;
+    // Same rules as sign-up and the profiles.full_name check.
+    const name = editName.trim().replace(/\s+/g, " ").toUpperCase();
+    if (!name || name.length > 100 || !NAME_PATTERN.test(name)) {
+      setEditError(t("nameInvalid"));
+      return;
+    }
     if (
       editRole === "ADMIN" &&
       user.role !== "ADMIN" &&
@@ -320,12 +331,15 @@ export function UsersAdmin({
       p_status: editStatus,
       p_outlet_ids: fitOutlets(editRole, editOutlets),
       p_expected_revision: user.revision,
+      p_full_name: name,
     });
     setEditBusy(false);
     if (error) {
       setEditError(
         error.message === "REVISION_CONFLICT"
           ? t("conflict")
+          : error.message === "NAME_INVALID"
+            ? t("nameInvalid")
           : error.message.includes("last active Admin")
             ? t("lastAdmin")
             : error.code === "23514"
@@ -726,6 +740,24 @@ export function UsersAdmin({
                       onSubmit={(event) => saveUser(event, user)}
                       className="flex flex-col gap-3 pt-3"
                     >
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor={`name-${user.id}`}
+                          className={labelClass}
+                        >
+                          {t("fullName")}
+                        </label>
+                        <input
+                          id={`name-${user.id}`}
+                          type="text"
+                          required
+                          maxLength={100}
+                          autoComplete="off"
+                          value={editName}
+                          onChange={(event) => setEditName(event.target.value)}
+                          className={`${inputClass} uppercase`}
+                        />
+                      </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="flex flex-col gap-1.5">
                           <label

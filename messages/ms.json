@@ -718,6 +718,8 @@
     "resetFailed": "E-mel tetapan semula tidak dapat dihantar. Sila cuba lagi.",
     "superAdmin": "Super Admin",
     "superAdminNote": "Akaun dilindungi: tidak boleh diubah, digantung atau dibuang.",
+    "fullName": "Nama penuh",
+    "nameInvalid": "Masukkan nama penuh (maksimum 100 aksara; huruf, ruang, ' / @ - sahaja).",
     "notAllowed": "Anda hanya boleh mengurus pengguna dan cawangan yang anda uruskan."
   },
   "RawMaterials": {
