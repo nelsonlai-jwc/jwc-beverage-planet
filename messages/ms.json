@@ -1080,6 +1080,41 @@
       "reason": "Sebab",
       "confirm": "Batalkan kelulusan",
       "cancel": "Batal"
+    },
+    "shopSync": {
+      "open": "Segerak dari kedai JWC",
+      "title": "Segerak biji kopi dari kedai JWC",
+      "intro": "Membaca biji kopi di www.justwantcoffee.com. Saiz baharu ditambah sebagai bahan mentah Coffee Bean yang diluluskan pada harga kedai tolak 20%. Biji yang sudah ada dalam Raw Material tidak ditambah lagi; status Tersedia / Tidak tersedia mengikut kedai.",
+      "sizesTitle": "Saiz untuk ditambah",
+      "sizesHint": "Hanya saiz yang ditanda akan ditambah. Status biji yang sudah ada dalam Raw Material dikemas kini walau apa pun yang ditanda.",
+      "newTitle": "Akan ditambah ({count})",
+      "newEmpty": "Tiada yang baharu untuk saiz yang ditanda.",
+      "newHint": "Jenama JWC Roastery, jenis Coffee Bean, terus diluluskan.",
+      "price": "RM{price} (kedai RM{shop})",
+      "soldOut": "Habis dijual di kedai",
+      "changesTitle": "Perubahan status ({count})",
+      "changesEmpty": "Tiada perubahan status.",
+      "toUnavailable": "Akan ditetapkan Tidak tersedia",
+      "toAvailable": "Akan ditetapkan Tersedia",
+      "goneFromShop": "Tiada lagi di kedai: akan ditetapkan Tidak tersedia",
+      "existingTitle": "Sudah ada dalam Raw Material ({count})",
+      "existingHint": "Tidak ditambah lagi. Nama dan harga tidak diubah.",
+      "run": "Tambah {count} dan kemas kini status",
+      "running": "Menyegerak…",
+      "doneTitle": "Segerak selesai",
+      "doneSummary": "Ditambah {created}, dipautkan {linked}, Tidak tersedia {unavailable}, Tersedia {available}.",
+      "errors": {
+        "SHOP_UNREACHABLE": "Tidak dapat membaca kedai JWC. Cuba lagi sebentar.",
+        "NOT_ALLOWED": "Hanya Super Admin boleh segerak dari kedai JWC.",
+        "NO_COFFEE_BEAN_TYPE": "Tiada jenis bahan \"Coffee Bean\" dalam Tetapan.",
+        "UNKNOWN": "Ralat berlaku. Tiada apa yang diubah."
+      }
+    },
+    "unavailable": {
+      "badge": "Tidak tersedia",
+      "markUnavailable": "Tetapkan Tidak tersedia",
+      "markAvailable": "Tetapkan Tersedia",
+      "note": "Tidak tersedia: tidak ditawarkan dalam senarai bahan resipi atau senarai biji kalibrasi. Resipi yang sudah menggunakannya tidak terjejas."
     }
   },
   "Recipes": {

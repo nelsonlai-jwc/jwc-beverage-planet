@@ -1080,6 +1080,41 @@
       "reason": "原因",
       "confirm": "撤回审批",
       "cancel": "取消"
+    },
+    "shopSync": {
+      "open": "从 JWC 网站同步",
+      "title": "从 JWC 网站同步咖啡豆",
+      "intro": "读取 www.justwantcoffee.com 上的咖啡豆。新的容量会以网站售价减 20% 新增为已核准的 Coffee Bean 原料。已在 Raw Material 的豆子不会重复新增，其可用/不可用状态跟随网站。",
+      "sizesTitle": "要新增的容量",
+      "sizesHint": "只新增打勾的容量。已在 Raw Material 的豆子，不论勾选与否都会更新可用状态。",
+      "newTitle": "将新增（{count}）",
+      "newEmpty": "勾选的容量没有需要新增的豆子。",
+      "newHint": "品牌 JWC Roastery，类型 Coffee Bean，直接核准。",
+      "price": "RM{price}（网站 RM{shop}）",
+      "soldOut": "网站缺货",
+      "changesTitle": "可用状态变更（{count}）",
+      "changesEmpty": "没有可用状态变更。",
+      "toUnavailable": "将设为不可用",
+      "toAvailable": "将设为可用",
+      "goneFromShop": "网站已下架：将设为不可用",
+      "existingTitle": "已在 Raw Material（{count}）",
+      "existingHint": "不会重复新增，名称和价格不变。",
+      "run": "新增 {count} 款并更新可用状态",
+      "running": "同步中…",
+      "doneTitle": "同步完成",
+      "doneSummary": "新增 {created}，连结 {linked}，设为不可用 {unavailable}，设为可用 {available}。",
+      "errors": {
+        "SHOP_UNREACHABLE": "无法读取 JWC 网站，请稍后再试。",
+        "NOT_ALLOWED": "只有 Super Admin 可以从 JWC 网站同步。",
+        "NO_COFFEE_BEAN_TYPE": "设置中没有“Coffee Bean”原料类型。",
+        "UNKNOWN": "出错了，没有任何更改。"
+      }
+    },
+    "unavailable": {
+      "badge": "不可用",
+      "markUnavailable": "设为不可用",
+      "markAvailable": "设为可用",
+      "note": "不可用：不会出现在配方原料选单和校准咖啡豆选单中。已使用它的配方不受影响。"
     }
   },
   "Recipes": {

@@ -1885,9 +1885,11 @@ export type Database = {
           no_brand: boolean
           photo_asset_id: string | null
           revision: number
+          shop_variant_id: number | null
           specification: string | null
           specification_normalized: string | null
           status: Database["public"]["Enums"]["approval_status"]
+          unavailable: boolean
           updated_at: string
           updated_by: string | null
         }
@@ -1915,9 +1917,11 @@ export type Database = {
           no_brand?: boolean
           photo_asset_id?: string | null
           revision?: number
+          shop_variant_id?: number | null
           specification?: string | null
           specification_normalized?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
+          unavailable?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -1945,9 +1949,11 @@ export type Database = {
           no_brand?: boolean
           photo_asset_id?: string | null
           revision?: number
+          shop_variant_id?: number | null
           specification?: string | null
           specification_normalized?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
+          unavailable?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -3662,6 +3668,10 @@ export type Database = {
         Args: { p_en: string; p_ms: string; p_source: string; p_zh: string }
         Returns: undefined
       }
+      set_material_unavailable: {
+        Args: { p_material_id: string; p_unavailable: boolean }
+        Returns: undefined
+      }
       set_my_locale: {
         Args: { p_locale: Database["public"]["Enums"]["app_locale"] }
         Returns: undefined
@@ -3669,6 +3679,10 @@ export type Database = {
       set_recipe_outlets: {
         Args: { p_all_outlets: boolean; p_outlet_ids: string[]; p_recipe_id: string }
         Returns: undefined
+      }
+      sync_shop_beans: {
+        Args: { p_links: Json; p_new: Json; p_variants: Json }
+        Returns: Json
       }
       sync_recipes: {
         Args: { p_content: Json; p_recipe_ids: string[] }

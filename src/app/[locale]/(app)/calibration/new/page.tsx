@@ -108,8 +108,8 @@ export default async function NewCalibrationPage({
     { data: shots },
     { data: brews },
   ] = await Promise.all([
-    supabase.from("materials").select("id, name, brand").eq("espresso_calibration", true).eq("status", "APPROVED").order("name"),
-    supabase.from("materials").select("id, name, brand").eq("filter_calibration", true).eq("status", "APPROVED").order("name"),
+    supabase.from("materials").select("id, name, brand, unavailable").eq("espresso_calibration", true).eq("status", "APPROVED").order("name"),
+    supabase.from("materials").select("id, name, brand, unavailable").eq("filter_calibration", true).eq("status", "APPROVED").order("name"),
     supabase.from("coffee_bean_targets").select("*"),
     supabase.from("coffee_bean_filter_targets").select("*"),
     supabase.from("grinders").select(`${GRINDER_COLUMNS}, all_outlets`).order("name"),
@@ -183,7 +183,11 @@ export default async function NewCalibrationPage({
   });
   const before = (r: { business_date: string }) => r.business_date < date;
   const yesterday = (r: { business_date: string }) => r.business_date === addDays(date, -1);
-  const beanList = (list: typeof espressoBeans) => (list ?? []).map((b) => ({ id: b.id, name: b.name, brand: b.brand }));
+  // Unavailable beans are not offered, except the bean of a session being edited.
+  const beanList = (list: typeof espressoBeans) =>
+    (list ?? [])
+      .filter((b) => !b.unavailable || b.id === edit?.beanId)
+      .map((b) => ({ id: b.id, name: b.name, brand: b.brand }));
   const unique = (ids: string[]) => [...new Set(ids)];
 
   return (

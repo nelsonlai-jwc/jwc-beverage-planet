@@ -12,7 +12,7 @@ import {
   type SortDir,
   type SortKey,
 } from "@/lib/materials/table";
-import { StatusBadge } from "./ui";
+import { StatusBadge, UnavailableBadge } from "./ui";
 
 const CHIPS = ["name", "brand", "type", "pack", "cost", "status", "updated"] as const;
 type ChipKey = (typeof CHIPS)[number];
@@ -488,7 +488,10 @@ export function MaterialTable({
                         {row.brand} · {row.type}
                       </span>
                     </div>
-                    <StatusBadge status={row.status} />
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <StatusBadge status={row.status} />
+                      {row.unavailable && <UnavailableBadge />}
+                    </div>
                   </div>
                   <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
                     <span>
@@ -535,7 +538,10 @@ export function MaterialTable({
                       {row.unitCost ?? <span className="text-[#3d3f3a]">{t("noApprovedCost")}</span>}
                     </td>
                     <td className="px-5 py-3">
-                      <StatusBadge status={row.status} />
+                      <div className="flex flex-wrap gap-1">
+                        <StatusBadge status={row.status} />
+                        {row.unavailable && <UnavailableBadge />}
+                      </div>
                     </td>
                     <td className="px-5 py-3 whitespace-nowrap">{row.updated}</td>
                   </tr>

@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import {
   SectionTabs,
   StatusBadge,
@@ -123,6 +123,12 @@ export default async function RawMaterialsPage({
           <p className="text-sm text-[#3d3f3a]">{t("intro")}</p>
         </div>
         <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
+          {role === "ADMIN" && tab === "materials" && (
+            <Link href="/raw-materials/shop-sync" className={secondaryButtonClass}>
+              <RefreshCw size={16} strokeWidth={2} aria-hidden />
+              {t("shopSync.open")}
+            </Link>
+          )}
           <a href={`/${locale}/raw-materials/export?tab=${tab}`} className={secondaryButtonClass}>
             {t("export")}
           </a>
@@ -164,7 +170,7 @@ async function MaterialList({ locale, search }: { locale: string; search: Search
   const { data: materials } = await supabase
     .from("materials")
     .select(
-      "id, name, brand, no_brand, status, updated_at, material_type_id, cost_pack_id, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status)",
+      "id, name, brand, no_brand, status, unavailable, updated_at, material_type_id, cost_pack_id, material_types(name), material_packs!material_packs_material_id_fkey(id, pack_quantity, unit, status)",
     )
     .order("name");
 
@@ -191,6 +197,7 @@ async function MaterialList({ locale, search }: { locale: string; search: Search
       typeId: m.material_type_id ?? "",
       type: m.material_types?.name ?? "",
       status: m.status,
+      unavailable: m.unavailable,
       updated: formatDate(m.updated_at, locale),
       updatedDay: new Date(m.updated_at).toLocaleDateString("en-CA"),
       updatedAt: m.updated_at,

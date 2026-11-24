@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AddPackForm } from "@/components/materials/AddPackForm";
-import { DeleteButton, RestoreButton, UndoApprovalButton } from "@/components/materials/ItemActions";
+import { DeleteButton, RestoreButton, UnavailableButton, UndoApprovalButton } from "@/components/materials/ItemActions";
 import { ChangeRequestNotice, UsageSection } from "@/components/materials/ItemSections";
 import {
   PriceChangeForm,
@@ -12,6 +12,7 @@ import {
 import {
   BackLink,
   StatusBadge,
+  UnavailableBadge,
   cardClass,
   secondaryButtonClass,
 } from "@/components/materials/ui";
@@ -33,7 +34,7 @@ export default async function MaterialPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("RawMaterials");
-  const { supabase, role, userId } = await getViewer();
+  const { supabase, role, userId, outletAdmin } = await getViewer();
 
   if (role !== "ADMIN" && role !== "MANAGER") {
     return <p className="rounded-[20px] bg-white p-6 text-sm text-[#3d3f3a]">{t("noAccess")}</p>;
@@ -99,6 +100,7 @@ export default async function MaterialPage({
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-serif text-[26px] font-normal leading-tight md:text-[28px]">{loc.t(material.name)}</h1>
             <StatusBadge status={material.status} />
+            {material.unavailable && <UnavailableBadge />}
           </div>
           <p className="text-sm text-[#3d3f3a]">
             {brand} · {material.material_types?.name}
@@ -119,8 +121,16 @@ export default async function MaterialPage({
             <DeleteButton entity="MATERIAL" id={id} mode={deleteMode} listHref="/raw-materials" />
           )}
           {isAdmin && material.status === "APPROVED" && <UndoApprovalButton entity="MATERIAL" id={id} />}
+          {(isAdmin || outletAdmin) && material.status !== "ARCHIVED" && (
+            <UnavailableButton id={id} unavailable={material.unavailable} />
+          )}
         </div>
       </div>
+      {material.unavailable && (
+        <p role="status" className="rounded-[20px] bg-white p-5 text-[13px] text-[#3d3f3a]">
+          {t("unavailable.note")}
+        </p>
+      )}
 
       {material.status === "ARCHIVED" && (
         <div role="status" className="flex flex-col gap-3 rounded-[20px] bg-white p-5">

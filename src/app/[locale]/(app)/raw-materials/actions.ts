@@ -327,6 +327,18 @@ export async function submitMaterial(materialId: string): Promise<ActionResult> 
 }
 
 /** The submitter (or an Admin) takes a pending new material back to draft to fix it. */
+/** Super Admin or outlet Admin: Unavailable hides the material from new recipe lines and calibration. */
+export async function setMaterialUnavailable(materialId: string, unavailable: boolean): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_material_unavailable", {
+    p_material_id: materialId,
+    p_unavailable: unavailable,
+  });
+  if (error) return fail(error);
+  refresh();
+  return { ok: true };
+}
+
 export async function withdrawMaterial(materialId: string): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("withdraw_material", { p_material_id: materialId });

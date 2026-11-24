@@ -12,6 +12,8 @@ export type IngredientOption = {
   type?: string | null;
   typeOrder?: number | null;
   approved?: boolean;
+  // Raw material set to Unavailable: kept on lines that already use it, not offered in the list.
+  unavailable?: boolean;
   unit?: MeasureUnit | null;
 };
 
@@ -69,12 +71,12 @@ export function IngredientPicker({
   const q = query.trim();
   const matchesQuery = (o: IngredientOption) =>
     !q || o.name.toLowerCase().includes(q.toLowerCase()) || (o.brand ?? "").toLowerCase().includes(q.toLowerCase());
-  const searched = all.filter(matchesQuery);
+  const searched = all.filter((o) => !o.unavailable && matchesQuery(o));
   const shown = type === ALL ? searched : searched.filter((o) => o.type === type);
   // Type chips in the order set on the Settings page, only types in use; Prep last.
   const types = useMemo(() => {
     const order = new Map<string, number>();
-    for (const m of materials) if (m.type) order.set(m.type, m.typeOrder ?? Number.MAX_SAFE_INTEGER);
+    for (const m of materials) if (m.type && !m.unavailable) order.set(m.type, m.typeOrder ?? Number.MAX_SAFE_INTEGER);
     const names = [...order.keys()].sort((a, b) => order.get(a)! - order.get(b)! || a.localeCompare(b));
     return preps.length ? [...names, PREP] : names;
   }, [materials, preps]);
