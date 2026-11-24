@@ -3431,6 +3431,7 @@ export type Database = {
       admin_update_user: {
         Args: {
           p_expected_revision: number
+          p_full_name?: string
           p_outlet_ids: string[]
           p_role: Database["public"]["Enums"]["user_role"]
           p_status: Database["public"]["Enums"]["user_status"]

@@ -718,6 +718,8 @@
     "resetFailed": "Could not send the reset email. Please try again.",
     "superAdmin": "Super Admin",
     "superAdminNote": "Protected account: it cannot be changed, suspended or removed.",
+    "fullName": "Full name",
+    "nameInvalid": "Enter a full name (up to 100 characters; letters, spaces, ' / @ - only).",
     "notAllowed": "You can only manage users and outlets that you manage."
   },
   "RawMaterials": {

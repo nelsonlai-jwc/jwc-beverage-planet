@@ -718,6 +718,8 @@
     "resetFailed": "无法寄出重设邮件，请重试。",
     "superAdmin": "超级管理员",
     "superAdminNote": "受保护账号：不能被修改、停用或删除。",
+    "fullName": "全名",
+    "nameInvalid": "请输入全名（最多 100 个字符，只能用字母、空格和 ' / @ -）。",
     "notAllowed": "你只能管理自己负责分店的用户和分店。"
   },
   "RawMaterials": {
