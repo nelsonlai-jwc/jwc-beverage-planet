@@ -2,7 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { submitSurvey, type SurveyAnswer } from "@/app/[locale]/taste/[token]/actions";
+import {
+  submitSurvey,
+  type SurveyAnswer,
+} from "@/app/[locale]/taste/[token]/actions";
 import {
   CRITERIA,
   FLAVOR_TAGS,
@@ -27,6 +30,8 @@ export type SurveyInfo = {
   drinks: SurveyDrink[];
   note: string | null;
   outlet: string | null;
+  /** Every outlet of the survey (several when more were ticked). */
+  outlets?: string[];
   date: string;
   bean: string | null;
   brand: string | null;
@@ -44,7 +49,9 @@ const chip = (on: boolean) =>
 
 const START = 3;
 const startScores = (drink: SurveyDrink) =>
-  Object.fromEntries(CRITERIA[drink].map((c) => [c, START])) as Partial<Record<Criterion, number>>;
+  Object.fromEntries(CRITERIA[drink].map((c) => [c, START])) as Partial<
+    Record<Criterion, number>
+  >;
 
 /** One score: a 0-6 slider in steps of 0.5 with the scale word. */
 function ScoreRow({
@@ -64,7 +71,10 @@ function ScoreRow({
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-base font-semibold">{label}</span>
         <span className="text-base font-semibold tabular-nums">
-          {value.toFixed(1)} <span className="text-sm font-normal">· {t(scaleWordKey(value))}</span>
+          {value.toFixed(1)}{" "}
+          <span className="text-sm font-normal">
+            · {t(scaleWordKey(value))}
+          </span>
         </span>
       </div>
       <span className="text-[13px] text-[#3d3f3a]">{help}</span>
@@ -78,7 +88,10 @@ function ScoreRow({
         onChange={(e) => onChange(Number(e.target.value))}
         className="h-8 w-full accent-black"
       />
-      <div aria-hidden className="flex justify-between text-[11px] text-[#3d3f3a]">
+      <div
+        aria-hidden
+        className="flex justify-between text-[11px] text-[#3d3f3a]"
+      >
         {[0, 1, 2, 3, 4, 5, 6].map((n) => (
           <span key={n}>{n}</span>
         ))}
@@ -109,16 +122,36 @@ export function useSubjectLabel() {
 export function useSubjectBadge() {
   const t = useTranslations("Surveys");
   return (s: { subject_type: SubjectType; title: string | null }) =>
-    s.title ? `${t("subject.CUSTOM")} · ${t(`customType.${s.subject_type}`)}` : t(`subject.${s.subject_type}`);
+    s.title
+      ? `${t("subject.CUSTOM")} · ${t(`customType.${s.subject_type}`)}`
+      : t(`subject.${s.subject_type}`);
+}
+
+/** "Outlet A, Outlet B · " before a survey's date, or nothing for a survey with no outlet. */
+export function useOutletPrefix() {
+  const t = useTranslations("Surveys");
+  return (s: { outlet: string | null; outlets?: string[] }) => {
+    const names = s.outlets?.length ? s.outlets : s.outlet ? [s.outlet] : [];
+    return names.length ? `${names.join(t("outletSeparator"))} · ` : "";
+  };
 }
 
 /** Answer form for one survey: one drink at a time, then the next drink left. */
-export function SurveyForm({ token, survey }: { token: string; survey: SurveyInfo }) {
+export function SurveyForm({
+  token,
+  survey,
+}: {
+  token: string;
+  survey: SurveyInfo;
+}) {
   const t = useTranslations("Tasting");
   const subject = useSubjectLabel();
+  const outletPrefix = useOutletPrefix();
   const drinks = survey.drinks;
   const [done, setDone] = useState<SurveyDrink[]>(survey.answered);
-  const [drink, setDrink] = useState<SurveyDrink>(drinks.find((d) => !survey.answered.includes(d)) ?? drinks[0]);
+  const [drink, setDrink] = useState<SurveyDrink>(
+    drinks.find((d) => !survey.answered.includes(d)) ?? drinks[0],
+  );
   const [scores, setScores] = useState(() => startScores(drink));
   const [tags, setTags] = useState<string[]>([]);
   const [milkAmount, setMilkAmount] = useState<MilkAmount | null>(null);
@@ -142,7 +175,13 @@ export function SurveyForm({ token, survey }: { token: string; survey: SurveyInf
       setError(t("milkAmountRequired"));
       return;
     }
-    const answer: SurveyAnswer = { drink, scores, flavorTags: tags, milkAmount, comment };
+    const answer: SurveyAnswer = {
+      drink,
+      scores,
+      flavorTags: tags,
+      milkAmount,
+      comment,
+    };
     setError(null);
     startTransition(async () => {
       const result = await submitSurvey(token, answer);
@@ -158,10 +197,12 @@ export function SurveyForm({ token, survey }: { token: string; survey: SurveyInf
 
   const header = (
     <div className="flex flex-col gap-1 rounded-[20px] bg-white p-5">
-      <h1 className="font-serif text-2xl leading-tight">{t(`subjectTitle.${survey.subject_type}`)}</h1>
+      <h1 className="font-serif text-2xl leading-tight">
+        {t(`subjectTitle.${survey.subject_type}`)}
+      </h1>
       <p className="text-base font-semibold">{subject(survey)}</p>
       <p className="text-sm text-[#3d3f3a]">
-        {survey.outlet ? `${survey.outlet} · ` : ""}
+        {outletPrefix(survey)}
         {survey.date}
       </p>
       {survey.note && <p className="text-sm">{survey.note}</p>}
@@ -174,7 +215,9 @@ export function SurveyForm({ token, survey }: { token: string; survey: SurveyInf
         {header}
         <div className="flex flex-col gap-4 rounded-[20px] bg-white p-5">
           <p className="text-lg font-semibold">{t("thanks")}</p>
-          {error && <p className="text-sm font-semibold text-[#c4161c]">{error}</p>}
+          {error && (
+            <p className="text-sm font-semibold text-[#c4161c]">{error}</p>
+          )}
           {left.map((d) => (
             <button
               key={d}
@@ -265,7 +308,11 @@ export function SurveyForm({ token, survey }: { token: string; survey: SurveyInf
                     key={tag}
                     type="button"
                     aria-pressed={on}
-                    onClick={() => setTags(on ? tags.filter((x) => x !== tag) : [...tags, tag])}
+                    onClick={() =>
+                      setTags(
+                        on ? tags.filter((x) => x !== tag) : [...tags, tag],
+                      )
+                    }
                     className={chip(on)}
                   >
                     {t(`tags.${tag}`)}
@@ -277,7 +324,9 @@ export function SurveyForm({ token, survey }: { token: string; survey: SurveyInf
         )}
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-base font-semibold">{drink === "RECIPE" ? t("opinion") : t("comment")}</span>
+          <span className="text-base font-semibold">
+            {drink === "RECIPE" ? t("opinion") : t("comment")}
+          </span>
           {drink === "RECIPE" ? (
             <textarea
               value={comment}

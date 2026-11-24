@@ -2085,6 +2085,7 @@
     "customRecord": "Custom",
     "choose": "请选择…",
     "outlet": "分店",
+    "outletSeparator": "、",
     "recipe": "饮品配方",
     "noRecipes": "这间分店没有已核准的饮品配方。",
     "drinksLabel": "要评分的饮品",
