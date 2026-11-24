@@ -18,6 +18,27 @@ export function useItemLabel() {
   return (kind: FinalKind, item: string) => (kind === "ESPRESSO" ? t(`drink.${item}`) : t(`temp.${item}`));
 }
 
+/** A tab with test shots (or brews), or one already saved as Final. */
+export type TabStatus = "SHOTS" | "FINAL";
+const DOT: Record<TabStatus, string> = { SHOTS: "bg-[#ffd400]", FINAL: "bg-brand-green" };
+
+/** What the yellow and green dots on the tabs mean. */
+export function DotLegend({ kind }: { kind: FinalKind }) {
+  const t = useTranslations("Calibration");
+  return (
+    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#6b6d67]">
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden className={`size-2.5 rounded-full ${DOT.SHOTS}`} />
+        {kind === "ESPRESSO" ? t("dotShots") : t("dotBrews")}
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden className={`size-2.5 rounded-full ${DOT.FINAL}`} />
+        {t("dotFinal")}
+      </span>
+    </p>
+  );
+}
+
 /**
  * Tabs for the drinks a Final is for, with the open tab's panel attached below.
  * Each tab has its own values and saves as its own Final.
@@ -27,6 +48,7 @@ export function ItemTabs({
   items,
   value,
   summary,
+  status,
   onChange,
   children,
   idPrefix = "tab",
@@ -37,6 +59,8 @@ export function ItemTabs({
   value: string;
   /** Short values of each filled tab; a tab without one is not filled and is not saved. */
   summary: Partial<Record<string, string>>;
+  /** The dot of each tab: green once Final, yellow with test shots, grey otherwise. Without it, filled tabs are green. */
+  status?: Partial<Record<string, TabStatus>>;
   onChange: (item: string) => void;
   children: React.ReactNode;
   /** Unique per page when several tab sets show at once (the list of Finals). */
@@ -70,6 +94,7 @@ export function ItemTabs({
         {items.map((item, index) => {
           const on = value === item;
           const text = summary[item];
+          const dot = status ? status[item] : text ? "FINAL" : undefined;
           return (
             <button
               key={item}
@@ -85,7 +110,7 @@ export function ItemTabs({
               }`}
             >
               <span className={`flex max-w-full items-center gap-1.5 text-[14px] leading-5 ${on ? "text-black" : "text-[#4d4d4d]"}`}>
-                <span aria-hidden className={`size-2.5 shrink-0 rounded-[2px] ${text ? "bg-brand-green" : "bg-black/20"}`} />
+                <span aria-hidden className={`size-2.5 shrink-0 rounded-full ${dot ? DOT[dot] : "bg-black/20"}`} />
                 <span className="truncate">{label(kind, item)}</span>
               </span>
               <span className="max-w-full truncate text-[12px] leading-4 text-[#6b6d67]">{text ?? t("tabEmpty")}</span>
@@ -239,31 +264,65 @@ export type FinalUpdate = { id: string; revision: number; record: Record<string,
 
 type Pending = { finals: FinalToSave[]; updates: FinalUpdate[]; conflicts: Conflict[] };
 
+/** A Final of this session, per tab: what an update of that tab needs. */
+export type SavedFinal = { id: string; revision: number };
+
+/** The current Finals of a session, per tab. */
+async function sessionFinals(kind: FinalKind, session: string): Promise<Map<string, SavedFinal> | null> {
+  const supabase = createClient();
+  const saved = new Map<string, SavedFinal>();
+  if (kind === "ESPRESSO") {
+    const { data, error } = await supabase
+      .from("calibrations")
+      .select("id, revision, calibration_drinks(drink_type, superseded_by)")
+      .eq("session_id", session)
+      .is("deleted_at", null);
+    if (error) return null;
+    const rows = (data ?? []) as unknown as { id: string; revision: number; calibration_drinks: { drink_type: string; superseded_by: string | null }[] }[];
+    for (const r of rows)
+      for (const u of r.calibration_drinks ?? []) if (!u.superseded_by) saved.set(u.drink_type, { id: r.id, revision: r.revision });
+  } else {
+    const { data, error } = await supabase
+      .from("filter_calibrations")
+      .select("id, revision, filter_calibration_uses(temperature, superseded_by)")
+      .eq("session_id", session)
+      .is("deleted_at", null);
+    if (error) return null;
+    const rows = (data ?? []) as unknown as { id: string; revision: number; filter_calibration_uses: { temperature: string; superseded_by: string | null }[] }[];
+    for (const r of rows)
+      for (const u of r.filter_calibration_uses ?? []) if (!u.superseded_by) saved.set(u.temperature, { id: r.id, revision: r.revision });
+  }
+  return saved;
+}
+
 /**
- * Saves one or more Finals together (all or none). Daily Finals first look for current Finals of
- * the same bean, grinder and drinks; when there are any, the person sees them and must agree
- * before they are replaced.
+ * Saves one tab at a time as a Final (Feedback #16). All tabs saved from one form share one
+ * session, so they show as one card. A tab already saved in this session is updated; a new tab
+ * is added. Daily Finals first look for current Finals of the same bean, grinder and drink from
+ * other saves; when there are any, the person sees them and must agree before they are replaced.
  */
 export function useFinalSave({
   kind,
   purpose,
   outletId,
   date,
-  session,
-  onSaved,
+  edit,
 }: {
   kind: FinalKind;
   purpose: Purpose;
   outletId: string | null;
   date: string;
-  /** Editing this session: its Finals are updated and empty tabs are added to it. */
-  session?: string;
-  onSaved: () => void;
+  /** Editing this session: its current Finals per tab. */
+  edit?: { session: string; saved: Map<string, SavedFinal> };
 }) {
   const t = useTranslations("Calibration");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
+  // A new form gets its session id now; the session exists once its first tab is saved.
+  const [session] = useState(() => edit?.session ?? crypto.randomUUID());
+  const [saved, setSaved] = useState<Map<string, SavedFinal>>(() => edit?.saved ?? new Map());
+  const sessionExists = !!edit || saved.size > 0;
 
   const allItems = (finals: FinalToSave[]) => finals.flatMap((f) => f.items);
 
@@ -282,12 +341,12 @@ export function useFinalSave({
     setBusy(true);
     setError(null);
     const p_finals = finals.map((f) => ({
-      record: { ...f.record, purpose, outlet_id: outletId, business_date: date },
+      record: { ...f.record, purpose, outlet_id: outletId, business_date: date, session_id: session },
       uses: f.items,
       replace: conflicts.filter((c) => f.items.includes(c.item)).map((c) => c.useId),
     }));
     const supabase = createClient();
-    const { error: saveError } = session
+    const { error: saveError } = sessionExists
       ? await supabase.rpc(kind === "ESPRESSO" ? "edit_espresso_calibrations" : "edit_filter_calibrations", {
           p_session: session,
           p_updates: updates,
@@ -299,11 +358,11 @@ export function useFinalSave({
       if (saveError.code === "40001" || saveError.code === "23505") {
         const now = await check(finals);
         setBusy(false);
-        setError(session && !now?.length ? t("conflict") : t("changedMeanwhile"));
+        setError(sessionExists && !now?.length ? t("conflict") : t("changedMeanwhile"));
         if (now?.length) setPending({ finals, updates, conflicts: now });
         return;
       }
-      if (saveError.code === "42501" && session) {
+      if (saveError.code === "42501" && sessionExists) {
         setBusy(false);
         setError(t("editNotAllowed"));
         return;
@@ -312,10 +371,23 @@ export function useFinalSave({
       setError(t("saveFailed"));
       return;
     }
+    const now = await sessionFinals(kind, session);
+    if (now) setSaved(now);
+    else {
+      // Saved, but the list could not be read: mark the saved tabs green anyway.
+      const next = new Map(saved);
+      for (const f of finals) for (const item of f.items) next.set(item, { id: "", revision: -1 });
+      setSaved(next);
+    }
     setBusy(false);
     setPending(null);
     toast("saved");
-    onSaved();
+  }
+
+  /** Save one tab as its Final: update it when this session already has one, else add it. */
+  function submitTab(item: string, record: Record<string, unknown>) {
+    const mine = saved.get(item);
+    return mine ? submit([], [{ id: mine.id, revision: mine.revision, record }]) : submit([{ record, items: [item] }], []);
   }
 
   async function submit(finals: FinalToSave[], updates: FinalUpdate[] = []) {
@@ -346,7 +418,7 @@ export function useFinalSave({
     />
   ) : null;
 
-  return { busy, setBusy, error, setError, submit, warning, pending: !!pending };
+  return { busy, setBusy, error, setError, submitTab, saved, warning, pending: !!pending };
 }
 
 function ReplaceWarning({

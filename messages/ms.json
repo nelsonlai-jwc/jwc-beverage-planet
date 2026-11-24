@@ -586,7 +586,7 @@
     "productionNoInvalid": "No. pengeluaran mesti seperti PR-47481 (PR- dan 5 digit).",
     "appliesTo": "Untuk",
     "invalidShotTab": "{drink}: dos, hasil dan masa mesti lebih daripada sifar.",
-    "needShotValues": "Isi sekurang-kurangnya satu tab sebelum menyimpan Final.",
+    "needShotValues": "Isi tab ini sebelum menetapkannya sebagai muktamad.",
     "tabsLabel": "Minuman",
     "tabEmpty": "Belum diisi",
     "switchTo": "Tukar ke {name}",
@@ -612,7 +612,13 @@
     "saveChanges": "Simpan perubahan",
     "editTitle": "Edit kalibrasi",
     "editNote": "Tukar nilai setiap tab minuman, atau isi tab yang kosong. Biji kopi, pengisar, cawangan dan tarikh kekal sama. Nilai lama disimpan dalam sejarah.",
-    "editNotAllowed": "Anda tidak boleh mengedit kalibrasi ini. Kalibrasi Daily boleh diedit pada hari yang sama oleh pembuatnya atau Manager / Admin; kalibrasi Custom oleh pembuatnya atau Super Admin."
+    "editNotAllowed": "Anda tidak boleh mengedit kalibrasi ini. Kalibrasi Daily boleh diedit pada hari yang sama oleh pembuatnya atau Manager / Admin; kalibrasi Custom oleh pembuatnya atau Super Admin.",
+    "setFinalTab": "Tetapkan {drink} sebagai muktamad",
+    "updateFinalTab": "Kemas kini muktamad {drink}",
+    "done": "Selesai",
+    "dotShots": "Ada syot ujian",
+    "dotBrews": "Ada bancuhan ujian",
+    "dotFinal": "Sudah muktamad"
   },
   "FilterCalibration": {
     "noEquipment": "Cawangan ini memerlukan sekurang-kurangnya satu kit bancuhan tangan dan satu pengisar. Admin memilihnya dalam Tetapan > Peralatan Cawangan.",

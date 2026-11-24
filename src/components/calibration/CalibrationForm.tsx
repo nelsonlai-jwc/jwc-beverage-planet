@@ -11,13 +11,14 @@ import { BeanTargetForm } from "./BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "./EquipmentSelect";
 import {
   ApplyTo,
+  DotLegend,
   FormError,
   ItemTabs,
   ProductionNoField,
   productionNoProblem,
   useFinalSave,
-  type FinalToSave,
-  type FinalUpdate,
+  type SavedFinal,
+  type TabStatus,
 } from "./FinalParts";
 import { ShotList } from "./ShotList";
 import {
@@ -99,7 +100,7 @@ function optionalNumber(value: string): number | null | undefined {
 
 const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
 
-/** Espresso: dial in with test shots per drink tab, then save each filled tab as its own Final. */
+/** Espresso: dial in with test shots per drink tab, then set each tab as its own Final. */
 export function CalibrationForm({
   purpose,
   outletId,
@@ -138,11 +139,14 @@ export function CalibrationForm({
   const t = useTranslations("Calibration");
   const router = useRouter();
   const custom = purpose === "CUSTOM";
-  const final = useFinalSave({ kind: "ESPRESSO", purpose, outletId, date, session: edit?.session, onSaved: onDone });
-  const { busy, setBusy, error, setError } = final;
   // Editing: the saved Final of each drink tab.
   const recordOf = new Map<string, CalibrationRecord>();
   for (const r of edit?.records ?? []) for (const u of r.uses) if (!u.superseded_by && !recordOf.has(u.item)) recordOf.set(u.item, r);
+  const [editSaved] = useState(() =>
+    edit ? { session: edit.session, saved: new Map<string, SavedFinal>([...recordOf].map(([d, r]) => [d, { id: r.id, revision: r.revision }])) } : undefined,
+  );
+  const final = useFinalSave({ kind: "ESPRESSO", purpose, outletId, date, edit: editSaved });
+  const { busy, setBusy, error, setError } = final;
   const first = edit?.records[0];
   const [editTarget, setEditTarget] = useState(false);
   const [tab, setTab] = useState<DrinkType>(() => DRINK_TYPES.find((d) => recordOf.has(d)) ?? "BLACK_HOT");
@@ -183,6 +187,13 @@ export function CalibrationForm({
   );
   // Only this tab's test shots; shots saved before tabs have no drink and are not shown here.
   const tabShots = shots.filter((s) => s.drink_type === tab);
+  // Dots: green once Final, yellow with test shots.
+  const status: Partial<Record<string, TabStatus>> = {};
+  for (const x of DRINK_TYPES) {
+    if (final.saved.has(x)) status[x] = "FINAL";
+    else if (shots.some((y) => y.drink_type === x)) status[x] = "SHOTS";
+  }
+  const tabIsFinal = final.saved.has(tab);
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
   // Earlier Finals to reuse: custom my last ones, daily yesterday's of this grinder.
@@ -291,25 +302,16 @@ export function CalibrationForm({
     };
   }
 
-  async function saveFinal(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (busy) return;
-    if (filled.length === 0) {
+  /** Set the open tab as its Final (only this tab). */
+  async function saveFinal(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    if (busy || final.pending) return;
+    if (!isFilled(shot)) {
       setError(t("needShotValues"));
       return;
     }
-    const finals: FinalToSave[] = [];
-    const updates: FinalUpdate[] = [];
-    for (const d of filled) {
-      const v = values(d);
-      if (!v) return;
-      const record = { ...v, roast_date: roastDate || null, production_no: productionNo.trim() || null };
-      const saved = recordOf.get(d);
-      // Editing: a tab that has a Final updates it; an empty tab filled now is added as a new Final.
-      if (saved) {
-        if (!updates.some((u) => u.id === saved.id)) updates.push({ id: saved.id, revision: saved.revision, record });
-      } else finals.push({ record, items: [d] });
-    }
+    const v = values(tab);
+    if (!v) return;
     if (roastDate && roastDate > date) {
       setError(t("roastFuture"));
       return;
@@ -318,7 +320,7 @@ export function CalibrationForm({
       setError(t("productionNoInvalid"));
       return;
     }
-    await final.submit(finals, updates);
+    await final.submitTab(tab, { ...v, roast_date: roastDate || null, production_no: productionNo.trim() || null });
   }
 
   async function saveShot() {
@@ -464,7 +466,7 @@ export function CalibrationForm({
 
       <fieldset className="flex min-w-0 flex-col gap-3">
         <legend className="mb-2 text-sm font-semibold">{t("shot")}</legend>
-        <ItemTabs kind="ESPRESSO" items={DRINK_TYPES} value={tab} summary={summary} onChange={(d) => setTab(d as DrinkType)}>
+        <ItemTabs kind="ESPRESSO" items={DRINK_TYPES} value={tab} summary={summary} status={status} onChange={(d) => setTab(d as DrinkType)}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {numberField("dose", t("doseG"), {
               min: "0.1",
@@ -540,21 +542,22 @@ export function CalibrationForm({
             />
           )}
           <ApplyTo kind="ESPRESSO" items={DRINK_TYPES} current={tab} onApply={(d) => setTabs({ ...tabs, [d]: { ...shot } })} />
+          <div className="flex flex-col gap-2 border-t border-black/10 pt-3">
+            <FormError error={error} />
+            {final.warning}
+            {!final.pending && (
+              <button type="submit" disabled={busy} className={`${primaryButton} self-start`}>
+                {busy ? t("saving") : t(tabIsFinal ? "updateFinalTab" : "setFinalTab", { drink: t(`drink.${tab}`) })}
+              </button>
+            )}
+            <DotLegend kind="ESPRESSO" />
+          </div>
         </ItemTabs>
       </fieldset>
 
-      <FormError error={error} />
-      {final.warning}
-      {!final.pending && (
-        <div className="flex flex-wrap gap-2">
-          <button type="submit" disabled={busy} className={primaryButton}>
-            {busy ? t("saving") : edit ? t("saveChanges") : t("saveFinal")}
-          </button>
-          <button type="button" onClick={onDone} className={secondaryButton}>
-            {t("cancel")}
-          </button>
-        </div>
-      )}
+      <button type="button" onClick={onDone} className={`${secondaryButton} self-start`}>
+        {t("done")}
+      </button>
     </form>
   );
 }

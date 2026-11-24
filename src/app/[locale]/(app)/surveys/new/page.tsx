@@ -25,7 +25,7 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
   const today = malaysiaToday();
   const outletIds = user.outlets.length ? user.outlets.map((o) => o.id) : [NO_OUTLET];
   const outletName = new Map(user.outlets.map((o) => [o.id, o.name]));
-  const COLS = "id, business_date, purpose, outlet_id, coffee_bean_material_id, grinder_id, grinder_name";
+  const COLS = "id, session_id, created_at, business_date, purpose, outlet_id, coffee_bean_material_id, grinder_id, grinder_name";
 
   const [espDaily, espCustom, filDaily, filCustom, { data: recipes }] = await Promise.all([
     supabase
@@ -35,7 +35,8 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
       .in("outlet_id", outletIds)
       .gte("business_date", addDays(today, -DAILY_DAYS))
       .is("deleted_at", null)
-      .order("business_date", { ascending: false }),
+      .order("business_date", { ascending: false })
+      .order("created_at", { ascending: true }),
     supabase
       .from("calibrations")
       .select(COLS)
@@ -43,7 +44,8 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
       .eq("created_by", user.id)
       .gte("business_date", addDays(today, -CUSTOM_DAYS))
       .is("deleted_at", null)
-      .order("business_date", { ascending: false }),
+      .order("business_date", { ascending: false })
+      .order("created_at", { ascending: true }),
     supabase
       .from("filter_calibrations")
       .select(`${COLS}, brewer_id, brewer_name`)
@@ -51,7 +53,8 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
       .in("outlet_id", outletIds)
       .gte("business_date", addDays(today, -DAILY_DAYS))
       .is("deleted_at", null)
-      .order("business_date", { ascending: false }),
+      .order("business_date", { ascending: false })
+      .order("created_at", { ascending: true }),
     supabase
       .from("filter_calibrations")
       .select(`${COLS}, brewer_id, brewer_name`)
@@ -59,7 +62,8 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
       .eq("created_by", user.id)
       .gte("business_date", addDays(today, -CUSTOM_DAYS))
       .is("deleted_at", null)
-      .order("business_date", { ascending: false }),
+      .order("business_date", { ascending: false })
+      .order("created_at", { ascending: true }),
     supabase
       .from("recipes")
       .select("id, all_outlets, current_approved_version_id, recipe_outlets(outlet_id)")
@@ -68,13 +72,20 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
       .not("current_approved_version_id", "is", null),
   ]);
 
-  const espresso = [...(espDaily.data ?? []), ...(espCustom.data ?? [])];
-  const filter = [...(filDaily.data ?? []), ...(filCustom.data ?? [])];
+  // Each drink tab of one save is its own record; offer one option per save (its first record).
+  const firstOfSave = <T extends { session_id: string }>(rows: T[]) => {
+    const seen = new Set<string>();
+    return rows.filter((r) => !seen.has(r.session_id) && !!seen.add(r.session_id));
+  };
+  const espAll = [...(espDaily.data ?? []), ...(espCustom.data ?? [])];
+  const espresso = firstOfSave(espAll);
+  const filter = firstOfSave([...(filDaily.data ?? []), ...(filCustom.data ?? [])]);
+  const saveOf = new Map(espAll.map((r) => [r.id, r.session_id]));
   const beanIds = [...new Set([...espresso, ...filter].map((r) => r.coffee_bean_material_id))];
   const grinderIds = [...new Set([...espresso, ...filter].flatMap((r) => (r.grinder_id ? [r.grinder_id] : [])))];
   const brewerIds = [...new Set(filter.flatMap((r) => (r.brewer_id ? [r.brewer_id] : [])))];
   const versionIds = (recipes ?? []).flatMap((r) => (r.current_approved_version_id ? [r.current_approved_version_id] : []));
-  const espIds = espresso.map((r) => r.id);
+  const espIds = espAll.map((r) => r.id);
 
   const [{ data: beans }, { data: grinders }, { data: brewers }, { data: versions }, { data: drinks }] =
     await Promise.all([
@@ -102,7 +113,7 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
     id: r.id,
     outletId: r.purpose === "DAILY" ? r.outlet_id : null,
     label: [
-      r.business_date,
+      `${r.business_date} ${new Date(r.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kuala_Lumpur" })}`,
       beanName.get(r.coffee_bean_material_id) ?? "—",
       equipment,
       r.purpose === "DAILY" ? (outletName.get(r.outlet_id ?? "") ?? "—") : custom,
@@ -114,7 +125,9 @@ export default async function NewSurveyPage({ params }: { params: Promise<{ loca
     option(
       r,
       (r.grinder_id ? grinderName.get(r.grinder_id) : r.grinder_name) ?? "—",
-      ESPRESSO_DRINKS.filter((d) => (drinks ?? []).some((x) => x.calibration_id === r.id && x.drink_type === d)),
+      ESPRESSO_DRINKS.filter((d) =>
+        (drinks ?? []).some((x) => saveOf.get(x.calibration_id) === r.session_id && x.drink_type === d),
+      ),
     ),
   );
   const filterOptions = filter.map((r) =>

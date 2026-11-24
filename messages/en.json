@@ -586,7 +586,7 @@
     "productionNoInvalid": "Production no. must look like PR-47481 (PR- and 5 digits).",
     "appliesTo": "Applies to",
     "invalidShotTab": "{drink}: dose, yield and time must be greater than zero.",
-    "needShotValues": "Fill in at least one tab before saving the Final.",
+    "needShotValues": "Fill in this tab before setting it as Final.",
     "tabsLabel": "Drink",
     "tabEmpty": "Not filled",
     "switchTo": "Switch to {name}",
@@ -612,7 +612,13 @@
     "saveChanges": "Save changes",
     "editTitle": "Edit calibration",
     "editNote": "Change the values of each drink tab, or fill an empty tab. Bean, grinder, outlet and date stay the same. Earlier values are kept in the history.",
-    "editNotAllowed": "You cannot edit this calibration. Daily calibrations can be edited on the same day by the person who made them or a Manager / Admin; custom ones by their creator or the Super Admin."
+    "editNotAllowed": "You cannot edit this calibration. Daily calibrations can be edited on the same day by the person who made them or a Manager / Admin; custom ones by their creator or the Super Admin.",
+    "setFinalTab": "Set {drink} as Final",
+    "updateFinalTab": "Update {drink} Final",
+    "done": "Done",
+    "dotShots": "Has test shots",
+    "dotBrews": "Has test brews",
+    "dotFinal": "Set as Final"
   },
   "FilterCalibration": {
     "noEquipment": "This outlet needs at least one hand brew kit and one grinder. An Admin picks them in Settings > Outlet Equipment.",
