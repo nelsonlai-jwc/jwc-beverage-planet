@@ -129,6 +129,35 @@ export function SubmitButton({
   );
 }
 
+/** Takes a pending item back to draft so its submitter can fix it. */
+export function WithdrawButton({
+  id,
+  action,
+}: {
+  id: string;
+  action: (id: string) => Promise<ActionResult>;
+}) {
+  const t = useTranslations("RawMaterials.detail");
+  const { error, pending, run } = useAction();
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => run(() => action(id), undefined, "withdrawn")}
+        className={secondaryButtonClass}
+      >
+        {pending ? t("withdrawing") : t("withdraw")}
+      </button>
+      {error && (
+        <p role="alert" className={errorClass}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
  * New price for an approved pack or packaging item: shows old, new and the change
  * before sending it for approval. The current price stays in effect until then.

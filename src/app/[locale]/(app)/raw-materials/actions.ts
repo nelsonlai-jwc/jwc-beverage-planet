@@ -326,6 +326,14 @@ export async function submitMaterial(materialId: string): Promise<ActionResult> 
   return error ? fail(error) : { ok: true };
 }
 
+/** The submitter (or an Admin) takes a pending new material back to draft to fix it. */
+export async function withdrawMaterial(materialId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("withdraw_material", { p_material_id: materialId });
+  refresh();
+  return error ? fail(error) : { ok: true };
+}
+
 /** Price change on an approved pack: a new price version sent straight for approval. */
 export async function proposeMaterialPrice(
   packId: string,

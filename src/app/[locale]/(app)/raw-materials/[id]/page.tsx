@@ -7,6 +7,7 @@ import {
   PriceChangeForm,
   ReviewActions,
   SubmitButton,
+  WithdrawButton,
 } from "@/components/materials/ReviewActions";
 import {
   BackLink,
@@ -22,7 +23,7 @@ import { getViewer } from "@/lib/materials/viewer";
 import { TranslationNote } from "@/components/content/TranslationNote";
 import { getLocalizer } from "@/lib/content/translations";
 import { signedMediaUrl } from "@/lib/media/signedUrl";
-import { proposeMaterialPrice, submitMaterial } from "../actions";
+import { proposeMaterialPrice, submitMaterial, withdrawMaterial } from "../actions";
 
 export default async function MaterialPage({
   params,
@@ -144,6 +145,14 @@ export default async function MaterialPage({
         <div className="rounded-[20px] bg-white p-5">
           <p className="text-sm font-semibold">{t("detail.pendingTitle")}</p>
           <p className="mt-1 text-[13px] text-[#3d3f3a]">{t("detail.pendingNote")}</p>
+          {isOwner && (
+            <div className="mt-4 flex flex-col gap-2">
+              <p className="text-[13px] text-[#3d3f3a]">{t("detail.withdrawNote")}</p>
+              <div className="self-start">
+                <WithdrawButton id={id} action={withdrawMaterial} />
+              </div>
+            </div>
+          )}
           {isAdmin && (
             <div className="mt-4">
               <ReviewActions kind="material" id={id} />
