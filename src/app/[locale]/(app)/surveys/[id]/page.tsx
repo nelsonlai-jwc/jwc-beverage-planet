@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SurveyResults } from "@/components/surveys/SurveyResults";
 import type { SurveyInfo } from "@/components/surveys/SurveyForm";
-import { SURVEY_COLUMNS, canManageSurvey } from "@/components/surveys/load";
+import { SURVEY_COLUMNS, canDeleteSurvey, canManageSurvey } from "@/components/surveys/load";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentUser } from "@/lib/auth/currentUser";
 import { createClient } from "@/lib/supabase/server";
@@ -42,6 +42,7 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
         info={info as SurveyInfo}
         responses={(responses ?? []).map((r) => ({ ...r, scores: r.scores as Record<string, number> }))}
         invitees={invitees ?? []}
+        canDelete={canDeleteSurvey(user, survey)}
       />
     </div>
   );
