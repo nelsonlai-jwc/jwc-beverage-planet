@@ -3,7 +3,9 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { notifyReviewResult } from "@/lib/email/approval";
+import { MAX_IMPORT_ROWS, type ImportRecipeRow } from "@/lib/recipes/csv-import";
 import type { ValidationError } from "@/lib/recipes/types";
+import type { Json } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 
 // Error codes the recipe pages explain; anything else shows the database message.
@@ -133,4 +135,55 @@ export async function publishRecipeVersion(
   const result = data as unknown as { errors?: ValidationError[] } | null;
   if (result?.errors?.length) return { ok: false, error: "INVALID", errors: result.errors };
   return { ok: true, outcome: "APPLIED" };
+}
+
+// CSV import ------------------------------------------------------------
+
+/**
+ * Creates each checked row as a new recipe draft, with the same calls as "New recipe"
+ * and "Save draft" (so the same permission checks apply). Nothing is submitted: the
+ * drafts go through the normal Submit and approval. If any row fails, the drafts made
+ * so far are deleted again, so the import is all or nothing.
+ */
+export async function importRecipes(rows: ImportRecipeRow[]): Promise<RecipeActionResult & { count?: number }> {
+  if (!rows.length || rows.length > MAX_IMPORT_ROWS) return { ok: false, error: "UNKNOWN" };
+  const supabase = await createClient();
+  const created: string[] = [];
+  const undo = async () => {
+    if (created.length) await supabase.from("recipes").delete().in("id", created);
+  };
+
+  for (const row of rows) {
+    const { data: versionId, error } = await supabase.rpc("create_recipe", {
+      p_outlet_ids: row.allOutlets ? [] : row.outletIds,
+      p_all_outlets: row.allOutlets,
+      p_is_prep: row.isPrep,
+      p_product_name: row.draft.product_name,
+    });
+    if (error || !versionId) {
+      await undo();
+      return error ? fail(error) : { ok: false, error: "UNKNOWN" };
+    }
+    const { data: version } = await supabase
+      .from("recipe_versions")
+      .select("recipe_id, revision")
+      .eq("id", versionId)
+      .single();
+    if (!version) {
+      await undo();
+      return { ok: false, error: "UNKNOWN" };
+    }
+    created.push(version.recipe_id);
+    const { error: saveError } = await supabase.rpc("save_recipe_draft", {
+      p_version_id: versionId,
+      p_revision: version.revision,
+      p_draft: { ...row.draft, tags: [], photos: [] } as unknown as Json,
+    });
+    if (saveError) {
+      await undo();
+      return fail(saveError);
+    }
+  }
+  refresh();
+  return { ok: true, count: created.length };
 }
