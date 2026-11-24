@@ -11,6 +11,7 @@ export type MaterialRow = {
   typeId: string;
   type: string;
   status: ApprovalStatus;
+  unavailable: boolean;
   updated: string;
   updatedDay: string; // yyyy-mm-dd, for the date filter
   updatedAt: string;

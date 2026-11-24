@@ -37,7 +37,7 @@ export default async function EditRecipePage({
     getOutlets(supabase),
     supabase
       .from("materials")
-      .select("id, name, brand, status, material_types(name, sort_order)")
+      .select("id, name, brand, status, unavailable, material_types(name, sort_order)")
       .neq("status", "ARCHIVED").order("name"),
     supabase
       .from("recipes")
@@ -92,6 +92,7 @@ export default async function EditRecipePage({
         id: m.id,
         name: m.brand ? `${m.name} (${m.brand})` : m.name,
         approved: m.status === "APPROVED",
+        unavailable: m.unavailable,
         unit: costUnits.get(m.id) ?? null,
         title: m.name,
         brand: m.brand,

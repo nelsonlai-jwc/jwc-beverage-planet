@@ -47,6 +47,8 @@ type Option = {
   id: string;
   name: string;
   approved?: boolean;
+  // Raw material set to Unavailable: not offered for new lines.
+  unavailable?: boolean;
   unit?: MeasureUnit | null;
   // Ingredient picker: name without brand, brand, and material type with its Settings order.
   title?: string;
@@ -241,6 +243,7 @@ export function RecipeEditor(props: Props) {
         type: m.type,
         typeOrder: m.typeOrder,
         approved: m.approved,
+        unavailable: m.unavailable,
         unit: m.unit,
       })),
     [materials],

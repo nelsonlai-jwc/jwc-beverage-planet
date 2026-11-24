@@ -7,6 +7,7 @@ import {
   archiveItem,
   deleteDraft,
   restoreItem,
+  setMaterialUnavailable,
   undoApproval,
 } from "@/app/[locale]/(app)/raw-materials/actions";
 import { useRouter } from "@/i18n/navigation";
@@ -212,6 +213,41 @@ export function UndoApprovalButton({
           {t("cancel")}
         </button>
       </div>
+      {error && (
+        <p role="alert" className={errorClass}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Super Admin / outlet Admin: hide a raw material from the recipe and calibration pickers, or show it again. */
+export function UnavailableButton({ id, unavailable }: { id: string; unavailable: boolean }) {
+  const t = useTranslations("RawMaterials.unavailable");
+  const te = useTranslations("RawMaterials.errors");
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function run() {
+    setError(null);
+    startTransition(async () => {
+      const result = await setMaterialUnavailable(id, !unavailable);
+      if (!result.ok) {
+        setError(te.has(result.error) ? te(result.error) : te("UNKNOWN"));
+        return;
+      }
+      toast("saved");
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button type="button" disabled={pending} onClick={run} className={secondaryButtonClass}>
+        {unavailable ? t("markAvailable") : t("markUnavailable")}
+      </button>
       {error && (
         <p role="alert" className={errorClass}>
           {error}

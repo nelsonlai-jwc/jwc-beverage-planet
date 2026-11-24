@@ -35,6 +35,16 @@ export function StatusBadge({ status }: { status: ApprovalStatus }) {
   );
 }
 
+/** Shown next to the status of a raw material set to Unavailable. */
+export function UnavailableBadge() {
+  const t = useTranslations("RawMaterials.unavailable");
+  return (
+    <span className="inline-flex items-center rounded-full border-[1.5px] border-black bg-black px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white">
+      {t("badge")}
+    </span>
+  );
+}
+
 /**
  * Materials | Packaging | Pending approval tabs. The approval tab shows only when `pending`
  * is given (reviewers), with a red count like the recipe "Pending approval" tab.
