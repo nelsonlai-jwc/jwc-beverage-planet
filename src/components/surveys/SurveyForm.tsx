@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   submitSurvey,
   type SurveyAnswer,
@@ -48,6 +48,32 @@ const chip = (on: boolean) =>
   }`;
 
 const START = 3;
+
+/** Unsent answer kept per survey in sessionStorage, so switching language (a new URL) does not wipe it. */
+type Draft = {
+  drink: SurveyDrink;
+  scores: Partial<Record<Criterion, number>>;
+  tags: string[];
+  milkAmount: MilkAmount | null;
+  comment: string;
+};
+const draftKey = (token: string) => `survey-draft:${token}`;
+function readDraft(token: string): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(draftKey(token));
+    return raw ? (JSON.parse(raw) as Draft) : null;
+  } catch {
+    return null;
+  }
+}
+function writeDraft(token: string, draft: Draft | null) {
+  try {
+    if (draft) sessionStorage.setItem(draftKey(token), JSON.stringify(draft));
+    else sessionStorage.removeItem(draftKey(token));
+  } catch {
+    // Storage blocked (private mode): the form still works, only without the draft.
+  }
+}
 const startScores = (drink: SurveyDrink) =>
   Object.fromEntries(CRITERIA[drink].map((c) => [c, START])) as Partial<
     Record<Criterion, number>
@@ -158,6 +184,29 @@ export function SurveyForm({
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Put back the unsent answer after the page reloads in another language.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    const d = readDraft(token);
+    if (d && drinks.includes(d.drink) && !survey.answered.includes(d.drink)) {
+      setDrink(d.drink);
+      setScores({ ...startScores(d.drink), ...d.scores });
+      setTags(Array.isArray(d.tags) ? d.tags : []);
+      setMilkAmount(d.milkAmount ?? null);
+      setComment(typeof d.comment === "string" ? d.comment : "");
+    }
+    setRestored(true);
+    // Only once, when the form first loads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    writeDraft(
+      token,
+      done.includes(drink) ? null : { drink, scores, tags, milkAmount, comment },
+    );
+  }, [restored, token, done, drink, scores, tags, milkAmount, comment]);
 
   const left = drinks.filter((d) => !done.includes(d));
 
