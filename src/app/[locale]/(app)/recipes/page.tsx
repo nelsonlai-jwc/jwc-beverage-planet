@@ -99,6 +99,9 @@ export default async function RecipesPage({
           <a href={`/${locale}/recipes/export`} className={secondaryButton}>
             {t("exportCsv")}
           </a>
+          <Link href="/recipes/import" className={secondaryButton}>
+            {t("importCsv")}
+          </Link>
           <Link href="/recipes?tab=catalogue" className={secondaryButton}>
             {t("copyApproved")}
           </Link>
