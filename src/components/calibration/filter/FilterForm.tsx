@@ -12,13 +12,14 @@ import { BeanTargetForm } from "../BeanTargetForm";
 import { EquipmentSelect, OTHER, equipmentColumns } from "../EquipmentSelect";
 import {
   ApplyTo,
+  DotLegend,
   FormError,
   ItemTabs,
   ProductionNoField,
   productionNoProblem,
   useFinalSave,
-  type FinalToSave,
-  type FinalUpdate,
+  type SavedFinal,
+  type TabStatus,
 } from "../FinalParts";
 import { rpmProblem, type Grinder, type Purpose, type TasteBalance } from "../types";
 import { FilterBrewList } from "./FilterBrewList";
@@ -101,7 +102,7 @@ function optionalNumber(value: string): number | null | undefined {
 
 const rangeMark: Record<RangeCheck, string> = { LOW: "↓", OK: "✓", HIGH: "↑" };
 
-/** Filter: dial in with test brews in Hot / Iced tabs, then save each filled tab as its own Final. */
+/** Filter: dial in with test brews in Hot / Iced tabs, then set each tab as its own Final. */
 export function FilterForm({
   purpose,
   outletId,
@@ -139,11 +140,14 @@ export function FilterForm({
   const tf = useTranslations("FilterCalibration");
   const router = useRouter();
   const custom = purpose === "CUSTOM";
-  const final = useFinalSave({ kind: "FILTER", purpose, outletId, date, session: edit?.session, onSaved: onDone });
-  const { busy, setBusy, error, setError } = final;
   // Editing: the saved Final of each tab.
   const recordOf = new Map<string, FilterRecord>();
   for (const r of edit?.records ?? []) for (const u of r.uses) if (!u.superseded_by && !recordOf.has(u.item)) recordOf.set(u.item, r);
+  const [editSaved] = useState(() =>
+    edit ? { session: edit.session, saved: new Map<string, SavedFinal>([...recordOf].map(([x, r]) => [x, { id: r.id, revision: r.revision }])) } : undefined,
+  );
+  const final = useFinalSave({ kind: "FILTER", purpose, outletId, date, edit: editSaved });
+  const { busy, setBusy, error, setError } = final;
   const first = edit?.records[0];
   const [editTarget, setEditTarget] = useState(false);
   const [tab, setTab] = useState<FilterTemp>(() => FILTER_TEMPS.find((x) => recordOf.has(x)) ?? "HOT");
@@ -180,6 +184,13 @@ export function FilterForm({
   );
   // Only this tab's test brews; brews saved before tabs have no temperature and are not shown here.
   const tabBrews = brews.filter((b) => b.temperature === tab);
+  // Dots: green once Final, yellow with test brews.
+  const status: Partial<Record<string, TabStatus>> = {};
+  for (const x of FILTER_TEMPS) {
+    if (final.saved.has(x)) status[x] = "FINAL";
+    else if (brews.some((y) => y.temperature === x)) status[x] = "SHOTS";
+  }
+  const tabIsFinal = final.saved.has(tab);
 
   const grinder = grinders.find((g) => g.id === form.grinderId);
   // Earlier Finals to reuse: custom my last ones, daily yesterday's of this grinder.
@@ -278,30 +289,21 @@ export function FilterForm({
     };
   }
 
-  async function saveFinal(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (busy) return;
-    if (filled.length === 0) {
+  /** Set the open tab as its Final (only this tab). */
+  async function saveFinal(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    if (busy || final.pending) return;
+    if (!isFilled(brew)) {
       setError(t("needShotValues"));
       return;
     }
-    const finals: FinalToSave[] = [];
-    const updates: FinalUpdate[] = [];
-    for (const x of filled) {
-      const v = values(x);
-      if (!v) return;
-      const record = { ...v, production_no: productionNo.trim() || null };
-      const saved = recordOf.get(x);
-      // Editing: a tab that has a Final updates it; an empty tab filled now is added as a new Final.
-      if (saved) {
-        if (!updates.some((u) => u.id === saved.id)) updates.push({ id: saved.id, revision: saved.revision, record });
-      } else finals.push({ record, items: [x] });
-    }
+    const v = values(tab);
+    if (!v) return;
     if (productionNoProblem(productionNo)) {
       setError(t("productionNoInvalid"));
       return;
     }
-    await final.submit(finals, updates);
+    await final.submitTab(tab, { ...v, production_no: productionNo.trim() || null });
   }
 
   async function saveBrew() {
@@ -436,7 +438,7 @@ export function FilterForm({
         </button>
       )}
 
-      <ItemTabs kind="FILTER" items={FILTER_TEMPS} value={tab} summary={summary} onChange={(x) => setTab(x as FilterTemp)}>
+      <ItemTabs kind="FILTER" items={FILTER_TEMPS} value={tab} summary={summary} status={status} onChange={(x) => setTab(x as FilterTemp)}>
 
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-2 text-sm font-semibold">{tf("recipe")}</legend>
@@ -538,21 +540,22 @@ export function FilterForm({
             />
           )}
           <ApplyTo kind="FILTER" items={FILTER_TEMPS} current={tab} onApply={(x) => setTabs({ ...tabs, [x]: { ...brew } })} />
+          <div className="flex flex-col gap-2 border-t border-black/10 pt-3">
+            <FormError error={error} />
+            {final.warning}
+            {!final.pending && (
+              <button type="submit" disabled={busy} className={`${primaryButton} self-start`}>
+                {busy ? t("saving") : t(tabIsFinal ? "updateFinalTab" : "setFinalTab", { drink: t(`temp.${tab}`) })}
+              </button>
+            )}
+            <DotLegend kind="FILTER" />
+          </div>
         </div>
       </ItemTabs>
 
-      <FormError error={error} />
-      {final.warning}
-      {!final.pending && (
-        <div className="flex flex-wrap gap-2">
-          <button type="submit" disabled={busy} className={primaryButton}>
-            {busy ? t("saving") : edit ? t("saveChanges") : t("saveFinal")}
-          </button>
-          <button type="button" onClick={onDone} className={secondaryButton}>
-            {t("cancel")}
-          </button>
-        </div>
-      )}
+      <button type="button" onClick={onDone} className={`${secondaryButton} self-start`}>
+        {t("done")}
+      </button>
     </form>
   );
 }
