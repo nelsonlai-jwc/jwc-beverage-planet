@@ -2085,6 +2085,7 @@
     "customRecord": "Custom",
     "choose": "Choose…",
     "outlet": "Outlet",
+    "outletSeparator": ", ",
     "recipe": "Drink recipe",
     "noRecipes": "This outlet has no approved drink recipe.",
     "drinksLabel": "Drinks to rate",

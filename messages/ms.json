@@ -2085,6 +2085,7 @@
     "customRecord": "Tersuai",
     "choose": "Pilih…",
     "outlet": "Cawangan",
+    "outletSeparator": ", ",
     "recipe": "Resipi minuman",
     "noRecipes": "Cawangan ini tiada resipi minuman yang diluluskan.",
     "drinksLabel": "Minuman untuk dinilai",

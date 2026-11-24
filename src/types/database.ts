@@ -3260,6 +3260,7 @@ export type Database = {
           max_responses: number
           note: string | null
           outlet_id: string | null
+          outlet_ids: string[]
           recipe_id: string | null
           revision: number
           subject_type: string
@@ -3280,6 +3281,7 @@ export type Database = {
           max_responses?: number
           note?: string | null
           outlet_id?: string | null
+          outlet_ids?: string[]
           recipe_id?: string | null
           revision?: number
           subject_type: string
@@ -3300,6 +3302,7 @@ export type Database = {
           max_responses?: number
           note?: string | null
           outlet_id?: string | null
+          outlet_ids?: string[]
           recipe_id?: string | null
           revision?: number
           subject_type?: string

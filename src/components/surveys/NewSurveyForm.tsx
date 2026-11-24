@@ -2,17 +2,41 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { cardClass, errorText, inputClass, labelClass, mutedText, primaryButton, secondaryButton } from "@/components/ui/styles";
+import {
+  cardClass,
+  errorText,
+  inputClass,
+  labelClass,
+  mutedText,
+  primaryButton,
+  secondaryButton,
+} from "@/components/ui/styles";
 import { toast } from "@/components/ui/toast";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Outlet } from "@/lib/auth/currentUser";
 import { createClient } from "@/lib/supabase/client";
-import { ESPRESSO_DRINKS, type Audience, type SubjectType, type SurveyDrink } from "@/lib/tasting/scale";
+import { OutletChecklist } from "@/components/recipes/OutletChecklist";
+import {
+  ESPRESSO_DRINKS,
+  type Audience,
+  type SubjectType,
+  type SurveyDrink,
+} from "@/lib/tasting/scale";
 
 /** A calibration record to survey. outletId: the outlet of a daily record, null for a custom one. */
-export type RecordOption = { id: string; outletId: string | null; label: string; drinks: SurveyDrink[] };
+export type RecordOption = {
+  id: string;
+  outletId: string | null;
+  label: string;
+  drinks: SurveyDrink[];
+};
 /** An approved drink recipe; outletIds null means all outlets. */
-export type RecipeOption = { id: string; name: string; temperature: string | null; outletIds: string[] | null };
+export type RecipeOption = {
+  id: string;
+  name: string;
+  temperature: string | null;
+  outletIds: string[] | null;
+};
 type Person = { id: string; full_name: string; role: string };
 
 /** CUSTOM: rate something with no record or recipe; it gets a type and a name instead. */
@@ -53,7 +77,11 @@ export function NewSurveyForm({
   const [drinks, setDrinks] = useState<SurveyDrink[]>([]);
   const [recipeId, setRecipeId] = useState("");
   const [audience, setAudience] = useState<Audience>("OUTLET");
-  const [chosenOutlet, setChosenOutlet] = useState(outlets[0]?.id ?? "");
+  // Ticked outlets, or all of the creator's outlets.
+  const [outletIds, setOutletIds] = useState<string[]>(
+    outlets[0] ? [outlets[0].id] : [],
+  );
+  const [allOutlets, setAllOutlets] = useState(false);
   const [people, setPeople] = useState<Person[] | null>(null);
   const [ticked, setTicked] = useState<string[]>([]);
   const [duration, setDuration] = useState<Duration>("none");
@@ -61,29 +89,97 @@ export function NewSurveyForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const records = subject === "ESPRESSO" ? espresso : subject === "FILTER" ? filter : [];
+  const records =
+    subject === "ESPRESSO" ? espresso : subject === "FILTER" ? filter : [];
   const record = records.find((x) => x.id === recordId) ?? null;
-  // A daily record's survey belongs to its outlet; otherwise the outlet is chosen.
-  const fixedOutlet = (subject === "ESPRESSO" || subject === "FILTER") && record?.outletId ? record.outletId : null;
+  // A daily record's survey always includes the record's outlet (ticked and locked).
+  const fixedOutlet =
+    (subject === "ESPRESSO" || subject === "FILTER") && record?.outletId
+      ? record.outletId
+      : null;
   const needsOutlet = subject === "RECIPE" || audience === "OUTLET";
-  const outletId = fixedOutlet ?? (needsOutlet ? chosenOutlet : null);
-  const outletRecipes = recipes.filter((x) => !x.outletIds || x.outletIds.includes(chosenOutlet));
+  const tickedOutlets = outlets
+    .filter(
+      (o) => allOutlets || o.id === fixedOutlet || outletIds.includes(o.id),
+    )
+    .map((o) => o.id);
+  const surveyOutlets = needsOutlet
+    ? tickedOutlets
+    : fixedOutlet
+      ? [fixedOutlet]
+      : [];
+  const outletKey = audience === "OUTLET" ? tickedOutlets.join(",") : "";
+  // A Signature Beverage recipe must be available in every ticked outlet.
+  const outletRecipes =
+    tickedOutlets.length === 0
+      ? []
+      : recipes.filter(
+          (x) =>
+            !x.outletIds ||
+            tickedOutlets.every((id) => x.outletIds!.includes(id)),
+        );
 
   useEffect(() => {
-    if (audience !== "OUTLET" || !outletId) return;
+    if (!outletKey) return;
     let live = true;
     setPeople(null);
-    createClient()
-      .rpc("survey_outlet_people", { p_outlet_id: outletId })
-      .then(({ data }) => {
-        if (!live) return;
-        setPeople(data ?? []);
-        setTicked((data ?? []).map((p) => p.id));
-      });
+    const supabase = createClient();
+    Promise.all(
+      outletKey
+        .split(",")
+        .map((id) => supabase.rpc("survey_outlet_people", { p_outlet_id: id })),
+    ).then((results) => {
+      if (!live) return;
+      // Staff of several ticked outlets appear once.
+      const byId = new Map<string, Person>();
+      for (const { data } of results)
+        for (const p of data ?? []) byId.set(p.id, p);
+      const list = [...byId.values()].sort((a, b) =>
+        a.full_name.localeCompare(b.full_name),
+      );
+      setPeople(list);
+      setTicked(list.map((p) => p.id));
+    });
     return () => {
       live = false;
     };
-  }, [audience, outletId]);
+  }, [outletKey]);
+
+  function pickOutlets(ids: string[], all: boolean) {
+    setOutletIds(ids);
+    setAllOutlets(all);
+    const next = outlets
+      .filter((o) => all || o.id === fixedOutlet || ids.includes(o.id))
+      .map((o) => o.id);
+    const recipe = recipes.find((x) => x.id === recipeId);
+    if (
+      recipe?.outletIds &&
+      !next.every((id) => recipe.outletIds!.includes(id))
+    )
+      setRecipeId("");
+  }
+
+  const outletPicker = (
+    <div className="flex flex-col gap-1.5">
+      <span className={labelClass}>{t("outlet")}</span>
+      <OutletChecklist
+        outlets={outlets}
+        allowAll
+        outletIds={
+          fixedOutlet && !outletIds.includes(fixedOutlet)
+            ? [...outletIds, fixedOutlet]
+            : outletIds
+        }
+        allOutlets={allOutlets}
+        onChange={pickOutlets}
+        editableIds={
+          fixedOutlet
+            ? outlets.filter((o) => o.id !== fixedOutlet).map((o) => o.id)
+            : undefined
+        }
+      />
+    </div>
+  );
 
   function pickSubject(next: Subject) {
     setSubject(next);
@@ -111,9 +207,12 @@ export function NewSurveyForm({
     const type = custom ? customType : subject;
     if (custom ? !title.trim() : subject === "RECIPE" ? !recipeId : !record)
       return setError(custom ? t("pickName") : t("pickSubject"));
-    if (type === "ESPRESSO" && drinks.length === 0) return setError(t("pickDrinks"));
-    if (needsOutlet && !outletId) return setError(t("pickOutlet"));
-    if (audience === "OUTLET" && ticked.length === 0) return setError(t("pickPeople"));
+    if (type === "ESPRESSO" && drinks.length === 0)
+      return setError(t("pickDrinks"));
+    if (needsOutlet && surveyOutlets.length === 0)
+      return setError(t("pickOutlet"));
+    if (audience === "OUTLET" && ticked.length === 0)
+      return setError(t("pickPeople"));
 
     setBusy(true);
     const supabase = createClient();
@@ -125,11 +224,22 @@ export function NewSurveyForm({
         calibration_id: subject === "ESPRESSO" ? recordId : null,
         filter_calibration_id: subject === "FILTER" ? recordId : null,
         recipe_id: subject === "RECIPE" ? recipeId : null,
-        outlet_id: outletId,
+        outlet_ids: surveyOutlets,
         audience,
-        drinks: type === "ESPRESSO" ? drinks : type === "FILTER" ? ["FILTER"] : ["RECIPE"],
+        drinks:
+          type === "ESPRESSO"
+            ? drinks
+            : type === "FILTER"
+              ? ["FILTER"]
+              : ["RECIPE"],
         note: note.trim() || null,
-        ...(duration !== "none" ? { closes_at: new Date(Date.now() + Number(duration) * 60e3).toISOString() } : {}),
+        ...(duration !== "none"
+          ? {
+              closes_at: new Date(
+                Date.now() + Number(duration) * 60e3,
+              ).toISOString(),
+            }
+          : {}),
       })
       .select("id")
       .single();
@@ -158,7 +268,13 @@ export function NewSurveyForm({
         <span className={labelClass}>{t("subjectLabel")}</span>
         <div className="flex flex-wrap gap-2">
           {SUBJECTS.map((s) => (
-            <button key={s} type="button" aria-pressed={subject === s} onClick={() => pickSubject(s)} className={chip(subject === s)}>
+            <button
+              key={s}
+              type="button"
+              aria-pressed={subject === s}
+              onClick={() => pickSubject(s)}
+              className={chip(subject === s)}
+            >
               {t(`subject.${s}`)}
             </button>
           ))}
@@ -186,18 +302,32 @@ export function NewSurveyForm({
           </div>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>{t("nameLabel")}</span>
-            <input value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
+            <input
+              value={title}
+              maxLength={80}
+              onChange={(e) => setTitle(e.target.value)}
+              className={inputClass}
+            />
           </label>
           {customType === "ESPRESSO" && (
             <div className="flex flex-col gap-2">
               <span className={labelClass}>{t("drinksLabel")}</span>
               <div className="flex flex-wrap gap-3">
                 {ESPRESSO_DRINKS.map((x) => (
-                  <label key={x} className="flex items-center gap-2 text-sm font-semibold">
+                  <label
+                    key={x}
+                    className="flex items-center gap-2 text-sm font-semibold"
+                  >
                     <input
                       type="checkbox"
                       checked={drinks.includes(x)}
-                      onChange={(e) => setDrinks(e.target.checked ? [...drinks, x] : drinks.filter((y) => y !== x))}
+                      onChange={(e) =>
+                        setDrinks(
+                          e.target.checked
+                            ? [...drinks, x]
+                            : drinks.filter((y) => y !== x),
+                        )
+                      }
                       className="h-5 w-5 accent-black"
                     />
                     {d(`drink.${x}`)}
@@ -209,26 +339,14 @@ export function NewSurveyForm({
         </>
       ) : subject === "RECIPE" ? (
         <>
-          <label className="flex flex-col gap-1.5">
-            <span className={labelClass}>{t("outlet")}</span>
-            <select
-              value={chosenOutlet}
-              onChange={(e) => {
-                setChosenOutlet(e.target.value);
-                setRecipeId("");
-              }}
-              className={inputClass}
-            >
-              {outlets.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {outletPicker}
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>{t("recipe")}</span>
-            <select value={recipeId} onChange={(e) => setRecipeId(e.target.value)} className={inputClass}>
+            <select
+              value={recipeId}
+              onChange={(e) => setRecipeId(e.target.value)}
+              className={inputClass}
+            >
               <option value="">{t("choose")}</option>
               {outletRecipes.map((x) => (
                 <option key={x.id} value={x.id}>
@@ -237,13 +355,19 @@ export function NewSurveyForm({
                 </option>
               ))}
             </select>
-            {outletRecipes.length === 0 && <span className={mutedText}>{t("noRecipes")}</span>}
+            {outletRecipes.length === 0 && (
+              <span className={mutedText}>{t("noRecipes")}</span>
+            )}
           </label>
         </>
       ) : (
         <label className="flex flex-col gap-1.5">
           <span className={labelClass}>{t("record")}</span>
-          <select value={recordId} onChange={(e) => pickRecord(e.target.value)} className={inputClass}>
+          <select
+            value={recordId}
+            onChange={(e) => pickRecord(e.target.value)}
+            className={inputClass}
+          >
             <option value="">{t("choose")}</option>
             {records.map((x) => (
               <option key={x.id} value={x.id}>
@@ -251,7 +375,9 @@ export function NewSurveyForm({
               </option>
             ))}
           </select>
-          <span className={mutedText}>{records.length === 0 ? t("noRecords") : t("recordHint")}</span>
+          <span className={mutedText}>
+            {records.length === 0 ? t("noRecords") : t("recordHint")}
+          </span>
         </label>
       )}
 
@@ -260,11 +386,20 @@ export function NewSurveyForm({
           <span className={labelClass}>{t("drinksLabel")}</span>
           <div className="flex flex-wrap gap-3">
             {record.drinks.map((x) => (
-              <label key={x} className="flex items-center gap-2 text-sm font-semibold">
+              <label
+                key={x}
+                className="flex items-center gap-2 text-sm font-semibold"
+              >
                 <input
                   type="checkbox"
                   checked={drinks.includes(x)}
-                  onChange={(e) => setDrinks(e.target.checked ? [...drinks, x] : drinks.filter((y) => y !== x))}
+                  onChange={(e) =>
+                    setDrinks(
+                      e.target.checked
+                        ? [...drinks, x]
+                        : drinks.filter((y) => y !== x),
+                    )
+                  }
                   className="h-5 w-5 accent-black"
                 />
                 {d(`drink.${x}`)}
@@ -279,7 +414,13 @@ export function NewSurveyForm({
         <span className={labelClass}>{t("audienceLabel")}</span>
         <div className="flex flex-wrap gap-2">
           {AUDIENCES.map((a) => (
-            <button key={a} type="button" aria-pressed={audience === a} onClick={() => setAudience(a)} className={chip(audience === a)}>
+            <button
+              key={a}
+              type="button"
+              aria-pressed={audience === a}
+              onClick={() => setAudience(a)}
+              className={chip(audience === a)}
+            >
               {t(`audience.${a}`)}
             </button>
           ))}
@@ -289,58 +430,62 @@ export function NewSurveyForm({
 
       {audience === "OUTLET" && (
         <div className="flex flex-col gap-3">
-          {subject !== "RECIPE" &&
-            (fixedOutlet ? (
-              <p className="text-sm">
-                <span className={labelClass}>{t("outlet")}: </span>
-                {outlets.find((o) => o.id === fixedOutlet)?.name ?? "—"}
-              </p>
-            ) : (
-              <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>{t("outlet")}</span>
-                <select value={chosenOutlet} onChange={(e) => setChosenOutlet(e.target.value)} className={inputClass}>
-                  {outlets.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
+          {subject !== "RECIPE" && outletPicker}
+          {outletKey !== "" && (
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className={labelClass}>
+                  {t("peopleLabel", { count: ticked.length })}
+                </span>
+                {people && people.length > 0 && (
+                  <button
+                    type="button"
+                    className="text-sm font-semibold underline"
+                    onClick={() =>
+                      setTicked(
+                        ticked.length === people.length
+                          ? []
+                          : people.map((p) => p.id),
+                      )
+                    }
+                  >
+                    {ticked.length === people.length
+                      ? t("tickNone")
+                      : t("tickAll")}
+                  </button>
+                )}
+              </div>
+              {people === null ? (
+                <p className={mutedText}>{t("loading")}</p>
+              ) : people.length === 0 ? (
+                <p className={mutedText}>{t("noPeople")}</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {people.map((p) => (
+                    <label
+                      key={p.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={ticked.includes(p.id)}
+                        onChange={(e) =>
+                          setTicked(
+                            e.target.checked
+                              ? [...ticked, p.id]
+                              : ticked.filter((x) => x !== p.id),
+                          )
+                        }
+                        className="h-5 w-5 accent-black"
+                      />
+                      <span className="font-semibold">{p.full_name}</span>
+                      <span className={mutedText}>{t(`role.${p.role}`)}</span>
+                    </label>
                   ))}
-                </select>
-              </label>
-            ))}
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className={labelClass}>{t("peopleLabel", { count: ticked.length })}</span>
-              {people && people.length > 0 && (
-                <button
-                  type="button"
-                  className="text-sm font-semibold underline"
-                  onClick={() => setTicked(ticked.length === people.length ? [] : people.map((p) => p.id))}
-                >
-                  {ticked.length === people.length ? t("tickNone") : t("tickAll")}
-                </button>
+                </div>
               )}
             </div>
-            {people === null ? (
-              <p className={mutedText}>{t("loading")}</p>
-            ) : people.length === 0 ? (
-              <p className={mutedText}>{t("noPeople")}</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {people.map((p) => (
-                  <label key={p.id} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={ticked.includes(p.id)}
-                      onChange={(e) => setTicked(e.target.checked ? [...ticked, p.id] : ticked.filter((x) => x !== p.id))}
-                      className="h-5 w-5 accent-black"
-                    />
-                    <span className="font-semibold">{p.full_name}</span>
-                    <span className={mutedText}>{t(`role.${p.role}`)}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
 
@@ -348,7 +493,13 @@ export function NewSurveyForm({
         <span className={labelClass}>{t("deadline")}</span>
         <div className="flex flex-wrap gap-2">
           {DURATIONS.map((x) => (
-            <button key={x} type="button" aria-pressed={duration === x} onClick={() => setDuration(x)} className={chip(duration === x)}>
+            <button
+              key={x}
+              type="button"
+              aria-pressed={duration === x}
+              onClick={() => setDuration(x)}
+              className={chip(duration === x)}
+            >
               {t(`duration.${x}`)}
             </button>
           ))}
@@ -358,12 +509,22 @@ export function NewSurveyForm({
 
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>{t("noteLabel")}</span>
-        <input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} className={inputClass} />
+        <input
+          value={note}
+          maxLength={200}
+          onChange={(e) => setNote(e.target.value)}
+          className={inputClass}
+        />
       </label>
 
       {error && <p className={errorText}>{error}</p>}
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={create} className={primaryButton}>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={create}
+          className={primaryButton}
+        >
           {t("create")}
         </button>
         <Link href="/surveys" className={secondaryButton}>
