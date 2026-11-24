@@ -3692,6 +3692,7 @@ export type Database = {
         Args: { p_menu_id: string; p_reason?: string }
         Returns: undefined
       }
+      withdraw_material: { Args: { p_material_id: string }; Returns: undefined }
       withdraw_recipe_version: {
         Args: { p_version_id: string }
         Returns: undefined
