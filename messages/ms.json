@@ -2146,6 +2146,15 @@
       "60": "1 jam",
       "300": "5 jam",
       "none": "Tiada had"
+    },
+    "table": {
+      "name": "Nama",
+      "type": "Jenis",
+      "date": "Tarikh",
+      "status": "Status",
+      "open": "Dibuka",
+      "answers": "Jawapan",
+      "noMatch": "Tiada soal selidik sepadan dengan penapis ini."
     }
   }
 }
