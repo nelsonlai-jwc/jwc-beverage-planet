@@ -94,7 +94,7 @@ begin
   exception when check_violation then
     null;
   end;
-  assert (select count(*) from public.survey_outlet_people(v_outlet)) = 2, 'outlet people';
+  assert (select count(*) from public.survey_outlet_people(v_outlet)) = 3, 'outlet people plus the Super Admin';
 end;
 $$;
 
