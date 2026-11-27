@@ -6,30 +6,42 @@ import { runShopSync, type SyncSummary } from "@/app/[locale]/(app)/raw-material
 import { useRouter } from "@/i18n/navigation";
 import { formatMoney } from "@/lib/materials/decimal";
 import { SHOP_SIZES, sizeLabel, type SyncPlan, type SyncRow } from "@/lib/materials/shopBeans";
-import { cardClass, errorClass, primaryButtonClass } from "./ui";
+import { cardClass, errorClass, primaryButtonClass, secondaryButtonClass } from "./ui";
 
-/** Size ticks, what will be added, what changes availability, then one button to run it. */
+/** Size ticks, a tick per bean to add, what changes availability, then one button to run it. */
 export function ShopSyncForm({ plan }: { plan: SyncPlan }) {
   const t = useTranslations("RawMaterials.shopSync");
   const router = useRouter();
-  const [sizes, setSizes] = useState<number[]>([...SHOP_SIZES]);
+  const newRows = plan.rows.filter((r) => !r.materialId);
+  // Beans ticked to add; all of them to start with, sold-out ones too.
+  const [picked, setPicked] = useState<Set<number>>(() => new Set(newRows.map((r) => r.variantId)));
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<SyncSummary | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const toAdd = plan.rows.filter((r) => !r.materialId && sizes.includes(r.grams));
+  const toAdd = newRows.filter((r) => picked.has(r.variantId));
   const changes = plan.rows.filter((r) => r.change);
   const existing = plan.rows.filter((r) => r.materialId && !r.change);
   const nothing = toAdd.length === 0 && changes.length === 0 && plan.gone.length === 0 && !plan.rows.some((r) => r.link);
 
-  function toggle(size: number) {
-    setSizes((list) => (list.includes(size) ? list.filter((s) => s !== size) : [...list, size]));
+  const ofSize = (size: number) => newRows.filter((r) => r.grams === size);
+  // A size is ticked while every bean of that size is ticked; clicking it ticks or unticks them all.
+  const sizeOn = (size: number) => ofSize(size).every((r) => picked.has(r.variantId));
+  function setRows(rows: SyncRow[], on: boolean) {
+    setPicked((current) => {
+      const next = new Set(current);
+      for (const r of rows) {
+        if (on) next.add(r.variantId);
+        else next.delete(r.variantId);
+      }
+      return next;
+    });
   }
 
   function run() {
     setError(null);
     startTransition(async () => {
-      const result = await runShopSync(sizes);
+      const result = await runShopSync(toAdd.map((r) => r.variantId));
       if (!result.ok) {
         setError(t.has(`errors.${result.error}`) ? t(`errors.${result.error}`) : t("errors.UNKNOWN"));
         return;
@@ -60,8 +72,9 @@ export function ShopSyncForm({ plan }: { plan: SyncPlan }) {
             <label key={size} className="flex min-h-11 items-center gap-2 text-sm font-semibold">
               <input
                 type="checkbox"
-                checked={sizes.includes(size)}
-                onChange={() => toggle(size)}
+                checked={sizeOn(size)}
+                disabled={ofSize(size).length === 0}
+                onChange={() => setRows(ofSize(size), !sizeOn(size))}
                 className="size-5 accent-black"
               />
               {sizeLabel(size)}
@@ -72,19 +85,39 @@ export function ShopSyncForm({ plan }: { plan: SyncPlan }) {
 
       <section className={cardClass} aria-labelledby="shop-new">
         <h2 id="shop-new" className="text-base font-semibold">
-          {t("newTitle", { count: toAdd.length })}
+          {t("newTitle", { count: toAdd.length, total: newRows.length })}
         </h2>
-        {toAdd.length === 0 ? (
+        {newRows.length === 0 ? (
           <p className="text-sm text-[#3d3f3a]">{t("newEmpty")}</p>
         ) : (
           <>
             <p className="text-sm text-[#3d3f3a]">{t("newHint")}</p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setRows(newRows, true)} className={secondaryButtonClass}>
+                {t("selectAll")}
+              </button>
+              <button type="button" onClick={() => setRows(newRows, false)} className={secondaryButtonClass}>
+                {t("selectNone")}
+              </button>
+            </div>
             <ul className="flex flex-col divide-y divide-black/10">
-              {toAdd.map((row) => (
-                <li key={row.variantId} className="flex flex-col gap-1 py-2 text-sm sm:flex-row sm:items-center sm:gap-4">
-                  <span className="min-w-0 flex-1 font-semibold break-words">{row.name}</span>
-                  {!row.available && <UnavailableTag label={t("soldOut")} />}
-                  <span className="shrink-0 tabular-nums text-[#3d3f3a]">{price(row)}</span>
+              {newRows.map((row) => (
+                <li key={row.variantId}>
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm sm:items-center">
+                    <input
+                      type="checkbox"
+                      checked={picked.has(row.variantId)}
+                      onChange={(event) => setRows([row], event.target.checked)}
+                      className="mt-0.5 size-5 shrink-0 accent-black sm:mt-0"
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                      <span className={`min-w-0 flex-1 font-semibold break-words ${picked.has(row.variantId) ? "" : "text-[#6b6d67]"}`}>
+                        {row.name}
+                      </span>
+                      {!row.available && <UnavailableTag label={t("soldOut")} />}
+                      <span className="shrink-0 tabular-nums text-[#3d3f3a]">{price(row)}</span>
+                    </span>
+                  </label>
                 </li>
               ))}
             </ul>

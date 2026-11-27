@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { isCoffeeBeanType } from "@/lib/materials/coffeeBean";
 import {
-  SHOP_SIZES,
   fetchShopBeans,
   gramsOf,
   planShopSync,
@@ -54,14 +53,14 @@ export async function loadShopPlan(): Promise<{ ok: true; plan: SyncPlan } | { o
 }
 
 /**
- * Adds the new sizes the Super Admin ticked, links beans found by name, and copies the shop's
+ * Adds the new beans the Super Admin ticked, links beans found by name, and copies the shop's
  * availability onto every linked bean. The shop is read again here, so what is written is
  * what the shop shows now.
  */
-export async function runShopSync(sizes: number[]): Promise<SyncResult> {
+export async function runShopSync(variantIds: number[]): Promise<SyncResult> {
   const { supabase, role } = await getViewer();
   if (role !== "ADMIN") return { ok: false, error: "NOT_ALLOWED" };
-  const ticked = new Set(sizes.filter((size) => (SHOP_SIZES as readonly number[]).includes(size)));
+  const ticked = new Set(variantIds);
 
   let products;
   try {
@@ -73,7 +72,7 @@ export async function runShopSync(sizes: number[]): Promise<SyncResult> {
 
   const links = rows.filter((r) => r.link).map((r) => ({ material_id: r.materialId, variant_id: r.variantId }));
   const created = rows
-    .filter((r) => !r.materialId && ticked.has(r.grams))
+    .filter((r) => !r.materialId && ticked.has(r.variantId))
     .map((r) => ({
       variant_id: r.variantId,
       name: r.name,
