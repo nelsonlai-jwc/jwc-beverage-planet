@@ -1086,10 +1086,10 @@
       "title": "Sync coffee beans from the JWC shop",
       "intro": "Reads the coffee beans on www.justwantcoffee.com. New sizes are added as approved Coffee Bean raw materials at the shop price less 20%. Beans already in Raw Material are not added again; their Available / Unavailable follows the shop.",
       "sizesTitle": "Sizes to add",
-      "sizesHint": "Only ticked sizes are added. Availability of beans already in Raw Material is updated whatever you tick.",
-      "newTitle": "To add ({count})",
-      "newEmpty": "Nothing new to add for the ticked sizes.",
-      "newHint": "Brand JWC Roastery, type Coffee Bean, approved at once.",
+      "sizesHint": "Ticks or unticks every bean of that size below. You can still tick each bean on its own.",
+      "newTitle": "To add ({count} of {total} ticked)",
+      "newEmpty": "Nothing new on the shop.",
+      "newHint": "Brand JWC Roastery, type Coffee Bean, approved at once. A sold-out bean can be added too; it is set Unavailable.",
       "price": "RM{price} (shop RM{shop})",
       "soldOut": "Sold out on shop",
       "changesTitle": "Availability changes ({count})",
@@ -1108,7 +1108,9 @@
         "NOT_ALLOWED": "Only the Super Admin can sync from the JWC shop.",
         "NO_COFFEE_BEAN_TYPE": "There is no \"Coffee Bean\" material type in Settings.",
         "UNKNOWN": "Something went wrong. Nothing was changed."
-      }
+      },
+      "selectAll": "Tick all",
+      "selectNone": "Untick all"
     },
     "unavailable": {
       "badge": "Unavailable",
