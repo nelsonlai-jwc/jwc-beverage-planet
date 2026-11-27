@@ -603,7 +603,7 @@
     "restoreBlocked": "不能还原：已有较新的 Final 取代它。",
     "colTime": "时间",
     "colType": "类型",
-    "colGrind": "磨豆机 · 刻度",
+    "colGrind": "磨豆机 · 研磨刻度",
     "colRecipe": "参数",
     "colBy": "提交人",
     "emptyToday": "今天还没有校准。按「新增」开始。",

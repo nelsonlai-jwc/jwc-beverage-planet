@@ -356,7 +356,9 @@ export function CalibrationTable({
         ) : (
           <div className="flex flex-col gap-2 text-sm">
             <p className={`flex flex-wrap items-center gap-2 ${row.record.deleted_at || use?.superseded_by ? "text-[#6b6d67]" : ""}`}>
-              <span className="font-semibold tabular-nums">{shortRecipe(row)}</span>
+              <span className="font-semibold tabular-nums">
+                {t("grind")} {row.record.grind_setting} · {shortRecipe(row)}
+              </span>
               {row.record.deleted_at ? (
                 <StatusBadge tone="red">{t("deleted")}</StatusBadge>
               ) : (
@@ -453,7 +455,7 @@ export function CalibrationTable({
                       </span>
                     </span>
                     <span className="text-sm">
-                      {grinder(r)} · {t("grind")} {r.grind_setting}
+                      {grinder(r)} · {t("grind")} <span className="font-semibold">{r.grind_setting}</span>
                       {r.grinder_rpm != null ? ` · ${r.grinder_rpm} RPM` : ""}
                     </span>
                   </button>
@@ -507,9 +509,9 @@ export function CalibrationTable({
                         </td>
                         <td className="px-4 py-3">
                           {grinder(r)}
-                          <span className={`block ${mutedText}`}>
-                            {r.grind_setting}
-                            {r.grinder_rpm != null ? ` · ${r.grinder_rpm} RPM` : ""}
+                          <span className="block whitespace-nowrap">
+                            {t("grind")} <span className="font-semibold">{r.grind_setting}</span>
+                            {r.grinder_rpm != null && <span className={mutedText}> · {r.grinder_rpm} RPM</span>}
                           </span>
                         </td>
                         <td className="px-4 py-3">
