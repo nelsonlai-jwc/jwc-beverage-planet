@@ -18,6 +18,7 @@ import { ArchiveRecipeButton, DeleteDraftRecipeButton } from "./RecipeRemove";
 import { FilterSortBar, writeFilterSortUrl, type SortDir } from "./FilterSortBar";
 import { StatusBadge, TagList, card, inputClass, secondaryButton, smallButton } from "./ui";
 import { RecipeName } from "./RecipeName";
+import { BulkActions } from "./BulkActions";
 
 const typeOf = (row: MineCard) => (row.isPrep ? "PREP" : "DRINK");
 
@@ -76,6 +77,7 @@ export function MineList({
   initialFilters,
   initialSort,
   initialDir,
+  isAdmin,
 }: {
   rows: MineCard[];
   outlets: { id: string; name: string }[];
@@ -85,17 +87,37 @@ export function MineList({
   initialFilters: MineFilters;
   initialSort: MineSortKey;
   initialDir: SortDir;
+  isAdmin: boolean;
 }) {
   const t = useTranslations("Recipes");
   const tf = useTranslations("Recipes.catalogueFilter");
   const [filters, setFilters] = useState(initialFilters);
   const [sort, setSort] = useState<MineSortKey>(initialSort);
   const [dir, setDir] = useState<SortDir>(initialDir);
+  // Select mode: tick recipes, then act on all of them from the bar at the bottom.
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
 
   const shown = useMemo(
     () => sortRows(rows.filter((row) => matches(row, filters)), sort, dir, styles),
     [rows, filters, sort, dir, styles],
   );
+
+  // Archived recipes can't be copied or deleted, so they can't be selected.
+  const selectable = shown.filter((r) => !r.archived);
+  const selected = rows.filter((r) => picked.has(r.id) && !r.archived);
+  const toggle = (id: string) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const allPicked = selectable.length > 0 && selectable.every((r) => picked.has(r.id));
+  const stopSelecting = () => {
+    setSelecting(false);
+    setPicked(new Set());
+  };
 
   const setFilter = (key: MineFilterKey, value: string) => {
     const next = { ...filters, [key]: value };
@@ -164,13 +186,55 @@ export function MineList({
         onSort={applySort}
       />
 
+      <div className="flex flex-wrap items-center gap-2">
+        {!selecting ? (
+          <button type="button" className={smallButton} onClick={() => setSelecting(true)} disabled={!selectable.length}>
+            {t("bulk.select")}
+          </button>
+        ) : (
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold">
+            <input
+              type="checkbox"
+              className="size-5 accent-black"
+              checked={allPicked}
+              onChange={() =>
+                setPicked((prev) => {
+                  const next = new Set(prev);
+                  for (const r of selectable) {
+                    if (allPicked) next.delete(r.id);
+                    else next.add(r.id);
+                  }
+                  return next;
+                })
+              }
+            />
+            {t("bulk.selectAll", { count: selectable.length })}
+          </label>
+        )}
+      </div>
+
       {shown.length === 0 ? (
         <p className={card}>{t("mineEmpty")}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {shown.map((r) => (
-            <li key={r.id} className={`${card} relative gap-2 hover:ring-2 hover:ring-black`}>
-              <span className="flex flex-wrap items-center justify-between gap-2">
+            <li
+              key={r.id}
+              className={`${card} relative gap-2 hover:ring-2 hover:ring-black ${selecting && picked.has(r.id) ? "ring-2 ring-black" : ""} ${selecting && r.archived ? "opacity-60" : ""}`}
+            >
+              {/* In select mode a tap anywhere on the card ticks it instead of opening it. */}
+              {selecting && !r.archived && (
+                <label className="absolute inset-0 z-20 cursor-pointer rounded-[20px]">
+                  <span className="sr-only">{r.name}</span>
+                  <input
+                    type="checkbox"
+                    className="absolute left-4 top-4 size-5 accent-black sm:left-5 sm:top-5"
+                    checked={picked.has(r.id)}
+                    onChange={() => toggle(r.id)}
+                  />
+                </label>
+              )}
+              <span className={`flex flex-wrap items-center justify-between gap-2 ${selecting ? "pl-8" : ""}`}>
                 {/* The link covers the whole card; the delete control sits above it. */}
                 <Link href={`/recipes/${r.id}`} className="text-base font-semibold after:absolute after:inset-0 after:rounded-[20px]">
                   <RecipeName name={r.name} temperature={r.isPrep ? null : r.temperature} />
@@ -189,7 +253,7 @@ export function MineList({
                   {r.approvedNo != null && ` · ${t("approvedVersion", { no: r.approvedNo })}`}
                   {r.open && ` · ${t("openVersion", { no: r.open.versionNo })}`}
                 </span>
-                {!r.archived && (
+                {!r.archived && !selecting && (
                   <span className="relative z-10 ml-auto flex flex-wrap items-center justify-end gap-2 has-[[role=dialog]]:basis-full">
                     {r.archivePending && <span className="text-sm font-semibold">{t("archive.pendingTitle")}</span>}
                     {/* Copies the version this card shows: the one in progress, else the approved one. */}
@@ -212,6 +276,14 @@ export function MineList({
             </li>
           ))}
         </ul>
+      )}
+
+      {selecting && (
+        <>
+          {/* Room for the bar, so it never covers the last card. */}
+          <div aria-hidden className="h-16" />
+          <BulkActions selected={selected} isAdmin={isAdmin} outlets={outlets} onCancel={stopSelecting} />
+        </>
       )}
     </div>
   );

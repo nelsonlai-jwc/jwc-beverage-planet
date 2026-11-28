@@ -1636,6 +1636,35 @@
       "noMedia": "None",
       "video": "video",
       "photo": "photo"
+    },
+    "bulk": {
+      "select": "Select",
+      "selectAll": "Select all shown ({count})",
+      "barLabel": "Selected recipes",
+      "selected": "{count} selected",
+      "working": "Working…",
+      "cancel": "Cancel",
+      "back": "Back",
+      "changeOutlets": "Change outlets",
+      "outletsTitle": "Change outlets of {count} recipes",
+      "outletsNote": "Every selected recipe is made for exactly these outlets. Applies at once and is recorded in each change log.",
+      "outletsSave": "Save outlets",
+      "copyTitle": "Copy {count} recipes",
+      "copyNote": "Each recipe is copied as a new draft under its own name: the version in progress, else the approved one. Approved Prep Materials are copied too, or reused if the outlet already has them.",
+      "copyConfirm": "Copy {count}",
+      "deleteTitle": "Delete {count} recipes",
+      "deleteNote": "Drafts that were never submitted are deleted. Submitted recipes are archived: their history is kept and Admin can restore them.",
+      "deleteNoteRequest": "Drafts that were never submitted are deleted. Approved recipes are deleted only after Admin approves; the reason goes with each request.",
+      "deleteSkipNote": "{count} selected recipes you can't delete will be skipped.",
+      "deleteConfirm": "Delete {count}",
+      "resultDone": "Done: {count}",
+      "resultRequested": "Requests sent: {count}",
+      "resultSkipped": "Skipped: {count}",
+      "errors": {
+        "DUPLICATE_NAME": "the outlet already has a drink with this name and temp. Use Copy on its card.",
+        "PREP_NOT_APPROVED": "it uses a Prep Material that isn't approved. Use Copy on its card to choose a Prep.",
+        "NOT_ALLOWED": "you don't have permission for this recipe."
+      }
     }
   },
   "Reports": {

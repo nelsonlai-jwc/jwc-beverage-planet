@@ -1636,6 +1636,35 @@
       "noMedia": "Tiada",
       "video": "video",
       "photo": "foto"
+    },
+    "bulk": {
+      "select": "Pilih",
+      "selectAll": "Pilih semua yang dipaparkan ({count})",
+      "barLabel": "Resipi dipilih",
+      "selected": "{count} dipilih",
+      "working": "Sedang diproses…",
+      "cancel": "Batal",
+      "back": "Kembali",
+      "changeOutlets": "Tukar outlet",
+      "outletsTitle": "Tukar outlet {count} resipi",
+      "outletsNote": "Setiap resipi yang dipilih akan dibuat untuk outlet ini sahaja. Berkuat kuasa serta-merta dan direkodkan dalam log perubahan setiap resipi.",
+      "outletsSave": "Simpan outlet",
+      "copyTitle": "Salin {count} resipi",
+      "copyNote": "Setiap resipi disalin sebagai draf baharu dengan namanya sendiri: versi yang sedang dikerjakan, jika tiada, versi yang diluluskan. Bahan Prep yang diluluskan turut disalin, atau digunakan semula jika outlet sudah memilikinya.",
+      "copyConfirm": "Salin {count}",
+      "deleteTitle": "Padam {count} resipi",
+      "deleteNote": "Draf yang belum pernah dihantar akan dipadam. Resipi yang pernah dihantar akan diarkibkan: sejarahnya disimpan dan Admin boleh memulihkannya.",
+      "deleteNoteRequest": "Draf yang belum pernah dihantar akan dipadam. Resipi yang diluluskan hanya dipadam selepas Admin meluluskan; sebab akan dihantar bersama setiap permohonan.",
+      "deleteSkipNote": "{count} resipi dipilih yang anda tidak boleh padam akan dilangkau.",
+      "deleteConfirm": "Padam {count}",
+      "resultDone": "Selesai: {count}",
+      "resultRequested": "Permohonan dihantar: {count}",
+      "resultSkipped": "Dilangkau: {count}",
+      "errors": {
+        "DUPLICATE_NAME": "outlet sudah ada minuman dengan nama dan suhu ini. Gunakan Salin pada kadnya.",
+        "PREP_NOT_APPROVED": "ia menggunakan Bahan Prep yang belum diluluskan. Gunakan Salin pada kadnya untuk memilih Prep.",
+        "NOT_ALLOWED": "anda tiada kebenaran untuk resipi ini."
+      }
     }
   },
   "Reports": {

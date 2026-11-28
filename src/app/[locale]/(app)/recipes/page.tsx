@@ -467,6 +467,7 @@ export default async function RecipesPage({
         initialFilters={mineState.filters}
         initialSort={mineState.sort}
         initialDir={mineState.dir}
+        isAdmin={viewer.role === "ADMIN"}
       />
     </div>
   );
