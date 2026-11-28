@@ -1636,6 +1636,35 @@
       "noMedia": "不放",
       "video": "视频",
       "photo": "照片"
+    },
+    "bulk": {
+      "select": "选择",
+      "selectAll": "全选目前显示的（{count}）",
+      "barLabel": "已选配方",
+      "selected": "已选 {count} 个",
+      "working": "处理中…",
+      "cancel": "取消",
+      "back": "返回",
+      "changeOutlets": "修改分店",
+      "outletsTitle": "修改 {count} 个配方的分店",
+      "outletsNote": "所选配方的分店都会换成这里勾选的分店。立即生效，并记录在每个配方的修改记录中。",
+      "outletsSave": "保存分店",
+      "copyTitle": "复制 {count} 个配方",
+      "copyNote": "每个配方以原名复制成新草稿：有进行中版本就复制它，否则复制已批准版本。已批准的预制原料会一起复制，目标分店已有的则直接沿用。",
+      "copyConfirm": "复制 {count} 个",
+      "deleteTitle": "删除 {count} 个配方",
+      "deleteNote": "从未提交过的草稿会直接删除。提交过的配方会被封存：保留历史，Admin 可以恢复。",
+      "deleteNoteRequest": "从未提交过的草稿会直接删除。已批准的配方要等 Admin 批准后才删除，原因会附在每个申请上。",
+      "deleteSkipNote": "所选配方中有 {count} 个你不能删除，会被跳过。",
+      "deleteConfirm": "删除 {count} 个",
+      "resultDone": "完成：{count}",
+      "resultRequested": "已送出申请：{count}",
+      "resultSkipped": "跳过：{count}",
+      "errors": {
+        "DUPLICATE_NAME": "目标分店已有同名同温度的饮品，请用卡片上的复制。",
+        "PREP_NOT_APPROVED": "使用了未批准的预制原料，请用卡片上的复制来选择预制原料。",
+        "NOT_ALLOWED": "你没有这个配方的权限。"
+      }
     }
   },
   "Reports": {

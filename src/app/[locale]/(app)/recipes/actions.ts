@@ -187,3 +187,156 @@ export async function importRecipes(rows: ImportRecipeRow[]): Promise<RecipeActi
   refresh();
   return { ok: true, count: created.length };
 }
+
+// Bulk actions of the "My outlets" list -------------------------------------
+// Each recipe goes through the same call as its single action (same permission checks);
+// one that fails is skipped and reported, the others still go ahead.
+
+export type BulkResult = { id: string; ok: boolean; outcome?: "APPLIED" | "REQUESTED"; error?: string; message?: string };
+
+const MAX_BULK = 200;
+
+function bulkFail(id: string, error: PostgrestError): BulkResult {
+  const result = fail(error);
+  return result.ok ? { id, ok: true } : { id, ok: false, error: result.error, message: result.message };
+}
+
+/** Admin only: every chosen recipe gets the same outlets (or all outlets). */
+export async function bulkSetRecipeOutlets(
+  recipeIds: string[],
+  outletIds: string[],
+  allOutlets: boolean,
+): Promise<BulkResult[]> {
+  if (!recipeIds.length || recipeIds.length > MAX_BULK) return [];
+  const supabase = await createClient();
+  const results: BulkResult[] = [];
+  for (const id of recipeIds) {
+    const { error } = await supabase.rpc("set_recipe_outlets", {
+      p_recipe_id: id,
+      p_outlet_ids: allOutlets ? [] : outletIds,
+      p_all_outlets: allOutlets,
+    });
+    results.push(error ? bulkFail(id, error) : { id, ok: true });
+  }
+  refresh();
+  return results;
+}
+
+const norm = (s: string | null) => (s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+
+/**
+ * Copies each recipe as a draft into one outlet, under its own name: the version the card
+ * shows (the one in progress, else the approved one). Approved Preps are copied or reused
+ * as on the Copy page. Skipped: a drink whose name and temp the outlet already has, and a
+ * recipe whose Prep is not approved (it must be mapped by hand on the Copy page).
+ */
+export async function bulkCopyRecipes(
+  items: { recipeId: string; versionId: string | null }[],
+  targetOutletId: string,
+  idempotencyKey: string,
+): Promise<BulkResult[]> {
+  if (!items.length || items.length > MAX_BULK) return [];
+  const supabase = await createClient();
+
+  // Drinks the target outlet already has (approved or in progress), for the same-name check.
+  const { data: active } = await supabase
+    .from("recipes")
+    .select("id, is_prep, current_approved_version_id, all_outlets, recipe_outlets(outlet_id)")
+    .eq("status", "ACTIVE")
+    .eq("is_prep", false);
+  const inTarget = (active ?? []).filter(
+    (r) => r.all_outlets || r.recipe_outlets.some((o) => o.outlet_id === targetOutletId),
+  );
+  const { data: targetVersions } = inTarget.length
+    ? await supabase
+        .from("recipe_versions")
+        .select("recipe_id, id, status, product_name, temperature")
+        .in("recipe_id", inTarget.map((r) => r.id))
+    : { data: [] };
+  const approvedIds = new Set(inTarget.map((r) => r.current_approved_version_id));
+  const taken = new Set(
+    (targetVersions ?? [])
+      .filter((v) => approvedIds.has(v.id) || ["DRAFT", "PENDING", "RETURNED"].includes(v.status))
+      .map((v) => `${norm(v.product_name)}|${v.temperature ?? ""}`),
+  );
+
+  const { data: sources } = await supabase
+    .from("recipes")
+    .select("id, is_prep, current_approved_version_id")
+    .in("id", items.map((i) => i.recipeId));
+  const sourceVersionIds = items.map(
+    (i) => i.versionId ?? sources?.find((s) => s.id === i.recipeId)?.current_approved_version_id ?? "",
+  );
+  const { data: sourceVersions } = await supabase
+    .from("recipe_versions")
+    .select("id, product_name, temperature")
+    .in("id", sourceVersionIds.filter(Boolean));
+
+  const results: BulkResult[] = [];
+  for (const [index, item] of items.entries()) {
+    const source = sources?.find((s) => s.id === item.recipeId);
+    const version = sourceVersions?.find((v) => v.id === sourceVersionIds[index]);
+    if (!source || !version) {
+      results.push({ id: item.recipeId, ok: false, error: "NOT_ALLOWED" });
+      continue;
+    }
+    const nameKey = `${norm(version.product_name)}|${version.temperature ?? ""}`;
+    if (!source.is_prep && taken.has(nameKey)) {
+      results.push({ id: item.recipeId, ok: false, error: "DUPLICATE_NAME" });
+      continue;
+    }
+    const { error } = await supabase.rpc("copy_recipe", {
+      p_source_recipe_id: item.recipeId,
+      p_target_outlet_id: targetOutletId,
+      p_product_name: version.product_name ?? "",
+      p_prep_mapping: {},
+      p_idempotency_key: `${idempotencyKey}:${item.recipeId}:${targetOutletId}`,
+      ...(item.versionId ? { p_source_version_id: item.versionId } : {}),
+    });
+    if (error) {
+      // The recipe itself is always copyable here, so this message is about one of its Preps.
+      results.push(
+        error.message === "Only approved, active recipes can be copied"
+          ? { id: item.recipeId, ok: false, error: "PREP_NOT_APPROVED" }
+          : bulkFail(item.recipeId, error),
+      );
+      continue;
+    }
+    if (!source.is_prep) taken.add(nameKey);
+    results.push({ id: item.recipeId, ok: true });
+  }
+  refresh();
+  return results;
+}
+
+/**
+ * Same as each card's Delete: a recipe never submitted is deleted; a submitted one is
+ * archived (Admin, or a Manager while nothing is approved) or its deletion is requested.
+ */
+export async function bulkDeleteRecipes(
+  items: { recipeId: string; neverSubmitted: boolean }[],
+  reason: string,
+): Promise<BulkResult[]> {
+  if (!items.length || items.length > MAX_BULK) return [];
+  const supabase = await createClient();
+  const results: BulkResult[] = [];
+  for (const item of items) {
+    if (item.neverSubmitted) {
+      const { data, error } = await supabase.from("recipes").delete().eq("id", item.recipeId).select("id");
+      if (error) results.push(bulkFail(item.recipeId, error));
+      else results.push(data?.length ? { id: item.recipeId, ok: true, outcome: "APPLIED" } : { id: item.recipeId, ok: false, error: "NOT_ALLOWED" });
+      continue;
+    }
+    const { data, error } = await supabase.rpc("request_change", {
+      p_entity_type: "RECIPE",
+      p_entity_id: item.recipeId,
+      p_action: "ARCHIVE",
+      p_reason: reason.trim() || null,
+    });
+    results.push(
+      error ? bulkFail(item.recipeId, error) : { id: item.recipeId, ok: true, outcome: data === "APPLIED" ? "APPLIED" : "REQUESTED" },
+    );
+  }
+  refresh();
+  return results;
+}
